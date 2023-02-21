@@ -20,7 +20,7 @@
 #include "esp_netif.h"
 #include <esp_http_server.h>
 
-#include "RC_for_config.c"
+#include "RC_for_in_flight_config.c"
 #include "driver/gpio.h"
 #include "driver/uart.h"
 #include "uart.c"
