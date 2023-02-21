@@ -7,6 +7,9 @@ groundstation/sdkconfig
 in_flight_config/build
 in_flight_config/sdkconfig
 
+esp_internet_control/build
+esp_internet_control/sdkconfig
+
 # Created by https://www.toptal.com/developers/gitignore/api/cmake,ninja,visualstudio,macos,windows,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=cmake,ninja,visualstudio,macos,windows,linux
 
