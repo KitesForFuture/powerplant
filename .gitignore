@@ -9,7 +9,7 @@ in_flight_config/sdkconfig
 
 esp_internet_control/build
 esp_internet_control/sdkconfig
-control_backend/*
+control_backend
 
 # Created by https://www.toptal.com/developers/gitignore/api/cmake,ninja,visualstudio,macos,windows,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=cmake,ninja,visualstudio,macos,windows,linux
