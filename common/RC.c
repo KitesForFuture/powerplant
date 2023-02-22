@@ -7,7 +7,7 @@
 #define CONFIG_MODE 4
 #define DEBUG_DATA_MODE 5
 
-#define DATALENGTH 2
+#define DATALENGTH 3
 
 
 static uint8_t broadcast_mac[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
@@ -15,6 +15,7 @@ const uint8_t WIFI_CHANNEL = 0;
 
 float line_length_in_meters = 1;
 float flight_mode = 0;
+float groundstation_height = 0;
 
 float tension_request = 0;
 
@@ -53,6 +54,7 @@ static void msg_recv_cb_kite(const uint8_t *mac_addr, const uint8_t *data, int l
 		if(msg.mode == LINE_LENGTH_MODE){
 			line_length_in_meters = msg.data[0];
 			flight_mode = msg.data[1];
+			groundstation_height = msg.data[2];
 		}
 	}
 	
@@ -179,6 +181,7 @@ void sendDebuggingData(float num1, float num2, float num3, float num4, float num
 	esp_now_send(broadcast_mac, msg_data, packet_size);
 }
 
+/*
 // used by the kite to send data to the data receiver
 void sendDataArray(float data[DATALENGTH], uint32_t mode){
 
@@ -197,16 +200,24 @@ void sendDataArray(float data[DATALENGTH], uint32_t mode){
 	// Send
 	esp_now_send(broadcast_mac, msg_data, packet_size);
 }
+*/
 
-void sendData(uint32_t mode, float data0, float data1){
+void sendData(uint32_t mode, float data0, float data1, float data2){
 	
-	float to_be_sent[DATALENGTH];
-	for(int i = 0; i < DATALENGTH; i++){
-		to_be_sent[i] = 0;
-	}
-	to_be_sent[0] = data0;
-	to_be_sent[1] = data1;
-	sendDataArray(to_be_sent, mode);
+	esp_now_msg_t msg;
+	
+	msg.mode = mode;
+	msg.data[0] = data0;
+	msg.data[1] = data1;
+	msg.data[2] = data2;
+	
+	// Pack
+	uint16_t packet_size = sizeof(esp_now_msg_t);
+	uint8_t msg_data[packet_size]; // Byte array
+	memcpy(&msg_data[0], &msg, sizeof(esp_now_msg_t));
+	
+	// Send
+	esp_now_send(broadcast_mac, msg_data, packet_size);
 }
 
 void sendDataArrayLarge(uint32_t mode, float* data, int length){

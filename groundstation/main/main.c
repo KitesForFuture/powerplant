@@ -22,7 +22,11 @@
 
 #include "mymath.c"
 
-#include "uart.c"
+
+#include "../../common/i2c_devices/cat24c256.h"
+#include "../../common/i2c_devices/bmp280.h"
+
+#include "../../common/uart.c"
 
 #include "motors.c"
 
@@ -43,10 +47,22 @@
 #define LAND_COMMAND 0
 #define LAUNCH_COMMAND 1
 
+struct i2c_bus bus0 = {18, 19};//SDA, SCL
+
+float bmp_calib = 0;
+
 int internet_connected = false;
 
 float currentServoAngle = SERVO_MIN_ANGLE;
 float direction = 1;
+
+void set_bmp_calibration(float value){
+	float readValue = readEEPROM(0);
+	if(value != readValue){
+		write2EEPROM(value, 0);
+	}
+	updateBMP280Config(value);
+}
 
 void controlServoAngle(float reel_in_speed){
 	currentServoAngle += direction*0.0045*reel_in_speed;
@@ -70,8 +86,12 @@ void processReceivedConfigValuesViaWiFi(float* config_values){
 		printf("ECHOING back to ESP-NOW, because INTERNET_CONTROL ESP is connected");
 		sendDataArrayLarge(CONFIG_MODE, config_values, NUM_CONFIG_FLOAT_VARS); // ECHO the config array
 	}else{
-		printf("FORWARDING as UART on PIN 18\n");
-		sendUARTArray100(config_values, NUM_CONFIG_FLOAT_VARS, ESP32_UART); // FORWARD config to access point ESP32
+		printf("FORWARDING as UART on PIN 16\n");
+		//forwarding config, while appending groundstation-bmp280-config
+		float config_values_kite_and_gs[NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS];
+		for(int i = 0; i < NUM_CONFIG_FLOAT_VARS; i++) config_values_kite_and_gs[i] = config_values[i];
+		config_values_kite_and_gs[NUM_CONFIG_FLOAT_VARS + 0] = bmp_calib;
+		sendUARTArray100(config_values_kite_and_gs, NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS, ESP32_UART); // FORWARD config (appending groundstation config) to access point ESP32
 	}
 }
 
@@ -81,6 +101,12 @@ void processReceivedDebuggingDataViaWiFi(float* debugging_data){
 }
 
 void init(){
+	
+	init_cat24(bus0);
+	//TODO:
+	float bmp_calib = 0.000021;//readEEPROM(0);
+    init_bmp280(bus0, bmp_calib);
+	
 	initMotors(); // servo (pwm) outputs
 	storeServoArmForEnergyGeneration();
 	//networking
@@ -89,7 +115,7 @@ void init(){
 	// UART TO VESC/STM32
 	initUART(VESC_UART, GPIO_NUM_12, GPIO_NUM_13, true);
 	// UART TO wifi station/ap ESP32s
-	initUART(ESP32_UART, GPIO_NUM_18, GPIO_NUM_19, false);
+	initUART(ESP32_UART, GPIO_NUM_16, GPIO_NUM_17, false);
 	
 	network_setup_groundstation(&processReceivedConfigValuesViaWiFi, &processReceivedDebuggingDataViaWiFi);
 	
@@ -114,6 +140,8 @@ void app_main(void){
 	float line_length_raw, flight_mode;
 	printf("waiting for UART...\n");
 	while(1){
+		update_bmp280_if_necessary();
+		//printf("getHeight() = %f\n", getHeight());
 		//sendUART(1, 2, VESC_UART);//DEBUGGING
 		//sendUART(1, 2, ESP32_UART);//DEBUGGING
 		// **************** REACT to UART message from VESC ****************
@@ -128,7 +156,7 @@ void app_main(void){
 			line_length = line_length_raw;// - line_length_offset;
 			//printf("received %f, %f\n", line_length_raw, flight_mode);
 			printf("sending flight_mode %f and line_length %f to kite\n", flight_mode, line_length);
-			sendData(LINE_LENGTH_MODE, line_length, flight_mode); // send line_length, flight_mode to kite
+			sendData(LINE_LENGTH_MODE, line_length, flight_mode, getHeight()); // send line_length, flight_mode to kite
 			printf("sending flight_mode %f and line_length %f to communication ESP32\n", flight_mode, line_length);
 			if(internet_connected){
 				sendUART(flight_mode, line_length, ESP32_UART); // send flight_mode to attached ESP32, which forwards it to the internet
@@ -151,9 +179,10 @@ void app_main(void){
 			printf("Sending landing/launching request to VESC: %f\n", receive_array[0]);
 			sendUART(receive_array[0], 0, VESC_UART); // landing (TODO: launch) COMMAND
 			internet_connected = true;
-		}else if(receive_array_length == NUM_CONFIG_FLOAT_VARS){ // received from CONFIG TOOL
+		}else if(receive_array_length == NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS){ // received from in_flight_config CONFIG TOOL
 			printf("sending config to kite via ESP-NOW\n");
-			sendDataArrayLarge(CONFIG_MODE, receive_array, NUM_CONFIG_FLOAT_VARS); // *** FORWARD of CONFIG ARRAY from UART to ESP-NOW
+			sendDataArrayLarge(CONFIG_MODE, receive_array, NUM_CONFIG_FLOAT_VARS); // *** FORWARD of CONFIG ARRAY from UART to ESP-NOW, stripping groundstation config
+			set_bmp_calibration(bmp_calib);
 		}
 		
 		// **************** MANUAL SWITCH ****************

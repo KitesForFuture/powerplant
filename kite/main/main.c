@@ -4,13 +4,13 @@
 #include "sdkconfig.h"
 
 
-#include "i2c_devices/cat24c256.h"
-#include "i2c_devices/bmp280.h"
-#include "i2c_devices/mpu6050.h"
+#include "../../common/i2c_devices/cat24c256.h"
+#include "../../common/i2c_devices/bmp280.h"
+#include "../../common/i2c_devices/mpu6050.h"
 
 #include "control/rotation_matrix.h"
-#include "pwm/motors.h"
-#include "pwm/pwm_input.h"
+#include "../../common/pwm/motors.h"
+#include "../../common/pwm/pwm_input.h"
 
 #include "nvs_flash.h"
 #include "esp_wifi.h"

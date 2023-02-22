@@ -1,14 +1,14 @@
 idf_component_register(SRCS "main.c"
                     INCLUDE_DIRS ".")
 
-add_subdirectory(helpers)
+add_subdirectory(../../common/helpers helpers)
 target_link_libraries(${COMPONENT_LIB} PUBLIC helpers)
 
-add_subdirectory(i2c_devices)
+add_subdirectory(../../common/i2c_devices i2c_devices)
 target_link_libraries(${COMPONENT_LIB} PUBLIC i2c_devices)
 
 add_subdirectory(control)
 target_link_libraries(${COMPONENT_LIB} PUBLIC control)
 
-add_subdirectory(pwm)
+add_subdirectory(../../common/pwm pwm)
 target_link_libraries(${COMPONENT_LIB} PUBLIC pwm)

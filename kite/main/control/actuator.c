@@ -1,4 +1,4 @@
-#include "../helpers/math.h"
+#include "../../../common/helpers/math.h"
 #include "actuator.h"
 
 void initActuator(Actuator* actuator, float speed, float minValue, float maxValue){

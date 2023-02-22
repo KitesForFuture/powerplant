@@ -11,7 +11,7 @@
 
 #include "driver/gpio.h"
 #include "driver/uart.h"
-#include "uart.c"
+#include "../../common/uart.c"
 
 #define ESP32_UART 0
 

@@ -23,11 +23,11 @@
 #include "RC_for_in_flight_config.c"
 #include "driver/gpio.h"
 #include "driver/uart.h"
-#include "uart.c"
+#include "../../common/uart.c"
 
 #define ESP32_UART 0
 
-float config_values[NUM_CONFIG_FLOAT_VARS];
+float config_values[NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS];
 
 int data_needs_being_send_via_UART = 0;
 
@@ -41,13 +41,13 @@ void getDebuggingData(float* values){
 }
 
 void getConfigValues(float* values){
-	for (int i = 0; i < NUM_CONFIG_FLOAT_VARS; i++){
+	for (int i = 0; i < NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS; i++){
 		values[i] = config_values[i];
 	}
 }
 
 void setConfigValues(float* values){
-	for (int i = 6; i < NUM_CONFIG_FLOAT_VARS; i++){
+	for (int i = 6; i < NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS; i++){
 		config_values[i] = values[i];
 	}
 	data_needs_being_send_via_UART = 1;
@@ -55,7 +55,7 @@ void setConfigValues(float* values){
 
 void app_main(void)
 {
-	initUART(ESP32_UART, GPIO_NUM_19, GPIO_NUM_18, false);
+	initUART(ESP32_UART, GPIO_NUM_17, GPIO_NUM_16, false);
 	//initializeConfigValues(config_values);
 	
 	int length = 0;
@@ -65,17 +65,17 @@ void app_main(void)
 	while(1){
 		//printf("looping\n");
 		//sendUART(1,2, ESP32_UART);//DEBUGGING
-		//sendUARTArray100(config_values, NUM_CONFIG_FLOAT_VARS, ESP32_UART);//DEBUGGING
+		//sendUARTArray100(config_values, NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS, ESP32_UART);//DEBUGGING
 		if(data_needs_being_send_via_UART == 1){
-			sendUARTArray100(config_values, NUM_CONFIG_FLOAT_VARS, ESP32_UART);
+			sendUARTArray100(config_values, NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS, ESP32_UART);
 			data_needs_being_send_via_UART = 0;
 		}
 		length = processUART(ESP32_UART, receive_array);
 		
 		// *** ECHO config array and INITIALIZE values[] ***
-		if (length == NUM_CONFIG_FLOAT_VARS) {
-			printf("Received config from kite: ");
-			for(int i = 6; i < NUM_CONFIG_FLOAT_VARS; i++){
+		if (length == NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS) {
+			printf("Received config from kite (and groundstation: ");
+			for(int i = 6; i < NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS; i++){
 				config_values[i] = receive_array[i];
 				printf("%f, ", config_values[i]);
 			}
@@ -89,7 +89,7 @@ void app_main(void)
 			
 			//ECHO config_values to UART
 			printf("Echoing config values back to groundstation\n");
-			sendUARTArray100(config_values, NUM_CONFIG_FLOAT_VARS, ESP32_UART);
+			sendUARTArray100(config_values, NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS, ESP32_UART);
 		}else if (length == 2){
 			//ignore, this is status message for internet
 		}else if (length == 6){
