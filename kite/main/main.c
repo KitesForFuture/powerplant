@@ -77,7 +77,7 @@ void setConfigValues(float* values){
 	loadConfigVariables(&autopilot, config_values);
 }
 
-void actuatorControl(float left_elevon, float right_elevon, float brake, float left_propeller, float right_propeller, float propeller_safety_max){
+void actuatorControl(float left_elevon, float right_elevon, float brake, float rudder, float left_propeller, float right_propeller, float propeller_safety_max){
 	
 	if(config_values[9]){ // SWAPPED
 		setAngle(3, config_values[37] + config_values[7]*left_elevon); // left elevon
@@ -95,6 +95,7 @@ void actuatorControl(float left_elevon, float right_elevon, float brake, float l
 		setSpeed(2, clamp(right_propeller, 0, propeller_safety_max)); // right Propeller
 	}
 	setAngle(1, config_values[39] + config_values[10]*brake); // Brake
+	setAngle(5, config_values[41] + config_values[40]*rudder); // Rudder
 	//printf("config[39] = %f\n", config_values[39]);
 	//printf("setting left, brake, right to (%f, %f, %f)\n", config_values[37] + config_values[7]*left_elevon, config_values[39] + config_values[10]*brake, config_values[38] + config_values[8]*right_elevon);
 }
@@ -135,11 +136,12 @@ void main_task(void* arg)
 	};
 	
 	int output_pins[] = {27,26,12,13,5};
-	initMotors(output_pins, 5);
+	initMotors(output_pins, 6);
 	
 	setAngle(0, 0);
 	setAngle(1, 0);
 	setAngle(3, 0);
+	setAngle(5, 0);
 	setSpeed(2, 0);
 	setSpeed(4, 0);
 	
@@ -238,7 +240,7 @@ void main_task(void* arg)
 		control_data.right_elevon = clamp(control_data.right_elevon, -MAX_SERVO_DEFLECTION, MAX_SERVO_DEFLECTION);
 		
 		//TODO: setAngle in radians ( * PI/180) and setSpeed from [0, 1] or so
-		actuatorControl(control_data.left_elevon, control_data.right_elevon, control_data.brake, getPWMInput0to1normalized(2)*control_data.left_prop, getPWMInput0to1normalized(2)*control_data.right_prop, MAX_PROPELLER_SPEED);
+		actuatorControl(control_data.left_elevon, control_data.right_elevon, control_data.brake, control_data.rudder, getPWMInput0to1normalized(2)*control_data.left_prop, getPWMInput0to1normalized(2)*control_data.right_prop, MAX_PROPELLER_SPEED);
 		
 	}
 }

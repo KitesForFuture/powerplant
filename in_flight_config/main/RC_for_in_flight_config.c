@@ -690,7 +690,7 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     (*init_callback)(float_values);
     
 	char response2[(NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS)*20];
-    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", 
+    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", 
     	float_values[0],
     	float_values[1],
     	float_values[2],
@@ -731,7 +731,9 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     	float_values[37],
     	float_values[38],
     	float_values[39],
-    	float_values[40]
+    	float_values[40],
+    	float_values[41],
+    	float_values[42]
     );
     
     error = httpd_resp_send(req, response2, strlen(response2));

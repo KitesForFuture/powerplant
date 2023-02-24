@@ -9,7 +9,7 @@
 static const char *TAG = "wifi softAP";
 static void (*read_callback)(float*);
 static void (*write_callback)(float*);
-static void (*actuator_control_callback)(float, float, float, float, float, float);
+static void (*actuator_control_callback)(float, float, float, float, float, float, float);
 
 
 Orientation_Data* orientation_data;
@@ -216,10 +216,10 @@ static const httpd_uri_t kite_config_get_html = {
 							() => {  console.log('failed sending config'); downloadConfig(); }  );\n\
 						}\n\
 						\n\
-						function controlActuators(elevonLeft, elevonRight, brake, propellerLeft, propellerRight){\n\
+						function controlActuators(elevonLeft, elevonRight, brake, rudder, propellerLeft, propellerRight){\n\
 							\n\
 							console.log(\"brake before sendData = \" + brake);\n\
-							sendData(\"\" + elevonLeft + \",\" + elevonRight + \",\" + brake + \",\" + propellerLeft + \",\" + propellerRight + \",\", 'uploadControls',\n\
+							sendData(\"\" + elevonLeft + \",\" + elevonRight + \",\" + brake + \",\" + \",\" + rudder + \",\" + propellerLeft + \",\" + propellerRight + \",\", 'uploadControls',\n\
 							() => {  console.log('succeeded sending controls'); },\n\
 							() => {  console.log('failed sending controls'); }  );\n\
 						}\n\
@@ -260,6 +260,7 @@ static const httpd_uri_t kite_config_get_html = {
 								  	window[\"value\" + 7].innerHTML,\n\
 								  	window[\"value\" + 8].innerHTML,\n\
 								  	window[\"value\" + 10].innerHTML,\n\
+								  	window[\"value\" + 40].innerHTML,\n\
 								  	window[\"value\" + (numConfigValues + 0)].innerHTML,\n\
 								  	window[\"value\" + (numConfigValues + 1)].innerHTML\n\
 								  );\n\
@@ -302,6 +303,8 @@ static const httpd_uri_t kite_config_get_html = {
 							configValues[37] = 0;\n\
 							configValues[38] = 0;\n\
 							configValues[39] = 0;\n\
+							configValues[40] = 1;\n\
+							configValues[41] = 0;\n\
 							uploadConfig();\n\
 						}\n\
 						function addFixedConfig(name, index){\n\
@@ -548,6 +551,7 @@ static const httpd_uri_t kite_config_get_html = {
 								\n\
 						addVariableConfig(\"BMP280 Calibration\", 6)\n\
 						addServo(\"Brake\", 10);\n\
+						addServo(\"Rudder\", 40);\n\
 						addServo(\"Left Elevon\", 7);\n\
 						addServo(\"Right Elevon\", 8);\n\
 						addSwitch(\"Elevons\", 9);\n\
@@ -557,6 +561,7 @@ static const httpd_uri_t kite_config_get_html = {
 						addDegrees(\"Left Elevon Trim\", 37);\n\
 						addDegrees(\"Right Elevon Trim\", 38);\n\
 						addDegrees(\"Brake Trim\", 39);\n\
+						addDegrees(\"Rudder Trim\", 41);\n\
 						\n\
 						UIstring += tableEnd;\n\
 						UIstring += \"<h3>Eight Flying Config</h3>\";\n\
@@ -803,7 +808,7 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     (*read_callback)(float_values);
     
 	//char response2[NUM_CONFIG_FLOAT_VARS*20];
-    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", 
+    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", 
     	float_values[0],
     	float_values[1],
     	float_values[2],
@@ -843,7 +848,9 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     	float_values[36],
     	float_values[37],
     	float_values[38],
-    	float_values[39]
+    	float_values[39],
+    	float_values[40],
+    	float_values[41]
     );
     
     error = httpd_resp_send(req, response2, strlen(response2));
@@ -945,14 +952,14 @@ esp_err_t control_post_handler(httpd_req_t *req)
     if (ret <= 0) return ESP_FAIL;
     
     int string_position = 0;
-    float controls[5];
-    for(int i = 0; i < 5; i++){
+    float controls[6];
+    for(int i = 0; i < 6; i++){
     	controls[i] = atof(content+string_position);
     	string_position = getIndexToNextNumber(content, string_position);
     }
-    printf("controls[0...4] = %f, %f, %f, %f, %f\n", controls[0], controls[1], controls[2], controls[3], controls[4]);
+    printf("controls[0...5] = %f, %f, %f, %f, %f, %f\n", controls[0], controls[1], controls[2], controls[3], controls[4], controls[5]);
     
-	(*actuator_control_callback)(controls[0], controls[1], controls[2], controls[3], controls[4], 50);
+	(*actuator_control_callback)(controls[0], controls[1], controls[2], controls[3], controls[4], controls[5], 50);
 	
 	
     /* Send a simple response */

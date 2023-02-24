@@ -191,7 +191,7 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	//sendData(DATA_MODE, height, desired_dive_angle_smooth);
 	sendDebuggingData(height, line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control);
 	printf("height = %f\n", height);
-	initControlData(control_data_out, 0, 0, autopilot->brake - y_axis_control-1*x_axis_control, autopilot->brake - y_axis_control+1*x_axis_control, -autopilot->brake, LINE_TENSION_LANDING); return;
+	initControlData(control_data_out, 0, 0, autopilot->brake - y_axis_control-1*x_axis_control, autopilot->brake - y_axis_control+1*x_axis_control, -autopilot->brake, 0, LINE_TENSION_LANDING); return;
 }
 
 void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float timestep_in_s){
@@ -228,7 +228,7 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	float y_axis_control = autopilot->eight.elevator - 1 * autopilot->eight.Y.D * sensor_data.gyro[1];
 	
 	sendDebuggingData(sensor_data.height, z_axis_angle_from_zenith, target_angle_adjustment, slowly_changing_target_angle_local, z_axis_offset, z_axis_control);
-	initControlData(control_data_out, 0, 0, y_axis_control - 0.5*z_axis_control, y_axis_control + 0.5*z_axis_control, 0, LINE_TENSION_EIGHT); return;
+	initControlData(control_data_out, 0, 0, y_axis_control - 0.5*z_axis_control, y_axis_control + 0.5*z_axis_control, 0, 0, LINE_TENSION_EIGHT); return;
 }
 
 void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension){
@@ -290,6 +290,6 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		y_axis_control = 0;
 	}
 	
-	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, (left_elevon+right_elevon)*0.125, line_tension); return;
+	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, (left_elevon+right_elevon)*0.125, 0, line_tension); return;
 	
 }
