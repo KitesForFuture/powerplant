@@ -31,6 +31,7 @@ The groundstations main component is a Vedder Electronic Speed Controller (VESC)
 For in flight configuration during the testing of new wings an ESP32 can be soldered to the top of the groundstation ESP32 connecting only 5V, GND and two pins for UART.
 
 * Find the ESP32 C code in the subfolder "in_flight_config".
+* Can also be used to plot debugging data live.
 
 ## Internet connection
 
