@@ -390,7 +390,7 @@ static const httpd_uri_t kite_config_get_html = {
 						}\n\
 						\n\
 						\n\
-						var numConfigValues = " NUM_CONFIG_FLOAT_VARS_string ";\n\
+						var numConfigValues = " NUM_CONFIG_FLOAT_VARS_string " + " NUM_GS_CONFIG_FLOAT_VARS_string ";\n\
 						var numActuatorsWithoutConfig = 2;\n\
 						var configValues = new Array(numConfigValues).fill(0);\n\
 						\n\
@@ -555,7 +555,8 @@ static const httpd_uri_t kite_config_get_html = {
 						UIstring += \"<h3>Eight Flying Config</h3>\";\n\
 						UIstring += tableBegin;\n\
 						\n\
-						addVariableConfig(\"BMP280 Calibration\", 6)\n\
+						addVariableConfig(\"BMP280 Calibration (Kite)\", 6)\n\
+						addVariableConfig(\"BMP280 Calibration (Groundstation)\", " NUM_CONFIG_FLOAT_VARS_string " + 0)\n\
 						addHeight(\"Sideways Flying Time (s)\", 12, 0.5)\n\
 						addHeight(\"Turning Speed (deg/s)\", 13, 0.5)\n\
 						addPIDConstant(\"Eights Yaw(Z) Compensation(P)\", 27);\n\
@@ -685,11 +686,11 @@ static esp_err_t config_get_handler(httpd_req_t *req)
 	ESP_LOGI(TAG, "Getting config values (initialization)");
 	esp_err_t error;
 	
-    float float_values[NUM_CONFIG_FLOAT_VARS];
+    float float_values[NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS];
     (*init_callback)(float_values);
     
-	char response2[NUM_CONFIG_FLOAT_VARS*20];
-    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", 
+	char response2[(NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS)*20];
+    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", 
     	float_values[0],
     	float_values[1],
     	float_values[2],
@@ -729,7 +730,8 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     	float_values[36],
     	float_values[37],
     	float_values[38],
-    	float_values[39]
+    	float_values[39],
+    	float_values[40]
     );
     
     error = httpd_resp_send(req, response2, strlen(response2));
@@ -758,7 +760,7 @@ int getIndexToNextNumber(char* string_arg, int current_index){
 esp_err_t config_post_handler(httpd_req_t *req)
 {
 	ESP_LOGI(TAG, "Posting config to kite");
-    char content[NUM_CONFIG_FLOAT_VARS*20];
+    char content[(NUM_CONFIG_FLOAT_VARS+NUM_GS_CONFIG_FLOAT_VARS)*20];
 
     size_t recv_size = MIN(req->content_len, sizeof(content));
 
@@ -767,8 +769,8 @@ esp_err_t config_post_handler(httpd_req_t *req)
     if (ret <= 0) return ESP_FAIL;
     
     int string_position = 0;
-    float config_float_values[NUM_CONFIG_FLOAT_VARS];
-    for(int i = 0; i < NUM_CONFIG_FLOAT_VARS; i++){
+    float config_float_values[NUM_CONFIG_FLOAT_VARS+NUM_GS_CONFIG_FLOAT_VARS];
+    for(int i = 0; i < NUM_CONFIG_FLOAT_VARS+NUM_GS_CONFIG_FLOAT_VARS; i++){
     	config_float_values[i] = atof(content+string_position);
     	string_position = getIndexToNextNumber(content, string_position);
     }
