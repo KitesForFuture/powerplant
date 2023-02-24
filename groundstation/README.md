@@ -2,6 +2,8 @@
 
 This code runs on the groundstation of the Tailsitter Kite Wind Turbine https://www.kitesforfuture.de/tailsitter.pdf
 
+![alt text](https://github.com/KitesForFuture/powerplant/blob/main/groundstation/groundstation.jpg?raw=true)
+
 ## Step 1: Build and Flash to ESP32
 * Download and in stall espressif ide from https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html
 * Run 'idf.py build' to build the project

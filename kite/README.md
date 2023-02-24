@@ -2,6 +2,8 @@
 
 This code runs on the autopilot of the Tailsitter Kite Wind Turbine https://www.kitesforfuture.de/tailsitter.pdf
 
+![alt text](https://github.com/KitesForFuture/powerplant/blob/main/kite/kite.jpg?raw=true)
+
 ## Step 0: Calibrate the gyro
 * You can do this with our calibration robot or manually (for manual calibration we still need to commit some changes to the configuration GUI).
 
