@@ -1,7 +1,12 @@
 # powerplant
 
-All code necessary to build the airborne wind energy system described in the document https://github.com/KitesForFuture/powerplant/blob/main/tailsitterkite.pdf
-Also checkout the project website website hackaday.kitesforfuture.de and our youtube channel https://www.youtube.com/@kitesforfuture577/videos
+All code necessary to build an airborne wind energy system.
+
+* Paper: https://github.com/KitesForFuture/powerplant/blob/main/tailsitterkite.pdf
+
+* Project website: https://hackaday.kitesforfuture.de/
+
+* Youtube channel: https://www.youtube.com/@kitesforfuture577/videos
 
 The system consists of the several components shown in this diagram:
 
