@@ -4,7 +4,7 @@
 
 * With this code you can also live plot debugging data from the kite:
 
-![alt text](https://github.com/KitesForFuture/powerplant/blob/main/example_diagram.jpg?raw=true)
+![alt text](https://github.com/KitesForFuture/powerplant/blob/main/example_diagram.png?raw=true)
 
 ## Step 1: Build and Flash to ESP32
 * Download and in stall espressif ide from https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html
