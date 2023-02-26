@@ -25,8 +25,8 @@
 #include "esp_tls.h"
 #include "esp_crt_bundle.h"
 
-#define EXAMPLE_ESP_WIFI_SSID      "PYUR C7E0C"
-#define EXAMPLE_ESP_WIFI_PASS      "kKf8333jsCZk"
+#define EXAMPLE_ESP_WIFI_SSID      "YOUR_ACCESS_POINT"
+#define EXAMPLE_ESP_WIFI_PASS      "ACCESS_POINT_PASSWORD"
 #define EXAMPLE_ESP_MAXIMUM_RETRY  10
 
 #define WEB_URL "https://kitesforfuture.de"
