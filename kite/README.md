@@ -18,7 +18,7 @@ This code runs on the autopilot of the Tailsitter Kite Wind Turbine https://www.
 * Access 192.168.4.1/config with any web browser.
 * Configure servo trim, direction. Swap left-right. Adjust PID variables. Calibrate pressure sensor. Test motor direction and thrust.
 
-![alt text](https://github.com/KitesForFuture/powerplant/blob/main/media/config_tool.jpg?raw=true)
+![alt text](https://github.com/KitesForFuture/powerplant/blob/main/media/config_tool.jpg?raw=true {width=100px })
 
 ## Autopilot Hardware
 * https://oshwlab.com/benjamin.kutschan/kitepcb1_copy
