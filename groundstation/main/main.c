@@ -104,7 +104,7 @@ void init(){
 	
 	init_cat24(bus0);
 	//TODO:
-	float bmp_calib = 0.000021;//readEEPROM(0);
+	bmp_calib = 0.000021;//readEEPROM(0);
     init_bmp280(bus0, bmp_calib);
 	
 	initMotors(); // servo (pwm) outputs

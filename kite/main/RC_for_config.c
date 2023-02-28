@@ -528,7 +528,7 @@ static const httpd_uri_t kite_config_get_html = {
 						\n\
 						function updateConfigValuesInHTML(){\n\
 							for(let i = 0; i < numConfigValues; i++){\n\
-								if(document.getElementById(\"value\" + i) != null && i!=7 && i!=8 && i!=10 && i!= numConfigValues + 0 && i!=numConfigValues + 1){\n\
+								if(document.getElementById(\"value\" + i) != null && i!=7 && i!=8 && i!=10 && i!=40 && i!= numConfigValues + 0 && i!=numConfigValues + 1){\n\
 									document.getElementById(\"value\" + i).innerHTML = configValues[i];\n\
 									console.log(document.getElementById(\"value\" + i));\n\
 									console.log(configValues[i]);\n\
@@ -1104,7 +1104,7 @@ void wifi_init_softap(void)
 
 // init wifi on the esp
 // register callbacks
-void network_setup_configuring(void (*read_callback_arg)(float*), void (*write_callback_arg)(float*), void (*actuator_control_callback_arg)(float, float, float, float, float, float), Orientation_Data* orientation_data_arg)
+void network_setup_configuring(void (*read_callback_arg)(float*), void (*write_callback_arg)(float*), void (*actuator_control_callback_arg)(float, float, float, float, float, float, float), Orientation_Data* orientation_data_arg)
 {
 	orientation_data = orientation_data_arg;
 	read_callback = read_callback_arg;

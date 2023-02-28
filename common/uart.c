@@ -68,7 +68,7 @@ void sendUARTArray100(float* array, int length, int uart_number){
 	}
 	uint8_t to_be_sent[102*4];
 	memcpy(to_be_sent, d, 102*4);
-	uart_write_bytes(uart[uart_number].uart_num, &to_be_sent, 102*4);
+	uart_write_bytes(uart[uart_number].uart_num, &to_be_sent, (length+2)*4);
 }
 
 void sendUART(float number1, float number2, int uart_number){
@@ -135,7 +135,8 @@ int processUART(int uart_number, float* message){
 			uart[uart_number].currentMessage[uart[uart_number].current_index] = possibly_reversed_float;
 			
 			uart[uart_number].current_index += (uart[uart_number].current_index < 99) ? 1 : 0;
-		}else if(possibly_reversed_float == 1234567){
+		}
+		if(possibly_reversed_float == 1234567){
 			//START READING
 			uart[uart_number].reading = true;
 			uart[uart_number].current_index = 0;

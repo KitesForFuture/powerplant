@@ -334,7 +334,7 @@ static const httpd_uri_t kite_config_get_html = {
 								const myArray = xhr.response.split(\",\");\n\
 								for(let i = 0; i < numConfigValues; i++){\n\
 									configValues[i] = parseFloat(myArray[i]);\n\
-									if(i==6) configValues[i] *= 0.000001;//because (s)prinf only prints 5 digits after the comma\n\
+									if(i==6 || i == " NUM_CONFIG_FLOAT_VARS_string " + 0) configValues[i] *= 0.000001;//because (s)prinf only prints 5 digits after the comma\n\
 								}\n\
 								//console.log(configValues);\n\
 								updateConfigValuesInHTML();\n\
@@ -733,7 +733,7 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     	float_values[39],
     	float_values[40],
     	float_values[41],
-    	float_values[42]
+    	float_values[42]*1000000
     );
     
     error = httpd_resp_send(req, response2, strlen(response2));
