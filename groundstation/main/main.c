@@ -57,6 +57,7 @@ float currentServoAngle = SERVO_MIN_ANGLE;
 float direction = 1;
 
 void set_bmp_calibration(float value){
+	//printf("setting bmp_calibration(gs) to %f * 10**-5\n", value*100000);
 	float readValue = readEEPROM(0);
 	if(value != readValue){
 		write2EEPROM(value, 0);
@@ -96,7 +97,7 @@ void processReceivedConfigValuesViaWiFi(float* config_values){
 }
 
 void processReceivedDebuggingDataViaWiFi(float* debugging_data){
-	printf("forwarding Debugging data to in_flight_config ESP32");
+	//printf("forwarding Debugging data to in_flight_config ESP32");
 	sendUARTArray100(debugging_data, 6, ESP32_UART);
 }
 
@@ -182,7 +183,7 @@ void app_main(void){
 		}else if(receive_array_length == NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS){ // received from in_flight_config CONFIG TOOL
 			printf("sending config to kite via ESP-NOW\n");
 			sendDataArrayLarge(CONFIG_MODE, receive_array, NUM_CONFIG_FLOAT_VARS); // *** FORWARD of CONFIG ARRAY from UART to ESP-NOW, stripping groundstation config
-			set_bmp_calibration(bmp_calib);
+			set_bmp_calibration(receive_array[NUM_CONFIG_FLOAT_VARS+0]);
 		}
 		
 		// **************** MANUAL SWITCH ****************
