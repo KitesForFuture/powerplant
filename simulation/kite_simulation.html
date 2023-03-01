@@ -1,0 +1,513 @@
+<html><head>
+		<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+		<meta http-equiv="Pragma" content="no-cache" />
+		<meta http-equiv="Expires" content="0" />
+		<meta charset="utf-8">
+		<meta name="viewport" >
+		<style>
+			
+			buttonInactive{
+			  background-color: gray;
+			  color: white;
+			  padding: 5px 1px;
+			  text-align: center;
+			  text-decoration: none;
+			  display: inline-block;
+			}
+			
+			a.class1:link, a.class1:visited {
+			  background-color: #4fa48a;
+			  color: white;
+			  text-align: center;
+			  text-decoration: none;
+			}
+			
+			a.class1:hover, a.class1:active {
+			  background-color: #36705f;
+			}
+			
+			a.class1 {
+			  margin-top: 0vw;
+			  margin-bottom: 1vw;
+			  margin-right: 0vw;
+			  margin-left: 0vw;
+			  border-radius: 0vw;
+						  
+			  width: 100%;
+  			  padding: 5px 1px;
+			  display: inline-block;
+			  border: none;
+			  box-shadow: none;
+			  box-sizing: border-box;
+			  cursor: pointer;
+			  font-size: 1.5vmin;
+			  font-weight: 600;
+			  box-shadow: none;
+			}
+			
+			
+			
+		</style>
+	</head>
+	<body>
+		
+		<table style="width:100%">
+			<tr>
+				<td>
+					<table style="width:100%;font-size: 10px">
+						
+						<tr><td>
+							<a href="https://www.kitesforfuture.de" target="_top" class="class1" style="background-color: black;">&#8678; Kites for Future</a>
+						</tr>
+						
+						<tr><td>
+							<a href="https://hackaday.io/project/188136-kites-for-future-flying-wind-turbine" target="_top" class="class1" style="background-color: black;">&#8680; HACKADAY.IO Project</a>
+						</tr>
+						
+						<tr><td>
+							<button type="button" id="startPauseSimulation" onclick="startPauseSimulation()" style="color: green;">start/pause</button></td>
+						</tr>
+						<tr><td>
+							<button type="button" id="land" onclick="land()" style="color: black;">LAND</button></td>
+						</tr>
+						<tr><td>
+							<button type="button" id="launch" onclick="launch()" style="color: black;">LAUNCH</button></td>
+						</tr>
+						<tr><td>
+							Zoom: 
+							<button type="button" id="zoomIn" onclick="zoomIn()" style="color: black;">+</button>
+							<button type="button" id="zoomOut" onclick="zoomOut()" style="color: black;">-</button></td>
+						</tr>
+						<tr>
+							<td>
+								Windstärke (0...25m/s)
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="range" id="wind_speed" min="0" max="50" style="height: 5px;">
+							</td>
+						</tr>
+						<tr>
+						<tr>
+							<td>
+								Windrichtung
+							</td>
+						</tr>
+							<td>
+								<input type="range" value="0" id="wind_direction" min="-200" max="200" style="height: 5px;">
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<p id="time">0</p>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								<p id="rope_length">0</p>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								<p id="rope_angle_horizon">0</p>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								<p id="flying_height">0</p>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								<p id="speed">0</p>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								<p id="power">0</p>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								<p id="energy">0</p>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								<p id="electricity_cost">0</p>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								Reflex (in Grad)
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="range" id="reflex" min="0" max="45" style="height: 5px;">
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								Länge Seilbefestigung
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="range" id="bridle_length" min="-20" max="250" style="height: 5px;">
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								Länge Tannenbaum
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="range" id="tannenbaum_length" min="0" max="50" style="height: 5px;">
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								Distance Propeller from Center
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="range" id="prop_dist" min="0" max="100" style="height: 5px;">
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								Seilspannung (0...20kg)
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="range" id="line_tension" min="0" max="200" style="height: 5px;">
+							</td>
+						</tr>
+						
+						
+						
+						<tr><td>
+							<button type="button" id="moveCamera" onclick="moveCamera()" style="color: green;">move camera</button></td>
+						</tr>
+						<tr><td>
+							<button type="button" id="elevonControlOff" onclick="elevonControlOff_func()" style="color: green;">Control OFF</button></td>
+						</tr>
+						
+						<tr>
+							<td>
+								Zeitschritt = <p id="zeitschritt">1/100</p>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="range" id="timestep_multiplier_exponent" min="0" max="4" style="height: 5px;">
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								y_p
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="range" id="y_p" min="-20" max="20" style="height: 5px;">
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								Autopilot-Log = <p id="autopilot_logging"></p>
+							</td>
+						</tr>
+					</table>
+				</td>
+				<td>
+					<canvas id="canvas_for_visualization" width = "1200" height= "600" style="overflow: scroll;width:100%;"> </canvas>
+				</td>
+			</tr>
+		</table>
+		
+		<script src="three.min.js"></script>
+		<script src="three_additional_math.js"></script>
+		<script src="Timer.js"></script>
+		<script src="AsyncTimer.js"></script>
+		<script src="math.js"></script>
+		<script src="Smoke.js"></script>
+		<script src="Visualization.js"></script>
+		<script src="ForceData.js"></script>
+		<script src="KitePart.js"></script>
+		<script src="FlatPlate.js"></script>
+		<script src="Propeller.js"></script>
+		<script src="KiteVisualization.js"></script>
+		<script src="Wind.js"></script>
+		<script src="RigidBody.js"></script>
+		<script src="Kite.js"></script>
+		<script src="SensorData.js"></script>
+		<script src="ControlData.js"></script>
+		<script src="Autopilot.js"></script>
+		<script src="Actuator.js"></script>
+		<script src="SlowlyChangingAngle.js"></script>
+		<script src="Groundstation.js"></script>
+		<script src="Servo.js"></script>
+		<script src="BLDCMotor.js"></script>
+		
+		
+		
+		<script>
+			"use strict";
+			
+			var width, height, dpr;
+			
+			var running = true;
+			var camAttachedToKite = true;
+			var elevonControlOff = false;
+			
+			// SIMULATION and VISUALIZATION of the KITE
+			var wind;
+			var kite;
+			var rudderServo;
+			var leftElevonServo;
+			var rightElevonServo;
+			var leftBLDC;
+			var rightBLDC;
+			var autopilot;
+			var groundstation;
+			var smoothLineTension;
+			var visualization;
+			var energy = 0;
+			var time = 0;
+			var timestep_multiplier = 100;
+			
+			var testBall = new THREE.Mesh(new THREE.SphereBufferGeometry(0.05, ), new THREE.MeshBasicMaterial( { color: new THREE.Color('red') } ) );
+			
+			var old_kite_line_length = 0;
+			
+			init();
+			
+			function init() {
+				console.log("hello");
+				var tannenbaum_length = document.getElementById("tannenbaum_length");	tannenbaum_length.value = 0;
+				var bridle_length = document.getElementById("bridle_length"); 			bridle_length.value = 50;
+				var prop_dist = document.getElementById("prop_dist");					prop_dist.value = 25;
+				var wind_speed = document.getElementById("wind_speed");					wind_speed.value = 25;
+				var wind_direction = document.getElementById("wind_direction");			wind_direction.value = 0;
+				var line_tension = document.getElementById("line_tension");				line_tension.value = 1;
+				//var y_angle_offset = document.getElementById("y_angle_offset");			y_angle_offset.value = 15;
+				var reflex = document.getElementById("reflex");							reflex.value = 25;
+				
+				var timestep_multiplier_exponent = document.getElementById("timestep_multiplier_exponent");
+																						timestep_multiplier_exponent.value = 2;
+																						
+				var y_p = document.getElementById("y_p");	y_p.value = 0;
+				
+				/*var z_p = document.getElementById("z_p");	z_p.value = 0;
+				var z_d = document.getElementById("z_d");	z_d.value = 0;
+				
+				var y_p = document.getElementById("y_p");	y_p.value = 0;
+				var y_d = document.getElementById("y_d");	y_d.value = 0;
+				
+				var x_d = document.getElementById("x_d");	x_d.value = 0;
+				
+				var h_p = document.getElementById("h_p");	h_p.value = 0;
+				var h_d = document.getElementById("h_d");	h_d.value = 0;
+				*/
+				reflex.oninput = function(){
+					console.log(reflex.value * Math.PI / 180);
+					kite.setReflex(reflex.value * Math.PI / 180);
+				};
+				
+				tannenbaum_length.oninput = function(){
+					kite.setTannenbaumLengthAndBridleLength(this.value*0.01, bridle_length.value*0.01);
+				};
+				bridle_length.oninput = function(){
+					kite.setTannenbaumLengthAndBridleLength(tannenbaum_length.value*0.01, this.value*0.01);
+				};
+				
+				prop_dist.oninput = function(){
+					kite.setPropellerDistance(this.value * 0.01);
+				}
+				
+				timestep_multiplier_exponent.oninput = function(){
+					timestep_multiplier = 10**this.value;
+					document.getElementById("zeitschritt").innerHTML = "1/" + timestep_multiplier;
+				}
+				
+				wind = new Wind();
+				
+				kite = new Kite();
+				kite.angular_velocity.set(0, 0, 0);//0.1, 0.1, 0.1);
+				
+				rudderServo = new Servo(); leftElevonServo = new Servo(); rightElevonServo = new Servo(); leftBLDC = new BLDCMotor(); rightBLDC = new BLDCMotor();
+				
+				autopilot = new Autopilot();
+				
+				let c_l_by_c_d = 5;
+				// min8T, max8T, minLT, maxLT, minLS, maxLS
+				groundstation = new Groundstation(30, 200, 4, 30, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
+				smoothLineTension = new Actuator(50, 0, 200); //TODO: 250 as first argument (speed) keeps vibrations short when transitioning to landing mode, maybe better to communicate with groundstation to tell it to instantly decrease tension (even when reeling out).
+				
+				visualization = new KiteVisualization("canvas_for_visualization", kite, wind);
+				
+				animate();
+			}
+			
+			function animate() {
+				
+				var timestep_in_ms = 1000/50; // 50Hz
+				var timestep_in_s = 0.001*timestep_in_ms;
+				
+				if(running){
+					//console.log(kite.positionR);
+					// AUTOPILOT
+					autopilot.hover.Y.P = 1.5**y_p.value;
+					/*autopilot.hover.Z.P = 1.04**z_p.value;	autopilot.hover.Z.D = 1.04**z_d.value;
+					autopilot.hover.Y.P = 1.14**y_p.value;	autopilot.hover.Y.D = 1.14**y_d.value;
+					autopilot.hover.X.D = 1.04**x_d.value;
+					autopilot.hover.H.P = 1.04**h_p.value;	autopilot.hover.H.D = 1.04**h_d.value;
+					*/
+					//autopilot.y_angle_offset = 15*Math.PI/180;
+					
+					wind.setSpeedAndDirection(wind_speed.value*0.5, wind_direction.value);
+					wind.update();
+					
+					var controlData = autopilot.step(kite.getSensorData(), kite.positionR.length(), line_tension.value, timestep_in_s);
+					document.getElementById("autopilot_logging").innerHTML = autopilot.loggingString;
+					// UI and LINE TENSION
+					line_tension.value = controlData.line_tension;
+					smoothLineTension.step(timestep_in_s);
+					smoothLineTension.setTargetValue(line_tension.value);
+					
+					let kite_line_length = kite.positionR.length();
+					time += timestep_in_s; 
+					document.getElementById("time").innerHTML = "Zeit: " + time.toFixed(0) + " s (" + (time/3600).toFixed(3) + " h)";
+					document.getElementById("rope_length").innerHTML = "Seillänge: " + kite_line_length.toFixed(0) + " m";
+					document.getElementById("rope_angle_horizon").innerHTML = "Seilwinkel zum Horizont: " + (180/Math.PI*Math.asin(projectToNormedVector(kite.positionR.clone().normalize(), new THREE.Vector3(1, 0, 0)).length())).toFixed(0) + " Grad";
+					document.getElementById("flying_height").innerHTML = "Flughöhe: " + kite.positionR.x.toFixed(0) + " m";
+					document.getElementById("speed").innerHTML = "Speed: " + kite.velocity.length().toFixed(0) + " m/s";
+					if(old_kite_line_length != 0){
+						let kite_line_length_difference = kite_line_length - old_kite_line_length;
+						if(line_tension.value != 1){
+							//groundstation.factor = autopilot.hover.Y.P;
+							smoothLineTension.setTargetValue( groundstation.getLineTension(kite_line_length_difference/timestep_in_s) );
+							line_tension.value = smoothLineTension.getValue();
+						}
+						let power = kite_line_length_difference*line_tension.value/timestep_in_s;
+						energy += power * timestep_in_s;
+						document.getElementById("power").innerHTML = "Leistung: " + power.toFixed(0) + " W (" + (energy/time).toFixed(0) + " W avg)";
+						document.getElementById("energy").innerHTML = "Energie: " + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)";
+						document.getElementById("electricity_cost").innerHTML = "Stromkosten: " + (850/(energy/time)).toFixed(0) + " ct/kWh)";
+						
+					}
+					old_kite_line_length = kite_line_length;
+					
+					
+					// PHYSICS
+					
+					let timestep_fraction_in_s = timestep_in_s / timestep_multiplier;
+					for (let i = 0; i < timestep_multiplier; i++){
+					
+						leftElevonServo.setTargetValue(controlData.left_elevon * Math.PI/180); leftElevonServo.step(timestep_fraction_in_s);
+						rightElevonServo.setTargetValue(controlData.right_elevon * Math.PI/180); rightElevonServo.step(timestep_fraction_in_s);
+						rudderServo.setTargetValue(controlData.rudder * Math.PI/180); rudderServo.step(timestep_fraction_in_s);
+						leftBLDC.setTargetValue(controlData.left_prop); leftBLDC.step(timestep_fraction_in_s);
+						rightBLDC.setTargetValue(controlData.right_prop); rightBLDC.step(timestep_fraction_in_s);
+						
+						kite.leftPropeller.setThrust(leftBLDC.getValue());
+						kite.rightPropeller.setThrust(rightBLDC.getValue());
+						kite.leftElevon.rotation.y = leftElevonServo.getValue();
+						kite.rightElevon.rotation.y = rightElevonServo.getValue();
+						if(elevonControlOff){
+							kite.leftElevon.rotation.y = -0.1;
+							kite.rightElevon.rotation.y = -0.1;
+						}
+						kite.rudder.rotation.y = rudderServo.getValue();
+						
+						kite.update(wind, line_tension.value, timestep_fraction_in_s);
+						kite.leftPropeller.update();
+						kite.rightPropeller.update();
+					}
+				}
+				
+				visualization.update(timestep_in_s*running);
+				
+				render();
+				
+				setTimeout(function(){
+				    requestAnimationFrame( animate )
+				}, timestep_in_ms);
+			}
+			
+			function render(){
+				visualization.render();
+			}
+			
+			function startPauseSimulation(){
+				running = !running;
+				if(running)
+					document.getElementById("startPauseSimulation").style.color = "green";
+				else
+					document.getElementById("startPauseSimulation").style.color = "red";
+			}
+			
+			function zoomIn(){
+				visualization.camera.zoom *= 1.5;
+				visualization.camera.updateProjectionMatrix();
+			}
+			
+			function zoomOut(){
+				visualization.camera.zoom *= 0.66;
+				visualization.camera.updateProjectionMatrix();
+			}
+			
+			function moveCamera(){
+				
+				if(camAttachedToKite){
+					visualization.cameraAttachedToKite = false;
+				}else{
+					visualization.cameraAttachedToKite = true;
+				}
+				camAttachedToKite = !camAttachedToKite;
+			}
+			
+			function land(){
+				autopilot.mode = FINAL_LANDING_MODE;
+			}
+			
+			function launch(){
+				autopilot.mode = HOVER_MODE;
+			}
+			
+			function elevonControlOff_func(){
+				if(elevonControlOff){
+					
+					document.getElementById("elevonControlOff").style.color = "green";
+					elevonControlOff = false;
+				}else{
+					
+					document.getElementById("elevonControlOff").style.color = "red";
+					elevonControlOff = true;
+				}
+			}
+
+		</script>
+
+	</body>
+</html>

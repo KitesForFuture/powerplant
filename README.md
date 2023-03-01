@@ -40,3 +40,9 @@ You can control the kite via a website. We currently use kitesforfuture.de/contr
 * Connects the kite to the internet via a Wifi hotspot.
 * Can watch status and initiate kite launch and landing from anywhere in the world.
 * Enables automatic launch and landing according to weather forecast.
+
+## Simulation
+
+In the simulation folder you find an interactive simulation that runs in your browser.
+
+* Open the kite_simulation.html file with a web browser
