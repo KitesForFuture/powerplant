@@ -1,6 +1,9 @@
 # Simulation
 
 In the simulation folder you find an interactive simulation that runs in your browser.
+<br>
+
+<img src="https://github.com/KitesForFuture/powerplant/blob/main/media/simulation.png" width="500" >
 
 * For an example visit: https://www.kitesforfuture.de/simulation17/kite_simulation.html
 
