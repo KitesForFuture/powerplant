@@ -31,7 +31,6 @@
 
 #include "RC_for_config.c"
 
-//#include "control/sensorData.h"
 #include "control/autopilot.h"
 
 #define MAX_SERVO_DEFLECTION 50
@@ -96,14 +95,11 @@ void actuatorControl(float left_elevon, float right_elevon, float brake, float r
 	}
 	setAngle(1, config_values[39] + config_values[10]*brake); // Brake
 	setAngle(5, config_values[41] + config_values[40]*rudder); // Rudder
-	//printf("config[39] = %f\n", config_values[39]);
-	//printf("setting left, brake, right to (%f, %f, %f)\n", config_values[37] + config_values[7]*left_elevon, config_values[39] + config_values[10]*brake, config_values[38] + config_values[8]*right_elevon);
 }
 
 // can also be used to manually change config variables
 void testConfigWriting(){
 	readConfigValuesFromEEPROM(config_values);
-	
 	
 	float test_config[NUM_CONFIG_FLOAT_VARS];
 	getConfigValues(test_config);
@@ -115,8 +111,6 @@ void testConfigWriting(){
 	vTaskDelay(100);
 	getConfigValues(test_config);
 	printf("after writing to and reading from EEPROM, config[6]*1000000000 = %f\n", (test_config[6]*1000000000));
-	
-	
 }
 
 void main_task(void* arg)
