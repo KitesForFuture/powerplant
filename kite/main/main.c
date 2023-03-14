@@ -129,7 +129,7 @@ void main_task(void* arg)
 		{readEEPROM(3), readEEPROM(4), readEEPROM(5)}
 	};
 	
-	int output_pins[] = {27,26,12,13,5};
+	int output_pins[] = {27,26,12,13,5,15};
 	initMotors(output_pins, 6);
 	
 	setAngle(0, 0);
