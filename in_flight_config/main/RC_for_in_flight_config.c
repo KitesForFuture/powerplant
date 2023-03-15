@@ -161,6 +161,23 @@ static const httpd_uri_t kite_config_get_html = {
 								diagramLineCurrentIndex++;\n\
 							}\n\
 							\n\
+							fakeAddPoint(x, y){\n\
+								if(receiving_data_points_paused) return;\n\
+								if(x > this.maxX) this.maxX = x;\n\
+								if(x < this.minX) this.minX = x;\n\
+								if(y < this.minY) this.minY = y;\n\
+								if(y > this.maxY) this.maxY = y;\n\
+								window[\"line\" + this.index + \"min\"].innerHTML = this.minY.toFixed(3);\n\
+								window[\"line\" + this.index + \"max\"].innerHTML = this.maxY.toFixed(3);\n\
+								\n\
+								let maxY = Math.max(Math.abs(this.maxY), Math.abs(this.minY));\n\
+								let a = 1/(2*maxY);//1/(this.maxY-this.minY);\n\
+								let b = 0.5;//-this.minY/(this.maxY-this.minY);\n\
+								let m = 1/(this.maxX-this.minX);\n\
+								let n = -this.minX/(this.maxX-this.minX);\n\
+								this.transform(a, b, m, n);\n\
+								\n\
+							}\n\
 							addPoint(x, y){\n\
 								if(receiving_data_points_paused) return;\n\
 								if(this.lastPoint[0] == 1000000.0){\n\
@@ -606,8 +623,13 @@ static const httpd_uri_t kite_config_get_html = {
 						var time_index = 0;\n\
 						function updateDebuggingDataGraph(){\n\
 							for(let i = 0; i < 6; i++){\n\
-								diagram.diagramLines[i].addPoint(time_index, debuggingData[i]);\n\
+								//if(i == 2)\n\
+								//	diagram.diagramLines[i].addPoint(time_index, debuggingData[0] - debuggingData[1]);\n\
+								//else\n\
+									diagram.diagramLines[i].addPoint(time_index, debuggingData[i]);\n\
 							}\n\
+							//diagram.diagramLines[0].fakeAddPoint(time_index, debuggingData[1]);\n\
+							//diagram.diagramLines[1].fakeAddPoint(time_index, debuggingData[0]);\n\
 							//console.log(\"updating graph\");\n\
 							//console.log(diagram.diagramLines)\n\
 							if(!receiving_data_points_paused)time_index++;\n\

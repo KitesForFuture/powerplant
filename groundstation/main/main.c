@@ -99,6 +99,7 @@ void processReceivedConfigValuesViaWiFi(float* config_values){
 
 void processReceivedDebuggingDataViaWiFi(float* debugging_data){
 	//printf("forwarding Debugging data to in_flight_config ESP32");
+	//debugging_data[1] = getHeight();
 	sendUARTArray100(debugging_data, 6, ESP32_UART);
 }
 
@@ -142,7 +143,7 @@ void app_main(void){
 	printf("waiting for UART...\n");
 	while(1){
 		update_bmp280_if_necessary();
-		//printf("getHeight() = %f\n", getHeight());
+		printf("getHeight() = %f\n", getHeight());
 		//sendUART(1, 2, VESC_UART);//DEBUGGING
 		//sendUART(1, 2, ESP32_UART);//DEBUGGING
 		// **************** REACT to UART message from VESC ****************
