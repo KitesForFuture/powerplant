@@ -219,7 +219,7 @@ static const httpd_uri_t kite_config_get_html = {
 						function controlActuators(elevonLeft, elevonRight, brake, rudder, propellerLeft, propellerRight){\n\
 							\n\
 							console.log(\"brake before sendData = \" + brake);\n\
-							sendData(\"\" + elevonLeft + \",\" + elevonRight + \",\" + brake + \",\" + \",\" + rudder + \",\" + propellerLeft + \",\" + propellerRight + \",\", 'uploadControls',\n\
+							sendData(\"\" + elevonLeft + \",\" + elevonRight + \",\" + brake + \",\" + rudder + \",\" + propellerLeft + \",\" + propellerRight + \",\", 'uploadControls',\n\
 							() => {  console.log('succeeded sending controls'); },\n\
 							() => {  console.log('failed sending controls'); }  );\n\
 						}\n\

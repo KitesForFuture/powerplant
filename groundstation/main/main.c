@@ -62,6 +62,7 @@ void set_bmp_calibration(float value){
 	if(value != readValue){
 		write2EEPROM(value, 0);
 	}
+	bmp_calib = value;
 	updateBMP280Config(value);
 }
 
@@ -104,8 +105,7 @@ void processReceivedDebuggingDataViaWiFi(float* debugging_data){
 void init(){
 	
 	init_cat24(bus0);
-	//TODO:
-	bmp_calib = 0.000021;//readEEPROM(0);
+	bmp_calib = readEEPROM(0);
     init_bmp280(bus0, bmp_calib);
 	
 	initMotors(); // servo (pwm) outputs

@@ -18,7 +18,7 @@
 void app_main(void)
 {
     init_internet_connection();
-    initUART(ESP32_UART, GPIO_NUM_19, GPIO_NUM_18, false);
+    initUART(ESP32_UART, GPIO_NUM_17, GPIO_NUM_16, false);
     //initUART(UART_NUM_2, GPIO_NUM_18, GPIO_NUM_19);
     
     float received_data[100];
