@@ -61,6 +61,9 @@ void initAutopilot(Autopilot* autopilot, float* config_values){
 	initActuator(&(autopilot->slowly_changing_target_angle), autopilot->turning_speed, -3.14, 3.14);
 	
 	autopilot->timer = 0;
+
+	autopilot->RC_target_angle = 0;
+	autopilot->RC_switch = 0;
 }
 
 void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension){
@@ -190,10 +193,18 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	stepActuator(&(autopilot->slowly_changing_target_angle), timestep_in_s);
 	float slowly_changing_target_angle_local = getValueActuator(&(autopilot->slowly_changing_target_angle));
 	
+	// FOR DEBUGGING
+	slowly_changing_target_angle_local = autopilot->RC_target_angle * 3.14 * 0.75;
+
 	float z_axis_offset = getAngleErrorZAxis(0.0, mat);
 	z_axis_offset -= slowly_changing_target_angle_local;
 	float z_axis_control = - 0.56 * autopilot->eight.Z.P * z_axis_offset + 0.22 * autopilot->eight.Z.D * sensor_data.gyro[2];
 	z_axis_control *=100;
+	
+	// FOR DEBUGGING
+	if(autopilot->RC_switch > 0.5){
+		z_axis_control = 45 * autopilot->RC_target_angle;
+	}
 	
 	// ELEVATOR
 	float y_axis_control = autopilot->eight.elevator - 1 * autopilot->eight.Y.D * sensor_data.gyro[1];
@@ -201,7 +212,7 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	sendDebuggingData(sensor_data.height, z_axis_angle_from_zenith, target_angle_adjustment, slowly_changing_target_angle_local, z_axis_offset, z_axis_control);
 	initControlData(control_data_out, 0, 0, y_axis_control - 0.5*z_axis_control, y_axis_control + 0.5*z_axis_control, 0, 0, LINE_TENSION_EIGHT); return;
 }
-
+float groundstation_height;
 void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension){
 	
 	float* mat = sensor_data.rotation_matrix;
@@ -240,6 +251,13 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	float x_axis_control = (normed_airflow > 0.0001 ? 1.0/(normed_airflow*normed_airflow) : 1.0) * autopilot->hover.X.D * sensor_data.gyro[0]*0.75;
 	x_axis_control *= 100;
 	
+	// FOR DEBUGGING
+	if(autopilot->RC_switch > 0.5){
+		x_axis_control += 45 * autopilot->RC_target_angle; // move ailerons directly
+	}else{
+		z_axis_control += 45 * autopilot->RC_target_angle; // differentiate propeller thrust
+	}
+	
 	// MIXING
 	
 	height_control = clamp(height_control, 0, 50);
@@ -257,7 +275,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		y_axis_control = 0;
 	}
 	
-	sendDebuggingData(sensor_data.height, 0, 0, 0, 0, 0);
+	sendDebuggingData(sensor_data.height, 0, 0, groundstation_height, 0, 0);
 	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, (left_elevon+right_elevon)*0.125, 0, line_tension); return;
 	
 }

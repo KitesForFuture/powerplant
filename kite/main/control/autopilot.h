@@ -101,6 +101,9 @@ struct _Autopilot {
 	float old_line_length;
 	float smooth_reel_in_speed;
 	
+	float RC_target_angle;
+	float RC_switch;
+	
 	Time timer;
 };
 typedef struct _Autopilot Autopilot;

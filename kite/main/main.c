@@ -221,10 +221,14 @@ void main_task(void* arg)
 		autopilot.fm = flight_mode;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
 		SensorData sensorData;
-		initSensorData(&sensorData, orientation_data.rotation_matrix_transpose, orientation_data.gyro_in_kite_coords, getHeight(), getHeightDerivative());
+		initSensorData(&sensorData, orientation_data.rotation_matrix_transpose, orientation_data.gyro_in_kite_coords, getHeight()-groundstation_height, getHeightDerivative());
 		
 		//TODO: decide size of timestep_in_s in main.c and pass to stepAutopilot(), or use same method as used in updateRotationMatrix
 		ControlData control_data;
+		
+		//DEBUGGING
+		autopilot.RC_target_angle = getPWMInputMinus1to1normalized(0); // can point towards ground at maximum 45 degree angle to either side. 0 means straight up.
+		autopilot.RC_switch = getPWMInputMinus1to1normalized(4);
 		
 		stepAutopilot(&autopilot, &control_data, sensorData, line_length, 3/*line tension*/);
 		
