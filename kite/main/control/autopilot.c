@@ -275,7 +275,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		y_axis_control = 0;
 	}
 	
-	sendDebuggingData(sensor_data.height, 0, 0, groundstation_height, 0, 0);
+	sendDebuggingData(sensor_data.height, x_axis_control, z_axis_control, groundstation_height, autopilot->RC_switch, autopilot->RC_target_angle);
 	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, (left_elevon+right_elevon)*0.125, 0, line_tension); return;
 	
 }
