@@ -227,9 +227,9 @@ void main_task(void* arg)
 		ControlData control_data;
 		
 		//DEBUGGING
-		autopilot.RC_target_angle = getPWMInputMinus1to1normalized(0); // can point towards ground at maximum 45 degree angle to either side. 0 means straight up.
-		autopilot.RC_switch = getPWMInputMinus1to1normalized(4);
-		
+		//autopilot.RC_target_angle = getPWMInputMinus1to1normalized(0); // can point towards ground at maximum 45 degree angle to either side. 0 means straight up.
+		//autopilot.RC_switch = getPWMInputMinus1to1normalized(4);
+		//autopilot.mode = EIGHT_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
 		stepAutopilot(&autopilot, &control_data, sensorData, line_length, 3/*line tension*/);
 		
 		// DON'T LET SERVOS BREAK THE KITE
