@@ -211,7 +211,7 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	sendDebuggingData(sensor_data.height, z_axis_angle_from_zenith, target_angle_adjustment, slowly_changing_target_angle_local, z_axis_offset, z_axis_control);
 	
-	initControlData(control_data_out, 0, 0, y_axis_control - 0.5*z_axis_control, y_axis_control + 0.5*z_axis_control, 0, 0.5*z_axis_control, LINE_TENSION_EIGHT); return;
+	initControlData(control_data_out, 0, 0, y_axis_control - 0.5*z_axis_control, y_axis_control + 0.5*z_axis_control, 0, 0.0*z_axis_control, LINE_TENSION_EIGHT); return;
 }
 float groundstation_height;
 void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension){

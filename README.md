@@ -46,3 +46,4 @@ You can control the kite via a website. We currently use kitesforfuture.de/contr
 In the simulation folder you find an interactive simulation that runs in your browser.
 
 * Copy the whole simulation folder to your PC. Then open the kite_simulation.html file with a web browser
+* Or just visit https://www.kitesforfuture.de/simulation17/kite_simulation.html

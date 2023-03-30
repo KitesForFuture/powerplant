@@ -201,7 +201,7 @@ void main_task(void* arg)
 	
 	initAutopilot(&autopilot, config_values);
 	
-	//autopilot.mode = FINAL_LANDING_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
+	//autopilot.mode = EIGHT_MODE;//FINAL_LANDING_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
 	
 	while(1) {
 		vTaskDelay(1);
