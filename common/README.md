@@ -1,4 +1,4 @@
-# Code used by multiple of the other directories
+# This directory contains common code used by multiple of the other directories
 
 ## helpers
 * math and timing
