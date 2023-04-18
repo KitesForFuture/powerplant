@@ -171,7 +171,7 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	autopilot->brake = clamp(autopilot->brake, 0, 35);
 	
 	sendDebuggingData(height, line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control);
-	initControlData(control_data_out, 0, 0, autopilot->brake - y_axis_control-1*x_axis_control, autopilot->brake - y_axis_control+1*x_axis_control, -autopilot->brake, 0, LINE_TENSION_LANDING); return;
+	initControlData(control_data_out, 0, 0, autopilot->brake - y_axis_control-1*x_axis_control, autopilot->brake - y_axis_control+1*x_axis_control, -autopilot->brake-5, 0, LINE_TENSION_LANDING); return;
 }
 
 void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float timestep_in_s){
@@ -211,7 +211,7 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	sendDebuggingData(sensor_data.height, z_axis_angle_from_zenith, target_angle_adjustment, slowly_changing_target_angle_local, z_axis_offset, z_axis_control);
 	
-	initControlData(control_data_out, 0, 0, y_axis_control - 0.5*z_axis_control, y_axis_control + 0.5*z_axis_control, 0, 0.0*z_axis_control, LINE_TENSION_EIGHT); return;
+	initControlData(control_data_out, 0, 0, y_axis_control - clamp(0.5*z_axis_control, -22, 22), y_axis_control + clamp(0.5*z_axis_control, -22, 22), 0, 0.0*z_axis_control, LINE_TENSION_EIGHT); return;
 }
 float groundstation_height;
 void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension){
@@ -240,6 +240,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	// if kite goes down with 4m/s -> -0.8 on normed airflow -> 1.0/(normed_airflow*normed_airflow) up to 100
 	float y_axis_control = (normed_airflow > 0.0001 ? 1.0/(normed_airflow*normed_airflow) : 1.0) * 0.7 * (- 3.8*autopilot->hover.Y.P * y_axis_offset + 0.7*0.4 * autopilot->hover.Y.D * sensor_data.gyro[1]);
 	y_axis_control *= 100;
+	y_axis_control -= 10;
 	
 	// Z-AXIS
 	
@@ -273,10 +274,10 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		right_prop = 70;
 		left_elevon = 10;
 		right_elevon = 10;
-		y_axis_control = 0;
+		y_axis_control = -10;
 	}
 	
 	sendDebuggingData(sensor_data.height, x_axis_control, z_axis_control, groundstation_height, autopilot->RC_switch, autopilot->RC_target_angle);
-	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, (left_elevon+right_elevon)*0.125, 0, line_tension); return;
+	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, y_axis_control*0.25, 0, line_tension); return;
 	
 }

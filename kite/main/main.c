@@ -185,9 +185,7 @@ void main_task(void* arg)
 	int input_pins[] = {4, 33, 2, 17, 16};
 	initPWMInput(input_pins, 5);
 	
-	// THIS TAKES TIME...
-	float bmp_calib = readEEPROM(6);//-0.000001; // TODO: recalibrate and remove the -0.000001 hack
-    init_bmp280(bus1, bmp_calib);
+	
     
     readConfigValuesFromEEPROM(config_values);
     
@@ -198,10 +196,14 @@ void main_task(void* arg)
     	printf("Sending config array\n");
     	vTaskDelay(100);
     }
+    
+    // THIS TAKES TIME...
+	float bmp_calib = readEEPROM(6);//-0.000001; // TODO: recalibrate and remove the -0.000001 hack
+    init_bmp280(bus1, bmp_calib);
 	
 	initAutopilot(&autopilot, config_values);
 	
-	//autopilot.mode = EIGHT_MODE;//FINAL_LANDING_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
+	//autopilot.mode = FINAL_LANDING_MODE;//EIGHT_MODE;//FINAL_LANDING_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
 	
 	while(1) {
 		vTaskDelay(1);
