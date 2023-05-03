@@ -10,7 +10,7 @@
 
 #include "control/rotation_matrix.h"
 #include "../../common/pwm/motors.h"
-#include "../../common/pwm/pwm_input.h"
+//#include "../../common/pwm/pwm_input.h"
 
 #include "nvs_flash.h"
 #include "esp_wifi.h"
@@ -182,8 +182,8 @@ void main_task(void* arg)
 	printf("Entering flight mode. Excitement guaranteed :D\n");
 	network_setup_kite_flying(&setConfigValues);
 	
-	int input_pins[] = {4, 33, 2, 17, 16};
-	initPWMInput(input_pins, 5);
+	//int input_pins[] = {4, 33, 2, 17, 16};
+	//initPWMInput(input_pins, 5);
 	
 	
     
@@ -205,6 +205,9 @@ void main_task(void* arg)
 	
 	//autopilot.mode = FINAL_LANDING_MODE;//EIGHT_MODE;//FINAL_LANDING_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
 	
+	int propellerBootState = 0;
+	float propellerFactor = 0;
+	
 	while(1) {
 		vTaskDelay(1);
 		//printf("mode = %d\n", autopilot.mode);
@@ -217,7 +220,18 @@ void main_task(void* arg)
 		
 		updateRotationMatrix(&orientation_data);
 		
-		updatePWMInput();
+		//updatePWMInput();
+		//propellerFactor = getPWMInput0to1normalized(2);
+		if(propellerBootState == 0 && getAccelX() < 0){ // kite nose pointing down
+			propellerBootState = 1;
+			propellerFactor = 0.05;
+		}
+		if(propellerBootState == 1 && getAccelX() > 0){ // kite nose pointing up
+			propellerBootState = 2;
+		}
+		if(propellerBootState == 2 && propellerFactor < 1){
+			propellerFactor = clamp(propellerFactor+0.004, 0, 1);
+		}
 		
 		float line_length = clamp(line_length_in_meters, 0, 1000000); // global var defined in RC.c, should default to 1 when no signal received, TODO: revert line length in VESC LISP code
 		autopilot.fm = flight_mode;// global var flight_mode defined in RC.c, 
@@ -229,9 +243,6 @@ void main_task(void* arg)
 		ControlData control_data;
 		
 		//DEBUGGING
-		//autopilot.RC_target_angle = getPWMInputMinus1to1normalized(0); // can point towards ground at maximum 45 degree angle to either side. 0 means straight up.
-		//autopilot.RC_switch = getPWMInputMinus1to1normalized(4);
-		//autopilot.mode = EIGHT_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
 		stepAutopilot(&autopilot, &control_data, sensorData, line_length, 3/*line tension*/);
 		
 		// DON'T LET SERVOS BREAK THE KITE
@@ -240,7 +251,7 @@ void main_task(void* arg)
 		control_data.right_elevon = clamp(control_data.right_elevon, -MAX_SERVO_DEFLECTION, MAX_SERVO_DEFLECTION);
 		
 		//TODO: setAngle in radians ( * PI/180) and setSpeed from [0, 1] or so
-		actuatorControl(control_data.left_elevon, control_data.right_elevon, control_data.brake, control_data.rudder, getPWMInput0to1normalized(2)*control_data.left_prop, getPWMInput0to1normalized(2)*control_data.right_prop, MAX_PROPELLER_SPEED);
+		actuatorControl(control_data.left_elevon, control_data.right_elevon, control_data.brake, control_data.rudder, propellerFactor*control_data.left_prop, propellerFactor*control_data.right_prop, MAX_PROPELLER_SPEED);
 		
 	}
 }
