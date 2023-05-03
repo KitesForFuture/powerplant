@@ -183,7 +183,10 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		autopilot->multiplier = 1;
 		autopilot->timer = start_timer();
 	}
-	float z_axis_angle_from_zenith = safe_acos(mat[6]); // roll angle of kite = line angle
+	
+	//float line_angle = safe_acos(sensor_data.height/(line_length == 0 ? 1.0 : line_length));
+	
+	float z_axis_angle_from_zenith = safe_acos(1.4*sensor_data.height/(line_length == 0 ? 1.0 : line_length)); //safe_acos(mat[6]); // roll angle of kite = line angle
 	
 	float angle_diff = autopilot->eight.desired_line_angle_from_zenith - z_axis_angle_from_zenith;
 	float target_angle_adjustment = clamp(angle_diff*autopilot->eight.beta_P, -autopilot->eight.target_angle_beta_clamp, autopilot->eight.target_angle_beta_clamp); // 3 works well for line angle control, but causes instability. between -pi/4=-0.7... and pi/4=0.7...
@@ -209,7 +212,7 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	// ELEVATOR
 	float y_axis_control = autopilot->eight.elevator - 1 * autopilot->eight.Y.D * sensor_data.gyro[1];
 	
-	sendDebuggingData(sensor_data.height, z_axis_angle_from_zenith, target_angle_adjustment, slowly_changing_target_angle_local, z_axis_offset, z_axis_control);
+	sendDebuggingData(sensor_data.height, z_axis_angle_from_zenith*180/PI, target_angle_adjustment, slowly_changing_target_angle_local, z_axis_offset, z_axis_control);
 	
 	initControlData(control_data_out, 0, 0, y_axis_control - clamp(0.5*z_axis_control, -22, 22), y_axis_control + clamp(0.5*z_axis_control, -22, 22), 0, 0.0*z_axis_control, LINE_TENSION_EIGHT); return;
 }
@@ -240,7 +243,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	// if kite goes down with 4m/s -> -0.8 on normed airflow -> 1.0/(normed_airflow*normed_airflow) up to 100
 	float y_axis_control = (normed_airflow > 0.0001 ? 1.0/(normed_airflow*normed_airflow) : 1.0) * 0.7 * (- 3.8*autopilot->hover.Y.P * y_axis_offset + 0.7*0.4 * autopilot->hover.Y.D * sensor_data.gyro[1]);
 	y_axis_control *= 100;
-	y_axis_control -= 10;
+	y_axis_control -= 20;
 	
 	// Z-AXIS
 	
