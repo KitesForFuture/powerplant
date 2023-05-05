@@ -1,3 +1,6 @@
+calibration_robot/build
+calibration_robot/sdkconfig
+
 kite/build
 kite/sdkconfig
 
