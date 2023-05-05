@@ -18,11 +18,6 @@
 #include "cat24c256.c"
 // gyroscope and accelerometer
 #include "mpu6050.c"
-// barometer
-#include "bmp280.c"
-// estimate current height from pressure and acceleration
-#include "heightSensorFusion.c"
-
 
 // servo motors and propeller motor control
 #include "motors.c"
@@ -79,7 +74,6 @@ void calibrateAccelZ(){
 void app_main(void){
 	initMotors();
 	startupMPU6050ForCalibration();
-	initHeightSensorFusion();
 	
 	float servo270Angle = -90;
 	float servo180Angle = -90;
@@ -89,7 +83,6 @@ void app_main(void){
 	while(1){
 		readMPURawData();
 		processMPURawData();
-		fuseHeightSensorData();
 		
 		if(waiter < 90){
 			waiter++;
@@ -148,14 +141,8 @@ void app_main(void){
 				write2EEPROM(calibration_pos.gyro_y, 4);
 				vTaskDelay(10.0);
 				write2EEPROM(calibration_pos.gyro_z, 5);
-				stage = 6;
-				//waiter = 0;
-			}
-		}else if(stage == 6){
-			printf("Flash red LED to signify BMP still being calibrated.");
-			if(bmp280_started == 1){
-				write2EEPROM(MINUS_DP_BY_DT_reading, 6);
 				stage = 7;
+				//waiter = 0;
 			}
 		}
 		
