@@ -2,17 +2,18 @@
 
 class Propeller extends KitePart{
 	
-	constructor(radius, rigidBody){
+	constructor(radius, rigidBody, maxThrustInNewton){
 		//super(new THREE.CylinderGeometry( radius, radius, 0.01, 20 ), new THREE.MeshBasicMaterial( { side: THREE.DoubleSide, color: new THREE.Color('red') } ), rigidBody);
 		super(new THREE.BoxBufferGeometry(radius*2, 0.001, 0.02), new THREE.MeshBasicMaterial( { side: THREE.DoubleSide, color: new THREE.Color('red') } ), rigidBody);
 		
 		
 		this.thrust = 0;
+		this.maxThrustInNewton = maxThrustInNewton;
 		
 	}
 	
 	setThrust(th){
-		this.thrust = th * 8/90.0; // max is 8N of thrust
+		this.thrust = th * this.maxThrustInNewton/90.0; // max is 8N of thrust
 	}
 	
 	/*getForce(){

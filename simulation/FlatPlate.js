@@ -10,6 +10,9 @@ class FlatPlate extends KitePart{
 		this.additionalAirflow = new THREE.Vector3(0,0,0);
 		
 		this.camber = camber;
+		
+		this.type = "FlatPlate";
+		this.torqueVis = new VectorVis(new THREE.Color('red'));
 	}
 	
 	setAdditionalWind(vec){
@@ -89,7 +92,7 @@ class FlatPlate extends KitePart{
 			
 			l*= (0.5+0.5*Math.cos(2*angle_of_attack_var));
 			
-			dir.multiplyScalar(l);
+			dir.multiplyScalar(-l);
 			
 			forceData.pressure_centre.add(this.rigidBody.world2kite(dir)); // in rigid body (kite) coordinates
 		}

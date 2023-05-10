@@ -46,11 +46,13 @@ class Autopilot{
 		this.sideways_flying_time = 7;
 		
 		this.multiplier = FIRST_TURN_MULTIPLIER;
-		this.turning_speed = 1.3;//0.75;//0.75;
+		this.turning_speed = 2.5;//1.3;//0.75;//0.75;
 		this.slowly_changing_target_angle = new SlowlyChangingAngle(this.turning_speed, -1000, 1000);
 		
 		this.old_line_length = 0;
 		this.smooth_reel_in_speed = 0.1;
+		
+		this.qr_neutral = 15;
 		
 		this.timer = new AsyncTimer();
 	}
@@ -147,13 +149,14 @@ class Autopilot{
 		let x_axis_control = -50 * (mat[3] * this.hover.Z.P + 0*this.hover.Z.D * sensor_data.gyro.x);
 		//console.log(y_axis_control);
 		//x_axis_control *= 100;
+		x_axis_control = clamp(x_axis_control, -15, 15);
 		
 		return new ControlData(0, 0, y_axis_control-1*x_axis_control, y_axis_control+1*x_axis_control, x_axis_control, 2);
 	}
 	
 	eight_control(sensor_data, line_length, timestep_in_s){
 		var mat = sensor_data.rotation_matrix.elements;
-		console.log("time = " + this.timer.timeElapsedInSeconds() + ", target = " + this.sideways_flying_time + ", mult = " + this.multiplier);
+		//console.log("time = " + this.timer.timeElapsedInSeconds() + ", target = " + this.sideways_flying_time + ", mult = " + this.multiplier);
 		if(this.timer.timeElapsedInSeconds() > this.sideways_flying_time * this.multiplier){ // IF TIME TO TURN
 			//TURN
 			console.log("turn");
@@ -163,7 +166,7 @@ class Autopilot{
 		}
 		let z_axis_angle = acos_clamp(mat[6]); // roll angle of kite = line angle
 		this.loggingString = "Seilwinkel = " + (90 - z_axis_angle *180 / Math.PI).toFixed(0) + " deg<br>"
-		let RC_requested_line_angle = Math.PI/4 * 1.5; // TODO: rename line_angle
+		let RC_requested_line_angle = Math.PI/4 * 1.3;//1.85;// 1.5; // TODO: rename line_angle
 		this.loggingString += "Sollseilwinkel = " + (90 - RC_requested_line_angle *180 / Math.PI).toFixed(0) + " deg<br>"
 		let angle_diff = RC_requested_line_angle - z_axis_angle;
 		let target_angle_adjustment = angle_diff*3; // 3 works well for line angle control, but causes instability. between -pi/4=-0.7... and pi/4=0.7...
@@ -179,15 +182,17 @@ class Autopilot{
 		
 		var z_axis_offset = this.getAngleError(0.0, new THREE.Vector3(mat[6], mat[7], mat[8]), new THREE.Vector3(mat[3], mat[4], mat[5]));
 		z_axis_offset -= slowly_changing_target_angle;
-		var z_axis_control = - 1 * z_axis_offset + 1 * sensor_data.gyro.z;
+		var z_axis_control = - 0.1 * 1 * z_axis_offset +  0.05 * sensor_data.gyro.z;
 		z_axis_control *=100;
+		z_axis_control = clamp(z_axis_control, -15, 15);
 		//console.log("target_angle = " + target_angle + ", slch = " + slowly_changing_target_angle + ", z_control = " + z_axis_control);
 		//rudder_angle = getRudderControl(target_angle, slowly_changing_target_angle, (float)(pow(5,CH5)), (float)(pow(5,CH5))); //TODO: CH5,CH6 here for P/D
 		//var y_axis_control = 10 * this.hover.Y.D * sensor_data.gyro.y;
 		
 		//let y_axis_control = 15;
-		var y_axis_control = 15 - 1 * this.hover.Y.D * sensor_data.gyro.y;
-		return new ControlData(0, 0, y_axis_control - 0.5*z_axis_control, y_axis_control + 0.5*z_axis_control, 0, 35);
+		var y_axis_control = this.qr_neutral - 0 * this.hover.Y.D * sensor_data.gyro.y;
+		return new ControlData(0, 0, y_axis_control - 0.5*z_axis_control, y_axis_control + 0.5*z_axis_control, 0 * z_axis_control, 35);
+		//return new ControlData(0, 0, y_axis_control - Math.min(0, 0.5*z_axis_control), y_axis_control + Math.max(0, 0.5*z_axis_control), 0, 35);
 		//return new ControlData(0, 0, y_axis_control - 0.5*z_axis_control, y_axis_control + 0.5*z_axis_control, z_axis_control, 35);
 	}
 	

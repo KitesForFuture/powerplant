@@ -159,12 +159,23 @@
 						
 						<tr>
 							<td>
+								QR neutral pos (in Grad)
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="range" id="qr_neutral" min="-25" max="25" style="height: 5px;">
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
 								Länge Seilbefestigung
 							</td>
 						</tr>
 						<tr>
 							<td>
-								<input type="range" id="bridle_length" min="-20" max="250" style="height: 5px;">
+								<input type="range" id="bridle_length" min="-50" max="50" style="height: 5px;">
 							</td>
 						</tr>
 						
@@ -192,12 +203,12 @@
 						
 						<tr>
 							<td>
-								Seilspannung (0...20kg)
+								Seilspannung (0...100kg)
 							</td>
 						</tr>
 						<tr>
 							<td>
-								<input type="range" id="line_tension" min="0" max="200" style="height: 5px;">
+								<input type="range" id="line_tension" min="0" max="1000" style="height: 5px;">
 							</td>
 						</tr>
 						
@@ -259,6 +270,7 @@
 		<script src="KiteVisualization.js"></script>
 		<script src="Wind.js"></script>
 		<script src="RigidBody.js"></script>
+		<script src="VectorVis.js"></script>
 		<script src="Kite.js"></script>
 		<script src="SensorData.js"></script>
 		<script src="ControlData.js"></script>
@@ -304,14 +316,15 @@
 			
 			function init() {
 				console.log("hello");
-				var tannenbaum_length = document.getElementById("tannenbaum_length");	tannenbaum_length.value = 0;
-				var bridle_length = document.getElementById("bridle_length"); 			bridle_length.value = 50;
+				var tannenbaum_length = document.getElementById("tannenbaum_length");	tannenbaum_length.value = 5;
+				var bridle_length = document.getElementById("bridle_length"); 			bridle_length.value = 20;
 				var prop_dist = document.getElementById("prop_dist");					prop_dist.value = 25;
 				var wind_speed = document.getElementById("wind_speed");					wind_speed.value = 25;
 				var wind_direction = document.getElementById("wind_direction");			wind_direction.value = 0;
 				var line_tension = document.getElementById("line_tension");				line_tension.value = 1;
 				//var y_angle_offset = document.getElementById("y_angle_offset");			y_angle_offset.value = 15;
-				var reflex = document.getElementById("reflex");							reflex.value = 25;
+				var reflex = document.getElementById("reflex");							reflex.value = 15;
+				var qr_neutral = document.getElementById("qr_neutral");					qr_neutral.value = 15;
 				
 				var timestep_multiplier_exponent = document.getElementById("timestep_multiplier_exponent");
 																						timestep_multiplier_exponent.value = 2;
@@ -332,6 +345,11 @@
 				reflex.oninput = function(){
 					console.log(reflex.value * Math.PI / 180);
 					kite.setReflex(reflex.value * Math.PI / 180);
+				};
+				
+				qr_neutral.oninput = function(){
+					//console.log(reflex.value * Math.PI / 180);
+					autopilot.qr_neutral = qr_neutral.value;
 				};
 				
 				tannenbaum_length.oninput = function(){
@@ -361,8 +379,8 @@
 				
 				let c_l_by_c_d = 5;
 				// min8T, max8T, minLT, maxLT, minLS, maxLS
-				groundstation = new Groundstation(30, 200, 4, 30, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
-				smoothLineTension = new Actuator(50, 0, 200); //TODO: 250 as first argument (speed) keeps vibrations short when transitioning to landing mode, maybe better to communicate with groundstation to tell it to instantly decrease tension (even when reeling out).
+				groundstation = new Groundstation(30, 1000, 4, 30, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
+				smoothLineTension = new Actuator(500, 0, 1000); //TODO: 250 as first argument (speed) keeps vibrations short when transitioning to landing mode, maybe better to communicate with groundstation to tell it to instantly decrease tension (even when reeling out).
 				
 				visualization = new KiteVisualization("canvas_for_visualization", kite, wind);
 				
@@ -432,11 +450,9 @@
 						
 						kite.leftPropeller.setThrust(leftBLDC.getValue());
 						kite.rightPropeller.setThrust(rightBLDC.getValue());
-						kite.leftElevon.rotation.y = leftElevonServo.getValue();
-						kite.rightElevon.rotation.y = rightElevonServo.getValue();
-						if(elevonControlOff){
-							kite.leftElevon.rotation.y = -0.1;
-							kite.rightElevon.rotation.y = -0.1;
+						if(!elevonControlOff){
+							kite.leftElevon.rotation.y = leftElevonServo.getValue();
+							kite.rightElevon.rotation.y = rightElevonServo.getValue();
 						}
 						kite.rudder.rotation.y = rudderServo.getValue();
 						
