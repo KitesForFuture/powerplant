@@ -251,7 +251,17 @@
 					</table>
 				</td>
 				<td>
-					<canvas id="canvas_for_visualization" width = "1200" height= "600" style="overflow: scroll;width:100%;"> </canvas>
+					<canvas id="canvas_for_visualization" width = "800" height= "600" style="overflow: scroll;width:100%;"> </canvas>
+				</td>
+				<td>
+				 	<table style="width:100%">
+					  <tr>
+						<td><canvas id="canvas_for_coefficients" width = "400" height= "300" style="overflow: scroll;width:100%;"> </canvas></td>
+					  </tr>
+					  <tr>
+						<td><canvas id="canvas_for_l_d" width = "400" height= "300" style="overflow: scroll;width:100%;"> </canvas></td>
+					  </tr>
+					</table> 
 				</td>
 			</tr>
 		</table>
@@ -268,6 +278,7 @@
 		<script src="FlatPlate.js"></script>
 		<script src="Propeller.js"></script>
 		<script src="KiteVisualization.js"></script>
+		<script src="AirfoilCoefficientsVisualization.js"></script>
 		<script src="Wind.js"></script>
 		<script src="RigidBody.js"></script>
 		<script src="VectorVis.js"></script>
@@ -304,6 +315,8 @@
 			var groundstation;
 			var smoothLineTension;
 			var visualization;
+			var airfoilVisualization;
+			var airfoilVisualization2;
 			var energy = 0;
 			var time = 0;
 			var timestep_multiplier = 100;
@@ -379,10 +392,13 @@
 				
 				let c_l_by_c_d = 5;
 				// min8T, max8T, minLT, maxLT, minLS, maxLS
-				groundstation = new Groundstation(30, 1000, 4, 30, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
+				groundstation = new Groundstation(100, 100/*30, 1000*/, 2, 30, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
 				smoothLineTension = new Actuator(500, 0, 1000); //TODO: 250 as first argument (speed) keeps vibrations short when transitioning to landing mode, maybe better to communicate with groundstation to tell it to instantly decrease tension (even when reeling out).
 				
 				visualization = new KiteVisualization("canvas_for_visualization", kite, wind);
+				
+				airfoilVisualization = new AirfoilCoefficientsVisualization("canvas_for_coefficients", kite.simpleWing1, kite.simpleWing2, "L,D");
+				airfoilVisualization2 = new AirfoilCoefficientsVisualization("canvas_for_l_d", kite.simpleWing1, kite.simpleWing2, "L/D");
 				
 				animate();
 			}

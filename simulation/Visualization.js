@@ -8,7 +8,7 @@ class Visualization{
 		
 		// CAMERA SETUP
 		
-		this.camera = new THREE.OrthographicCamera(-3, 3, 1.5, -1.5, -580, 580);
+		this.camera = new THREE.OrthographicCamera(-2, 2, 1.5, -1.5, -580, 580);
 		this.camera.rotation.x = -Math.PI;
 		this.camera.rotation.z = -Math.PI/2;
 		//this.camera.position.z = -80;

@@ -13,6 +13,8 @@ class FlatPlate extends KitePart{
 		
 		this.type = "FlatPlate";
 		this.torqueVis = new VectorVis(new THREE.Color('red'));
+		
+		this.AoA_for_vis = 0;
 	}
 	
 	setAdditionalWind(vec){
@@ -53,12 +55,12 @@ class FlatPlate extends KitePart{
 		
 		var airfoil_normal = new THREE.Vector3(this.matrixWorld.elements[8], this.matrixWorld.elements[9], this.matrixWorld.elements[10]);
 		var angle_of_attack_var = angle_of_attack(airfoil_normal, relative_wind_normalized);
-		
+		this.AoA_for_vis = angle_of_attack_var;
 		//FORCE
 		var direction_of_lift = lift_direction(airfoil_normal, relative_wind_normalized);
 		var direction_of_drag = drag_direction(relative_wind_normalized);
-		var c_l = lift_coefficient(angle_of_attack_var);
-		var c_d = drag_coefficient(angle_of_attack_var);
+		var c_l = lift_coefficient(angle_of_attack_var, this);
+		var c_d = drag_coefficient(angle_of_attack_var, 2*this.dimensions.y/this.dimensions.x, this);
 		var lift_vector_in_world_coordinates = direction_of_lift.multiplyScalar(lift(c_l, relative_wind_speed, this.dimensions.x * this.dimensions.y));
 		var drag_vector_in_world_coordinates = direction_of_drag.multiplyScalar(drag(c_d, relative_wind_speed, this.dimensions.x * this.dimensions.y));
 		forceData.force = lift_vector_in_world_coordinates.add(drag_vector_in_world_coordinates);

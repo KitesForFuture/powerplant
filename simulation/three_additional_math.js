@@ -46,12 +46,19 @@ function drag_direction(unit_wind_direction){
 	return unit_wind_direction;
 }
 
-function lift_coefficient(angle_of_attack){
+function lift_coefficient(angle_of_attack, obj){
+	//if(obj.material.color.r == 1.0 && obj.material.color.g == 1.0 && obj.material.color.b == 1.0)
+		//console.log("lift = " + (Math.sin(2 * angle_of_attack) + Math.exp(-49*(angle_of_attack-0.25)*(angle_of_attack-0.25))));
 	return Math.sin(2 * angle_of_attack) + Math.exp(-49*(angle_of_attack-0.25)*(angle_of_attack-0.25));
 }
 
-function drag_coefficient(angle_of_attack){
-	return 1 - Math.cos(2 * angle_of_attack);
+function drag_coefficient(angle_of_attack, aspect_ratio, obj){
+	//return 1 - Math.cos(2 * angle_of_attack);
+	//console.log(obj);
+	//if(obj.material.color.r == 1.0 && obj.material.color.g == 1.0 && obj.material.color.b == 1.0)
+		//console.log("ar = " + aspect_ratio + ", zero_lift Drag = 0.01, AoA-Drag = " + (1 - Math.cos(2 * angle_of_attack)) + ", AR-Drag = " + lift_coefficient(angle_of_attack, obj)*lift_coefficient(angle_of_attack, obj)/(2.5 /* pi*oswald_efficiency_number */ *aspect_ratio));
+	
+	return 0.01 /*drag at zero lift*/ + 1 - Math.cos(2 * angle_of_attack) /*drag depending on angle of attack*/ + lift_coefficient(angle_of_attack, obj)*lift_coefficient(angle_of_attack, obj)/(2.5 /* pi*oswald_efficiency_number */ *aspect_ratio);
 }
 
 

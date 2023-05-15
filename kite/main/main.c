@@ -224,13 +224,13 @@ void main_task(void* arg)
 		//propellerFactor = getPWMInput0to1normalized(2);
 		if(propellerBootState == 0 && getAccelX() < 0){ // kite nose pointing down
 			propellerBootState = 1;
-			propellerFactor = 0.05;
+			propellerFactor = 0.1;
 		}
 		if(propellerBootState == 1 && getAccelX() > 0){ // kite nose pointing up
 			propellerBootState = 2;
 		}
 		if(propellerBootState == 2 && propellerFactor < 1){
-			propellerFactor = clamp(propellerFactor+0.004, 0, 1);
+			propellerFactor = clamp(propellerFactor+0.001, 0, 1);
 		}
 		
 		float line_length = clamp(line_length_in_meters, 0, 1000000); // global var defined in RC.c, should default to 1 when no signal received, TODO: revert line length in VESC LISP code

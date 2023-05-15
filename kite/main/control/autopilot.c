@@ -227,7 +227,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	float line_angle = safe_asin(sensor_data.height/(line_length == 0 ? 1.0 : line_length));
 	
 	//TODO: cleanup all those constants!
-	float height_control_normed = clamp(0.92 - 1.15*5.8*autopilot->hover.H.P * (line_angle-PI/6.0) - 1.15*autopilot->hover.H.D * clamp(d_height, -1.0, 1.0), 0.7, 1.5);
+	float height_control_normed = clamp(0.55 - 1.15*5.8*autopilot->hover.H.P * (line_angle-PI/6.0) - 1.15*autopilot->hover.H.D * clamp(d_height, -1.0, 1.0), 0.4, 1.2);
 	
 	// autopilot is an approximation to the airflow seen by the elevons (propeller airflow + velocity in height direction)
 	float normed_airflow = height_control_normed + clamp(sensor_data.d_height*0.2, -0.8, 0.8); // this latter constant depends highly on the shape of the ailerons. probably needs to be more aggressive with the full wingspan ones.
@@ -243,7 +243,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	// if kite goes down with 4m/s -> -0.8 on normed airflow -> 1.0/(normed_airflow*normed_airflow) up to 100
 	float y_axis_control = (normed_airflow > 0.0001 ? 1.0/(normed_airflow*normed_airflow) : 1.0) * 0.7 * (- 3.8*autopilot->hover.Y.P * y_axis_offset + 0.7*0.4 * autopilot->hover.Y.D * sensor_data.gyro[1]);
 	y_axis_control *= 100;
-	y_axis_control -= 20;
+	//y_axis_control -= 20;
 	
 	// Z-AXIS
 	

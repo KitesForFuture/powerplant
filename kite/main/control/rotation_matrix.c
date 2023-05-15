@@ -44,13 +44,23 @@
 */
 
 //Erster EPP-Flügel, längs eingebaut, Akku-Anschluss hinten, ESP32 richtung Bauch
-
+/*
 #define accel_x -mpu_raw_data.accel[0]
 #define accel_y -mpu_raw_data.accel[1]
 #define accel_z mpu_raw_data.accel[2]
 
 #define gyro_x -mpu_raw_data.gyro[0]
 #define gyro_y -mpu_raw_data.gyro[1]
+#define gyro_z mpu_raw_data.gyro[2]
+*/
+//Zweiter EPP-Flügel (1,80m), längs eingebaut, USB-Anschluss hinten, ESP32 richtung Bauch
+
+#define accel_x mpu_raw_data.accel[0]
+#define accel_y mpu_raw_data.accel[1]
+#define accel_z mpu_raw_data.accel[2]
+
+#define gyro_x mpu_raw_data.gyro[0]
+#define gyro_y mpu_raw_data.gyro[1]
 #define gyro_z mpu_raw_data.gyro[2]
 
 // The Gravity vector is the direction the gravitational force is supposed to point in KITE COORDINATES with the nose pointing to the sky

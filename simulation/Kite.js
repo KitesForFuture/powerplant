@@ -92,9 +92,9 @@ class Kite extends RigidBody{
 		
 		
 		
-		this.wingDrag = new FlatPlate(0.0025, this.dimensions.y, this.dimensions.z, this, 'white', false);
+		//this.wingDrag = new FlatPlate(0.0025, this.dimensions.y, this.dimensions.z, this, 'white', false);
 		//this.wingDrag.position.x = this.dimensions.x * 0.25;
-		this.wingDrag.rotation.y = 0.5*Math.PI;
+		//this.wingDrag.rotation.y = 0.5*Math.PI;
 		
 		// PROPELLERS
 		
@@ -121,7 +121,7 @@ class Kite extends RigidBody{
 			this.tannenbaumRight,
 			this.simpleWing1,
 			this.simpleWing2,
-			this.wingDrag,
+			//this.wingDrag,
 			this.leftElevon,
 			this.rightElevon,
 			this.leftReflex,
@@ -156,7 +156,7 @@ class Kite extends RigidBody{
 			//this.rudder,
 			this.stabilizerLeft,
 			//this.stabilizerRight,
-			this.wingDrag,
+			//this.wingDrag,
 			this.leftPropeller,
 			this.rightPropeller
 		];
