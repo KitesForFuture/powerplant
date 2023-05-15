@@ -229,6 +229,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	//TODO: cleanup all those constants!
 	float height_control_normed = clamp(0.55 - 1.15*5.8*autopilot->hover.H.P * (line_angle-PI/6.0) - 1.15*autopilot->hover.H.D * clamp(d_height, -1.0, 1.0), 0.4, 1.2);
 	
+	
 	// autopilot is an approximation to the airflow seen by the elevons (propeller airflow + velocity in height direction)
 	float normed_airflow = height_control_normed + clamp(sensor_data.d_height*0.2, -0.8, 0.8); // this latter constant depends highly on the shape of the ailerons. probably needs to be more aggressive with the full wingspan ones.
 	
