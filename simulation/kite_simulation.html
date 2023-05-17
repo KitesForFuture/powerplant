@@ -130,6 +130,12 @@
 						
 						<tr>
 							<td>
+								<p id="glide_ratio">0</p>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
 								<p id="power">0</p>
 							</td>
 						</tr>
@@ -448,6 +454,10 @@
 					document.getElementById("rope_angle_horizon").innerHTML = "Seilwinkel zum Horizont: " + (180/Math.PI*Math.asin(projectToNormedVector(kite.positionR.clone().normalize(), new THREE.Vector3(1, 0, 0)).length())).toFixed(0) + " Grad";
 					document.getElementById("flying_height").innerHTML = "Flughöhe: " + kite.positionR.x.toFixed(0) + " m";
 					document.getElementById("speed").innerHTML = "Speed: " + kite.velocity.length().toFixed(0) + " m/s";
+					let AoA = kite.simpleWing1.AoA_for_vis;
+					let C_L = lift_coefficient(AoA, kite.simpleWing1);
+					let C_D = drag_coefficient(AoA, 2*kite.simpleWing1.dimensions.y/kite.simpleWing1.dimensions.x, kite.simpleWing1);
+					document.getElementById("glide_ratio").innerHTML = "L/D: " + (C_L/C_D).toFixed(1);
 					if(old_kite_line_length != 0){
 						let kite_line_length_difference = kite_line_length - old_kite_line_length;
 						if(line_tension.value != 1){
@@ -459,7 +469,7 @@
 						energy += power * timestep_in_s;
 						document.getElementById("power").innerHTML = "Leistung: " + power.toFixed(0) + " W (" + (energy/time).toFixed(0) + " W avg)";
 						document.getElementById("energy").innerHTML = "Energie: " + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)";
-						document.getElementById("electricity_cost").innerHTML = "Stromkosten: " + (850/(energy/time)).toFixed(0) + " ct/kWh)";
+						document.getElementById("electricity_cost").innerHTML = "Stromkosten: " + (850/(energy/time)).toFixed(1) + " ct/kWh)";
 						
 					}
 					old_kite_line_length = kite_line_length;
