@@ -256,10 +256,22 @@
 				<td>
 				 	<table style="width:100%">
 					  <tr>
-						<td><canvas id="canvas_for_coefficients" width = "400" height= "300" style="overflow: scroll;width:100%;"> </canvas></td>
+						<td style = "position: relative;">
+							<canvas id="canvas_for_coefficients" width = "400" height= "300" style="overflow: scroll;width:100%;"> </canvas>
+							<div style="position: absolute; left: 3pt; top: 0;">C<sub>L</sub>, C<sub>D</sub> = 2</div>
+							<div style="position: absolute; left: 3pt; bottom: 0;">C<sub>L</sub>, C<sub>D</sub> = -2</div>
+							<div style="position: absolute; left: 3pt; bottom: 50%;">AoA = 0</div>
+							<div style="position: absolute; right: 3pt; bottom: 50%;">AoA = &#960;</div>
+						</td>
 					  </tr>
 					  <tr>
-						<td><canvas id="canvas_for_l_d" width = "400" height= "300" style="overflow: scroll;width:100%;"> </canvas></td>
+						<td style = "position: relative;">
+							<canvas id="canvas_for_l_d" width = "400" height= "300" style="overflow: scroll;width:100%;"> </canvas>
+							<div style="position: absolute; left: 3pt; top: 0;">C<sub>L</sub> = 2</div>
+							<div style="position: absolute; left: 3pt; bottom: 0;">C<sub>L</sub> = -2</div>
+							<div style="position: absolute; left: 3pt; bottom: 50%;">C<sub>D</sub> = 0</div>
+							<div style="position: absolute; right: 3pt; bottom: 50%;">C<sub>D</sub> = 0.5</div>
+						</td>
 					  </tr>
 					</table> 
 				</td>

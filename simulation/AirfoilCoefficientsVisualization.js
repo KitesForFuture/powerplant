@@ -173,30 +173,53 @@ class AirfoilCoefficientsVisualization{
 		
 		
 		if(this.diagramType == "L,D"){
-			this.diagram.diagramLines[0].reset(0, 0, Math.PI, 2);
-			this.diagram.diagramLines[1].reset(0, 0, Math.PI, 2);
-			this.diagram.diagramLines[5].reset(0, 0, Math.PI, 2);
+			this.diagram.diagramLines[3].reset(0, 0, Math.PI, 2); // graph Lift
+			this.diagram.diagramLines[1].reset(0, 0, Math.PI, 2); // graph Drag
+			this.diagram.diagramLines[0].reset(0, 0, Math.PI, 2); // coordinate system
+			
+			this.diagram.diagramLines[0].addPoint(0, 0);
+			this.diagram.diagramLines[0].addPoint(Math.PI, 0);
+			this.diagram.diagramLines[0].addPoint(Math.PI, 0.1);
+			this.diagram.diagramLines[0].addPoint(Math.PI, 0);
+			this.diagram.diagramLines[0].addPoint(0, 0);
+			this.diagram.diagramLines[0].addPoint(0, 2);
+			this.diagram.diagramLines[0].addPoint(0.06, 2);
+			this.diagram.diagramLines[0].addPoint(0, 2);
+			this.diagram.diagramLines[0].addPoint(0, -2);
+			this.diagram.diagramLines[0].addPoint(0.06, -2);
+			this.diagram.diagramLines[0].addPoint(0, -2);
+			
+			
+			
 			let resolution = 400;
-			this.diagram.diagramLines[5].addPoint(0, 0);
-			this.diagram.diagramLines[5].addPoint(Math.PI, 0);
 			for(let i = 0; i < resolution; i++){
 				let AoA = i * Math.PI / resolution;
 				let C_L = lift_coefficient(AoA, this.wing1);
 				let C_D = drag_coefficient(AoA, 2*this.wing1.dimensions.y/this.wing1.dimensions.x, this.wing1);
-				this.diagram.diagramLines[0].addPoint(AoA, C_L);
+				this.diagram.diagramLines[3].addPoint(AoA, C_L);
 				this.diagram.diagramLines[1].addPoint(AoA, C_D);
 			}
 		}else if(this.diagramType = "L/D"){
-			this.diagram.diagramLines[0].reset(0, -2, 0.5, 2);
-			this.diagram.diagramLines[5].reset(0, -2, 0.5, 2);
+			this.diagram.diagramLines[0].reset(0, -2, 0.5, 2); // coordinate system
+			this.diagram.diagramLines[1].reset(0, -2, 0.5, 2); // graph
+			//this.diagram.diagramLines[5].reset(0, -2, 0.5, 2); // cross hair
 			
-			this.diagram.diagramLines[5].addPoint(0, 0);
-			this.diagram.diagramLines[5].addPoint(0.5, 0);
+			this.diagram.diagramLines[0].addPoint(0, 0);
+			this.diagram.diagramLines[0].addPoint(0.5, 0);
+			this.diagram.diagramLines[0].addPoint(0.5, 0.1);
+			this.diagram.diagramLines[0].addPoint(0.5, 0);
+			this.diagram.diagramLines[0].addPoint(0, 0);
+			this.diagram.diagramLines[0].addPoint(0, 2);
+			this.diagram.diagramLines[0].addPoint(0.01, 2);
+			this.diagram.diagramLines[0].addPoint(0, 2);
+			this.diagram.diagramLines[0].addPoint(0, -2);
+			this.diagram.diagramLines[0].addPoint(0.01, -2);
+			this.diagram.diagramLines[0].addPoint(0, -2);
 			for(let i = -500; i < 1000; i++){
 				let AoA = i * 0.5 * Math.PI / 1000;
 				let C_L = lift_coefficient(AoA, this.wing1);
 				let C_D = drag_coefficient(AoA, 2*this.wing1.dimensions.y/this.wing1.dimensions.x, this.wing1);
-				this.diagram.diagramLines[0].addPoint(C_D, C_L);
+				this.diagram.diagramLines[1].addPoint(C_D, C_L);
 			}
 		}
 		
