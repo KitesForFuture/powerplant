@@ -45,23 +45,29 @@
 			  box-shadow: none;
 			}
 			
-			
+			.collapsible {
+			  background-color: #777;
+			  color: white;
+			  cursor: pointer;
+			  outline: none;
+			}
+
+			.active, .collapsible:hover {
+			  background-color: #555;
+			}
+
 			
 		</style>
 	</head>
 	<body>
 		
 		<table style="width:100%">
-			<tr>
+			<tr style="vertical-align: top;">
 				<td>
 					<table style="width:100%;font-size: 10px">
 						
 						<tr><td>
 							<a href="https://www.kitesforfuture.de" target="_top" class="class1" style="background-color: black;">&#8678; Kites for Future</a>
-						</tr>
-						
-						<tr><td>
-							<a href="https://hackaday.io/project/188136-kites-for-future-flying-wind-turbine" target="_top" class="class1" style="background-color: black;">&#8680; HACKADAY.IO Project</a>
 						</tr>
 						
 						<tr><td>
@@ -78,182 +84,241 @@
 							<button type="button" id="zoomIn" onclick="zoomIn()" style="color: black;">+</button>
 							<button type="button" id="zoomOut" onclick="zoomOut()" style="color: black;">-</button></td>
 						</tr>
+						
 						<tr>
-							<td>
-								Windstärke (0...25m/s)
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<input type="range" id="wind_speed" min="0" max="50" style="height: 5px;">
-							</td>
-						</tr>
-						<tr>
-						<tr>
-							<td>
-								Windrichtung
-							</td>
-						</tr>
-							<td>
-								<input type="range" value="0" id="wind_direction" min="-200" max="200" style="height: 5px;">
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<p id="time">0</p>
-							</td>
+						<td>
+						<button type="button" class="collapsible">Kite Dimensions</button>
+						<div style="font-size: 10px;">
+						  	<table style="font-size: 10px;">
+						  		<tr>
+									<td>
+										Bridle Length
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="range" id="bridle_length" min="-50" max="50" style="height: 5px;">
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										Line Attachment Length
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="range" id="tannenbaum_length" min="0" max="50" style="height: 5px;">
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										Distance Propeller from Center
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="range" id="prop_dist" min="0" max="100" style="height: 5px;">
+									</td>
+								</tr>
+						  	</table>
+						  	<hr>
+						</div>
+						</td>
 						</tr>
 						
 						<tr>
-							<td>
-								<p id="rope_length">0</p>
-							</td>
+						<td>
+						<button type="button" class="collapsible">Autopilot Settings</button>
+						<div style="font-size: 10px;">
+						  	<table style="font-size: 10px;">
+						  		
+						  		<tr>
+									<td>
+										Reflex (in Deg)
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="range" id="reflex" min="0" max="45" style="height: 5px;">
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										QR neutral pos (in Deg)
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="range" id="qr_neutral" min="-25" max="25" style="height: 5px;">
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										y_p
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="range" id="y_p" min="-20" max="20" style="height: 5px;">
+									</td>
+								</tr>
+						  		
+						  	</table>
+						  	<hr>
+						</div>
+						</td>
 						</tr>
 						
 						<tr>
-							<td>
-								<p id="rope_angle_horizon">0</p>
-							</td>
+						<td>
+						<button type="button" class="collapsible">Environment</button>
+						<div style="font-size: 10px;">
+						  	<table style="font-size: 10px;">
+						  		
+						  		<tr>
+									<td>
+										Wind speed (0...25m/s)
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="range" id="wind_speed" min="0" max="50" style="height: 5px;">
+									</td>
+								</tr>
+								<tr>
+								<tr>
+									<td>
+										Wind direction
+									</td>
+								</tr>
+									<td>
+										<input type="range" value="0" id="wind_direction" min="-200" max="200" style="height: 5px;">
+									</td>
+								</tr>
+						  		
+						  	</table>
+						  	<hr>
+						</div>
+						</td>
 						</tr>
 						
 						<tr>
-							<td>
-								<p id="flying_height">0</p>
-							</td>
+						<td>
+						<button type="button" class="collapsible">Measurements</button>
+						<div style="font-size: 10px;">
+						  	<table style="font-size: 10px;">
+						  		
+						  		<tr>
+									<td>
+										<p id="time">0</p>
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										<p id="rope_length">0</p>
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										<p id="rope_angle_horizon">0</p>
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										<p id="flying_height">0</p>
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										<p id="speed">0</p>
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										<p id="glide_ratio">0</p>
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										<p id="power">0</p>
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										<p id="energy">0</p>
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										<p id="electricity_cost">0</p>
+									</td>
+								</tr>
+								
+								<tr>
+									<td>
+										Line tension (0...100kg)
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="range" id="line_tension" min="0" max="1000" style="height: 5px;">
+									</td>
+								</tr>
+						  		
+						  	</table>
+						  	<hr>
+						</div>
+						</td>
 						</tr>
 						
 						<tr>
-							<td>
-								<p id="speed">0</p>
-							</td>
+						<td>
+						<button type="button" class="collapsible">Simulation Settings</button>
+						<div style="font-size: 10px;">
+						  	<table style="font-size: 10px;">
+						  		
+								<tr><td>
+									<button type="button" id="moveCamera" onclick="moveCamera()" style="color: green;">move camera</button></td>
+								</tr>
+								<tr><td>
+									<button type="button" id="elevonControlOff" onclick="elevonControlOff_func()" style="color: green;">Control OFF</button></td>
+								</tr>
+						  		<tr>
+									<td>
+										time step = <p id="zeitschritt">1/100</p>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="range" id="timestep_multiplier_exponent" min="0" max="4" style="height: 5px;">
+									</td>
+								</tr>
+								
+								
+								<tr>
+									<td>
+										Autopilot-Log = <p id="autopilot_logging"></p>
+									</td>
+								</tr>
+						  		
+						  	</table>
+						  	<hr>
+						</div>
+						</td>
 						</tr>
 						
-						<tr>
-							<td>
-								<p id="glide_ratio">0</p>
-							</td>
-						</tr>
-						
-						<tr>
-							<td>
-								<p id="power">0</p>
-							</td>
-						</tr>
-						
-						<tr>
-							<td>
-								<p id="energy">0</p>
-							</td>
-						</tr>
-						
-						<tr>
-							<td>
-								<p id="electricity_cost">0</p>
-							</td>
-						</tr>
-						
-						<tr>
-							<td>
-								Reflex (in Grad)
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<input type="range" id="reflex" min="0" max="45" style="height: 5px;">
-							</td>
-						</tr>
-						
-						<tr>
-							<td>
-								QR neutral pos (in Grad)
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<input type="range" id="qr_neutral" min="-25" max="25" style="height: 5px;">
-							</td>
-						</tr>
-						
-						<tr>
-							<td>
-								Länge Seilbefestigung
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<input type="range" id="bridle_length" min="-50" max="50" style="height: 5px;">
-							</td>
-						</tr>
-						
-						<tr>
-							<td>
-								Länge Tannenbaum
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<input type="range" id="tannenbaum_length" min="0" max="50" style="height: 5px;">
-							</td>
-						</tr>
-						
-						<tr>
-							<td>
-								Distance Propeller from Center
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<input type="range" id="prop_dist" min="0" max="100" style="height: 5px;">
-							</td>
-						</tr>
-						
-						<tr>
-							<td>
-								Seilspannung (0...100kg)
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<input type="range" id="line_tension" min="0" max="1000" style="height: 5px;">
-							</td>
-						</tr>
-						
-						
-						
-						<tr><td>
-							<button type="button" id="moveCamera" onclick="moveCamera()" style="color: green;">move camera</button></td>
-						</tr>
-						<tr><td>
-							<button type="button" id="elevonControlOff" onclick="elevonControlOff_func()" style="color: green;">Control OFF</button></td>
-						</tr>
-						
-						<tr>
-							<td>
-								Zeitschritt = <p id="zeitschritt">1/100</p>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<input type="range" id="timestep_multiplier_exponent" min="0" max="4" style="height: 5px;">
-							</td>
-						</tr>
-						
-						<tr>
-							<td>
-								y_p
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<input type="range" id="y_p" min="-20" max="20" style="height: 5px;">
-							</td>
-						</tr>
-						
-						<tr>
-							<td>
-								Autopilot-Log = <p id="autopilot_logging"></p>
-							</td>
-						</tr>
 					</table>
 				</td>
 				<td>
@@ -310,10 +375,38 @@
 		<script src="Servo.js"></script>
 		<script src="BLDCMotor.js"></script>
 		
-		
-		
 		<script>
+		
 			"use strict";
+			
+			var coll = document.getElementsByClassName("collapsible");
+			var i;
+			
+			for (i = 0; i < coll.length; i++) {
+			  //coll[i].addEventListener("click", function() {
+				//this.classList.toggle("active");
+				var content = coll[i].nextElementSibling;
+				//if (content.style.display === "block") {
+				  content.style.display = "none";
+				//} else {
+				//  content.style.display = "block";
+				//}
+			  //});
+			}
+			
+			for (i = 0; i < coll.length; i++) {
+			  coll[i].addEventListener("click", function() {
+				this.classList.toggle("active");
+				var content = this.nextElementSibling;
+				if (content.style.display === "block") {
+				  content.style.display = "none";
+				} else {
+				  content.style.display = "block";
+				}
+			  });
+			}
+			
+			
 			
 			var width, height, dpr;
 			
@@ -449,10 +542,10 @@
 					
 					let kite_line_length = kite.positionR.length();
 					time += timestep_in_s; 
-					document.getElementById("time").innerHTML = "Zeit: " + time.toFixed(0) + " s (" + (time/3600).toFixed(3) + " h)";
-					document.getElementById("rope_length").innerHTML = "Seillänge: " + kite_line_length.toFixed(0) + " m";
-					document.getElementById("rope_angle_horizon").innerHTML = "Seilwinkel zum Horizont: " + (180/Math.PI*Math.asin(projectToNormedVector(kite.positionR.clone().normalize(), new THREE.Vector3(1, 0, 0)).length())).toFixed(0) + " Grad";
-					document.getElementById("flying_height").innerHTML = "Flughöhe: " + kite.positionR.x.toFixed(0) + " m";
+					document.getElementById("time").innerHTML = "Time: " + time.toFixed(0) + " s (" + (time/3600).toFixed(3) + " h)";
+					document.getElementById("rope_length").innerHTML = "Line length: " + kite_line_length.toFixed(0) + " m";
+					document.getElementById("rope_angle_horizon").innerHTML = "Line angle to horizon: " + (180/Math.PI*Math.asin(projectToNormedVector(kite.positionR.clone().normalize(), new THREE.Vector3(1, 0, 0)).length())).toFixed(0) + " Grad";
+					document.getElementById("flying_height").innerHTML = "Height: " + kite.positionR.x.toFixed(0) + " m";
 					document.getElementById("speed").innerHTML = "Speed: " + kite.velocity.length().toFixed(0) + " m/s";
 					let AoA = kite.simpleWing1.AoA_for_vis;
 					let C_L = lift_coefficient(AoA, kite.simpleWing1);
@@ -467,9 +560,9 @@
 						}
 						let power = kite_line_length_difference*line_tension.value/timestep_in_s;
 						energy += power * timestep_in_s;
-						document.getElementById("power").innerHTML = "Leistung: " + power.toFixed(0) + " W (" + (energy/time).toFixed(0) + " W avg)";
-						document.getElementById("energy").innerHTML = "Energie: " + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)";
-						document.getElementById("electricity_cost").innerHTML = "Stromkosten: " + (850/(energy/time)).toFixed(1) + " ct/kWh)";
+						document.getElementById("power").innerHTML = "Power: " + power.toFixed(0) + " W (" + (energy/time).toFixed(0) + " W avg)";
+						document.getElementById("energy").innerHTML = "Energy: " + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)";
+						document.getElementById("electricity_cost").innerHTML = "Electricity Cost: " + (850/(energy/time)).toFixed(1) + " ct/kWh)";
 						
 					}
 					old_kite_line_length = kite_line_length;
