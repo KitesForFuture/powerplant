@@ -181,7 +181,7 @@
 						  		
 						  		<tr>
 									<td>
-										Wind speed (0...25m/s)
+										<p id="wind_speed_p">Wind speed:</p>
 									</td>
 								</tr>
 								<tr>
@@ -268,7 +268,7 @@
 								
 								<tr>
 									<td>
-										Line tension (0...100kg)
+										<p id="line_tension_p">Line tension:</p>
 									</td>
 								</tr>
 								<tr>
@@ -541,7 +541,7 @@
 					smoothLineTension.setTargetValue(line_tension.value);
 					
 					let kite_line_length = kite.positionR.length();
-					time += timestep_in_s; 
+					time += timestep_in_s;
 					document.getElementById("time").innerHTML = "Time: " + time.toFixed(0) + " s (" + (time/3600).toFixed(3) + " h)";
 					document.getElementById("rope_length").innerHTML = "Line length: " + kite_line_length.toFixed(0) + " m";
 					document.getElementById("rope_angle_horizon").innerHTML = "Line angle to horizon: " + (180/Math.PI*Math.asin(projectToNormedVector(kite.positionR.clone().normalize(), new THREE.Vector3(1, 0, 0)).length())).toFixed(0) + " Grad";
@@ -592,6 +592,8 @@
 						kite.rightPropeller.update();
 					}
 				}
+				document.getElementById("wind_speed_p").innerHTML = "Windspeed: " + (wind_speed.value*0.5).toFixed(1) + " m/s";
+				document.getElementById("line_tension_p").innerHTML = "Line tension: " + line_tension.value + " N";
 				
 				visualization.update(timestep_in_s*running);
 				
