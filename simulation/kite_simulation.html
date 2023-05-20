@@ -90,117 +90,6 @@
 						</td>
 						</tr>
 						
-						
-						<tr>
-						<td>
-						<button type="button" class="collapsible">Environment</button>
-						<div style="font-size: 10px;display:none;">
-						  	<table style="font-size: 10px;">
-						  		
-						  		<tr>
-									<td>
-										<p id="wind_speed_p">Wind speed:</p>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<input type="range" id="wind_speed" min="0" max="50" style="height: 5px;">
-									</td>
-								</tr>
-								<tr>
-								<tr>
-									<td>
-										Wind direction
-									</td>
-								</tr>
-									<td>
-										<input type="range" value="0" id="wind_direction" min="-200" max="200" style="height: 5px;">
-									</td>
-								</tr>
-						  		
-						  	</table>
-						  	<hr>
-						</div>
-						</td>
-						</tr>
-						
-						<tr>
-						<td>
-						<button type="button" class="collapsible">Measurements</button>
-						<div style="font-size: 10px;display:none;">
-						  	<table style="font-size: 10px;">
-						  		
-						  		<tr>
-									<td>
-										<p id="time">0</p>
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										<p id="rope_length">0</p>
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										<p id="rope_angle_horizon">0</p>
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										<p id="flying_height">0</p>
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										<p id="speed">0</p>
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										<p id="glide_ratio">0</p>
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										<p id="power">0</p>
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										<p id="energy">0</p>
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										<p id="electricity_cost">0</p>
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										<p id="line_tension_p">Line tension:</p>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<input type="range" id="line_tension" min="0" max="1000" style="height: 5px;">
-									</td>
-								</tr>
-						  		
-						  	</table>
-						  	<hr>
-						</div>
-						</td>
-						</tr>
-						
 						<tr>
 						<td>
 						<button type="button" class="collapsible">Simulation Settings</button>
@@ -328,8 +217,24 @@
 			
 			var old_kite_line_length = 0;
 			
+			// UI
+			
 			var kiteDimensionsCollapsible;
 			var autopilotSettingsCollapsible;
+			var environmentCollapsible;
+			var measurementsCollapsible;
+			var simulationSettingsCollapsible;
+			
+			var timeUIElement;
+			var rope_lengthUIElement;
+			var rope_angle_horizonUIElement;
+			var flying_heightUIElement;
+			var speedUIElement;
+			var glide_ratioUIElement;
+			var powerUIElement;
+			var energyUIElement;
+			var electricity_costUIElement;
+			var line_tensionSlider;
 			
 			init();
 			
@@ -365,12 +270,33 @@
 				qr_neutralSlider.oninput = function(that){ autopilot.qr_neutral = that.value; };
 				y_pSlider.oninput = function(that){ autopilot.hover.Y.P = 1.5**that.value; };
 				
-				
-				
-				
 				// ENVIRONMENT
 				
+				environmentCollapsible = new Collapsible("environment", "Environment Settings");
+				collapsibles.push(environmentCollapsible);
+				
+				let wind_speedSlider = environmentCollapsible.add( new SlidableVariable("wind_speed", "Wind speed", 0, 50, 25, 0.5, 1, " m/s") );
+				let wind_directionSlider = environmentCollapsible.add( new SlidableVariable("wind_direction", "Wind direction", -200, 200, 0, 1, 0, "°") );
+				
+				wind_speedSlider.oninput = function(that){ wind.setSpeedAndDirection(that.value*0.5, wind_directionSlider.getSliderElement().value); };
+				wind_directionSlider.oninput = function(that){ wind.setSpeedAndDirection(wind_speedSlider.getSliderElement().value*0.5, that.value); };
+				
 				// MEASUREMENTS
+				
+				measurementsCollapsible = new Collapsible("measurements", "Measurements");
+				collapsibles.push(measurementsCollapsible);
+				
+				timeUIElement = measurementsCollapsible.add( new UIElement("time") );
+				rope_lengthUIElement = measurementsCollapsible.add( new UIElement("rope_length") );
+				rope_angle_horizonUIElement = measurementsCollapsible.add( new UIElement("rope_angle_horizon") );
+				flying_heightUIElement = measurementsCollapsible.add( new UIElement("flying_height") );
+				speedUIElement = measurementsCollapsible.add( new UIElement("speed") );
+				glide_ratioUIElement = measurementsCollapsible.add( new UIElement("glide_ratio") );
+				powerUIElement = measurementsCollapsible.add( new UIElement("power") );
+				energyUIElement = measurementsCollapsible.add( new UIElement("energy") );
+				electricity_costUIElement = measurementsCollapsible.add( new UIElement("electricity_cost") );
+				line_tensionSlider = measurementsCollapsible.add( new SlidableVariable("line_tension", "Line tension", 0, 1000, 1, 1, 0, " N") );
+				
 				
 				// SIMULATION SETTINGS
 				
@@ -387,18 +313,10 @@
 					collapsibles[i].init();
 				}
 				
-				
-				var wind_speed = document.getElementById("wind_speed");					wind_speed.value = 25;
-				var wind_direction = document.getElementById("wind_direction");			wind_direction.value = 0;
-				var line_tension = document.getElementById("line_tension");				line_tension.value = 1;
 				//var y_angle_offset = document.getElementById("y_angle_offset");			y_angle_offset.value = 15;
-				//var reflex = document.getElementById("reflex");							reflex.value = 15;
-				//var qr_neutral = document.getElementById("qr_neutral");					qr_neutral.value = 15;
 				
 				var timestep_multiplier_exponent = document.getElementById("timestep_multiplier_exponent");
 																						timestep_multiplier_exponent.value = 2;
-																						
-				//var y_p = document.getElementById("y_p");	y_p.value = 0;
 				
 				
 				
@@ -439,39 +357,38 @@
 					// AUTOPILOT
 					//autopilot.hover.Y.P = 1.5**y_p.value;
 					
-					wind.setSpeedAndDirection(wind_speed.value*0.5, wind_direction.value);
 					wind.update();
 					
-					var controlData = autopilot.step(kite.getSensorData(), kite.positionR.length(), line_tension.value, timestep_in_s);
+					var controlData = autopilot.step(kite.getSensorData(), kite.positionR.length(), line_tensionSlider.getSliderElement().value, timestep_in_s);
 					document.getElementById("autopilot_logging").innerHTML = autopilot.loggingString;
 					// UI and LINE TENSION
-					line_tension.value = controlData.line_tension;
+					line_tensionSlider.setSlider(controlData.line_tension);
 					smoothLineTension.step(timestep_in_s);
-					smoothLineTension.setTargetValue(line_tension.value);
+					smoothLineTension.setTargetValue(line_tensionSlider.getSliderElement().value);
 					
 					let kite_line_length = kite.positionR.length();
 					time += timestep_in_s;
-					document.getElementById("time").innerHTML = "Time: " + time.toFixed(0) + " s (" + (time/3600).toFixed(3) + " h)";
-					document.getElementById("rope_length").innerHTML = "Line length: " + kite_line_length.toFixed(0) + " m";
-					document.getElementById("rope_angle_horizon").innerHTML = "Line angle to horizon: " + (180/Math.PI*Math.asin(projectToNormedVector(kite.positionR.clone().normalize(), new THREE.Vector3(1, 0, 0)).length())).toFixed(0) + " Grad";
-					document.getElementById("flying_height").innerHTML = "Height: " + kite.positionR.x.toFixed(0) + " m";
-					document.getElementById("speed").innerHTML = "Speed: " + kite.velocity.length().toFixed(0) + " m/s";
+					timeUIElement.setString("Time: " + time.toFixed(0) + " s (" + (time/3600).toFixed(3) + " h)");
+					rope_lengthUIElement.setString("Line length: " + kite_line_length.toFixed(0) + " m");
+					rope_angle_horizonUIElement.setString("Line angle to horizon: " + (180/Math.PI*Math.asin(projectToNormedVector(kite.positionR.clone().normalize(), new THREE.Vector3(1, 0, 0)).length())).toFixed(0) + "°");
+					flying_heightUIElement.setString("Height: " + kite.positionR.x.toFixed(0) + " m");
+					speedUIElement.setString("Speed: " + kite.velocity.length().toFixed(0) + " m/s");
 					let AoA = kite.simpleWing1.AoA_for_vis;
 					let C_L = lift_coefficient(AoA, kite.simpleWing1);
 					let C_D = drag_coefficient(AoA, 2*kite.simpleWing1.dimensions.y/kite.simpleWing1.dimensions.x, kite.simpleWing1);
-					document.getElementById("glide_ratio").innerHTML = "L/D: " + (C_L/C_D).toFixed(1);
+					glide_ratioUIElement.setString("L/D: " + (C_L/C_D).toFixed(1));
 					if(old_kite_line_length != 0){
 						let kite_line_length_difference = kite_line_length - old_kite_line_length;
-						if(line_tension.value != 1){
+						if(line_tensionSlider.getSliderElement().value != 1){
 							//groundstation.factor = autopilot.hover.Y.P;
 							smoothLineTension.setTargetValue( groundstation.getLineTension(kite_line_length_difference/timestep_in_s) );
-							line_tension.value = smoothLineTension.getValue();
+							line_tensionSlider.setSlider(smoothLineTension.getValue());
 						}
-						let power = kite_line_length_difference*line_tension.value/timestep_in_s;
+						let power = kite_line_length_difference*line_tensionSlider.getSliderElement().value/timestep_in_s;
 						energy += power * timestep_in_s;
-						document.getElementById("power").innerHTML = "Power: " + power.toFixed(0) + " W (" + (energy/time).toFixed(0) + " W avg)";
-						document.getElementById("energy").innerHTML = "Energy: " + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)";
-						document.getElementById("electricity_cost").innerHTML = "Electricity Cost: " + (850/(energy/time)).toFixed(1) + " ct/kWh)";
+						powerUIElement.setString("Power: " + power.toFixed(0) + " W (" + (energy/time).toFixed(0) + " W avg)");
+						energyUIElement.setString("Energy: " + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)");
+						electricity_costUIElement.setString("Electricity Cost: " + (850/(energy/time)).toFixed(1) + " ct/kWh)");
 						
 					}
 					old_kite_line_length = kite_line_length;
@@ -496,13 +413,11 @@
 						}
 						kite.rudder.rotation.y = rudderServo.getValue();
 						
-						kite.update(wind, line_tension.value, timestep_fraction_in_s);
+						kite.update(wind, line_tensionSlider.getSliderElement().value, timestep_fraction_in_s);
 						kite.leftPropeller.update();
 						kite.rightPropeller.update();
 					}
 				}
-				document.getElementById("wind_speed_p").innerHTML = "Windspeed: " + (wind_speed.value*0.5).toFixed(1) + " m/s";
-				document.getElementById("line_tension_p").innerHTML = "Line tension: " + line_tension.value + " N";
 				
 				visualization.update(timestep_in_s*running);
 				

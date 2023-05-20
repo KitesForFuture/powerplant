@@ -16,6 +16,10 @@ class UIElement{
 			";
 	}
 	
+	init(){
+	
+	}
+	
 	setString(str){
 		document.getElementById(""+this.id+"_displayValue").innerHTML = str;
 	}

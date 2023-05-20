@@ -42,7 +42,8 @@ class SlidableVariable extends UIElement{
 	}
 	
 	setSlider(value){
-		document.getElementById("" + this.id + "_slider").value = value;
+		this.getSliderElement().value = value;
+		this.setString(this.displayName + ": " + (value*this.factor).toFixed(this.digitsbehindComma) + this.unit);
 	}
 	
 	getSliderElement(){
