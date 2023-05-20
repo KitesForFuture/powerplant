@@ -84,99 +84,17 @@
 							<button type="button" id="zoomIn" onclick="zoomIn()" style="color: black;">+</button>
 							<button type="button" id="zoomOut" onclick="zoomOut()" style="color: black;">-</button></td>
 						</tr>
-						
 						<tr>
 						<td>
-						<button type="button" class="collapsible">Kite Dimensions</button>
-						<div style="font-size: 10px;">
-						  	<table style="font-size: 10px;">
-						  		<tr>
-									<td>
-										Bridle Length
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<input type="range" id="bridle_length" min="-50" max="50" style="height: 5px;">
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										Line Attachment Length
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<input type="range" id="tannenbaum_length" min="0" max="50" style="height: 5px;">
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										Distance Propeller from Center
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<input type="range" id="prop_dist" min="0" max="100" style="height: 5px;">
-									</td>
-								</tr>
-						  	</table>
-						  	<hr>
-						</div>
+						<p id="UI"></p>
 						</td>
 						</tr>
 						
-						<tr>
-						<td>
-						<button type="button" class="collapsible">Autopilot Settings</button>
-						<div style="font-size: 10px;">
-						  	<table style="font-size: 10px;">
-						  		
-						  		<tr>
-									<td>
-										Reflex (in Deg)
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<input type="range" id="reflex" min="0" max="45" style="height: 5px;">
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										QR neutral pos (in Deg)
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<input type="range" id="qr_neutral" min="-25" max="25" style="height: 5px;">
-									</td>
-								</tr>
-								
-								<tr>
-									<td>
-										y_p
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<input type="range" id="y_p" min="-20" max="20" style="height: 5px;">
-									</td>
-								</tr>
-						  		
-						  	</table>
-						  	<hr>
-						</div>
-						</td>
-						</tr>
 						
 						<tr>
 						<td>
 						<button type="button" class="collapsible">Environment</button>
-						<div style="font-size: 10px;">
+						<div style="font-size: 10px;display:none;">
 						  	<table style="font-size: 10px;">
 						  		
 						  		<tr>
@@ -209,7 +127,7 @@
 						<tr>
 						<td>
 						<button type="button" class="collapsible">Measurements</button>
-						<div style="font-size: 10px;">
+						<div style="font-size: 10px;display:none;">
 						  	<table style="font-size: 10px;">
 						  		
 						  		<tr>
@@ -286,7 +204,7 @@
 						<tr>
 						<td>
 						<button type="button" class="collapsible">Simulation Settings</button>
-						<div style="font-size: 10px;">
+						<div style="font-size: 10px; display:none;">
 						  	<table style="font-size: 10px;">
 						  		
 								<tr><td>
@@ -374,39 +292,13 @@
 		<script src="Groundstation.js"></script>
 		<script src="Servo.js"></script>
 		<script src="BLDCMotor.js"></script>
+		<script src="UIElement.js"></script>
+		<script src="SlidableVariable.js"></script>
+		<script src="Collapsible.js"></script>
 		
 		<script>
 		
 			"use strict";
-			
-			var coll = document.getElementsByClassName("collapsible");
-			var i;
-			
-			for (i = 0; i < coll.length; i++) {
-			  //coll[i].addEventListener("click", function() {
-				//this.classList.toggle("active");
-				var content = coll[i].nextElementSibling;
-				//if (content.style.display === "block") {
-				  content.style.display = "none";
-				//} else {
-				//  content.style.display = "block";
-				//}
-			  //});
-			}
-			
-			for (i = 0; i < coll.length; i++) {
-			  coll[i].addEventListener("click", function() {
-				this.classList.toggle("active");
-				var content = this.nextElementSibling;
-				if (content.style.display === "block") {
-				  content.style.display = "none";
-				} else {
-				  content.style.display = "block";
-				}
-			  });
-			}
-			
-			
 			
 			var width, height, dpr;
 			
@@ -436,56 +328,79 @@
 			
 			var old_kite_line_length = 0;
 			
+			var kiteDimensionsCollapsible;
+			var autopilotSettingsCollapsible;
+			
 			init();
 			
 			function init() {
-				console.log("hello");
-				var tannenbaum_length = document.getElementById("tannenbaum_length");	tannenbaum_length.value = 5;
-				var bridle_length = document.getElementById("bridle_length"); 			bridle_length.value = 20;
-				var prop_dist = document.getElementById("prop_dist");					prop_dist.value = 25;
+				
+				// ORGANIZING PAGE LAYOUT
+				let collapsibles = [];
+				
+				// KITE DIMENSIONS
+				
+				kiteDimensionsCollapsible = new Collapsible("kite_dimensions", "Kite Dimensions");
+				collapsibles.push(kiteDimensionsCollapsible);
+				
+				let tannenbaum_lengthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("tannenbaum_length", "Line Attachment Length", 0, 50, 5, 1, 0, " cm") );
+				let bridle_lengthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("bridle_length", "Bridle Length", -50, 50, 20, 1, 0, " cm") );
+				let prop_distSlider = kiteDimensionsCollapsible.add( new SlidableVariable("prop_dist", "Dist Prop from Center", 0, 100, 75, 1, 0, "%") );
+				
+				tannenbaum_lengthSlider.oninput = function(that){ kite.setTannenbaumLengthAndBridleLength(that.value*0.01, bridle_lengthSlider.getSliderElement().value*0.01); };
+				bridle_lengthSlider.oninput = function(that){console.log("test");kite.setTannenbaumLengthAndBridleLength(tannenbaum_lengthSlider.getSliderElement().value*0.01, that.value*0.01); };
+				prop_distSlider.oninput = function(that){ kite.setPropellerDistance(that.value * 0.01); };
+				
+				// AUTOPILOT SETTINGS
+				
+				autopilotSettingsCollapsible = new Collapsible("autopilot_settings", "Autopilot Settings");
+				collapsibles.push(autopilotSettingsCollapsible);
+				
+				let reflexSlider = autopilotSettingsCollapsible.add( new SlidableVariable("reflex", "Reflex", 0, 45, 15, 1, 0, "°") );
+				let qr_neutralSlider = autopilotSettingsCollapsible.add( new SlidableVariable("qr_neutral", "QR Neutral Pos", -25, 25, 15, 1, 0, "°") );
+				let y_pSlider = autopilotSettingsCollapsible.add( new SlidableVariable("y_p", "y_p", -10, 10, 0, 1, 0, "") );
+				
+				
+				reflexSlider.oninput = function(that){ kite.setReflex(parseFloat(that.value) * Math.PI / 180); };
+				qr_neutralSlider.oninput = function(that){ autopilot.qr_neutral = that.value; };
+				y_pSlider.oninput = function(that){ autopilot.hover.Y.P = 1.5**that.value; };
+				
+				
+				
+				
+				// ENVIRONMENT
+				
+				// MEASUREMENTS
+				
+				// SIMULATION SETTINGS
+				
+				
+				// ASSEMBLING AND SETTING PAGE LAYOUT
+				
+				document.getElementById("UI").innerHTML += collapsibles[0].getHTML();
+				for(let i = 1; i < collapsibles.length; i++){
+					document.getElementById("UI").innerHTML += "<br>";
+					document.getElementById("UI").innerHTML += collapsibles[i].getHTML();
+				}
+				
+				for(let i = 0; i < collapsibles.length; i++){
+					collapsibles[i].init();
+				}
+				
+				
 				var wind_speed = document.getElementById("wind_speed");					wind_speed.value = 25;
 				var wind_direction = document.getElementById("wind_direction");			wind_direction.value = 0;
 				var line_tension = document.getElementById("line_tension");				line_tension.value = 1;
 				//var y_angle_offset = document.getElementById("y_angle_offset");			y_angle_offset.value = 15;
-				var reflex = document.getElementById("reflex");							reflex.value = 15;
-				var qr_neutral = document.getElementById("qr_neutral");					qr_neutral.value = 15;
+				//var reflex = document.getElementById("reflex");							reflex.value = 15;
+				//var qr_neutral = document.getElementById("qr_neutral");					qr_neutral.value = 15;
 				
 				var timestep_multiplier_exponent = document.getElementById("timestep_multiplier_exponent");
 																						timestep_multiplier_exponent.value = 2;
 																						
-				var y_p = document.getElementById("y_p");	y_p.value = 0;
+				//var y_p = document.getElementById("y_p");	y_p.value = 0;
 				
-				/*var z_p = document.getElementById("z_p");	z_p.value = 0;
-				var z_d = document.getElementById("z_d");	z_d.value = 0;
 				
-				var y_p = document.getElementById("y_p");	y_p.value = 0;
-				var y_d = document.getElementById("y_d");	y_d.value = 0;
-				
-				var x_d = document.getElementById("x_d");	x_d.value = 0;
-				
-				var h_p = document.getElementById("h_p");	h_p.value = 0;
-				var h_d = document.getElementById("h_d");	h_d.value = 0;
-				*/
-				reflex.oninput = function(){
-					console.log(reflex.value * Math.PI / 180);
-					kite.setReflex(reflex.value * Math.PI / 180);
-				};
-				
-				qr_neutral.oninput = function(){
-					//console.log(reflex.value * Math.PI / 180);
-					autopilot.qr_neutral = qr_neutral.value;
-				};
-				
-				tannenbaum_length.oninput = function(){
-					kite.setTannenbaumLengthAndBridleLength(this.value*0.01, bridle_length.value*0.01);
-				};
-				bridle_length.oninput = function(){
-					kite.setTannenbaumLengthAndBridleLength(tannenbaum_length.value*0.01, this.value*0.01);
-				};
-				
-				prop_dist.oninput = function(){
-					kite.setPropellerDistance(this.value * 0.01);
-				}
 				
 				timestep_multiplier_exponent.oninput = function(){
 					timestep_multiplier = 10**this.value;
@@ -520,15 +435,9 @@
 				var timestep_in_s = 0.001*timestep_in_ms;
 				
 				if(running){
-					//console.log(kite.positionR);
+					
 					// AUTOPILOT
-					autopilot.hover.Y.P = 1.5**y_p.value;
-					/*autopilot.hover.Z.P = 1.04**z_p.value;	autopilot.hover.Z.D = 1.04**z_d.value;
-					autopilot.hover.Y.P = 1.14**y_p.value;	autopilot.hover.Y.D = 1.14**y_d.value;
-					autopilot.hover.X.D = 1.04**x_d.value;
-					autopilot.hover.H.P = 1.04**h_p.value;	autopilot.hover.H.D = 1.04**h_d.value;
-					*/
-					//autopilot.y_angle_offset = 15*Math.PI/180;
+					//autopilot.hover.Y.P = 1.5**y_p.value;
 					
 					wind.setSpeedAndDirection(wind_speed.value*0.5, wind_direction.value);
 					wind.update();
