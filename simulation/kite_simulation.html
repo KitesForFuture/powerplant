@@ -4,60 +4,7 @@
 		<meta http-equiv="Expires" content="0" />
 		<meta charset="utf-8">
 		<meta name="viewport" >
-		<style>
-			
-			buttonInactive{
-			  background-color: gray;
-			  color: white;
-			  padding: 5px 1px;
-			  text-align: center;
-			  text-decoration: none;
-			  display: inline-block;
-			}
-			
-			a.class1:link, a.class1:visited {
-			  background-color: #4fa48a;
-			  color: white;
-			  text-align: center;
-			  text-decoration: none;
-			}
-			
-			a.class1:hover, a.class1:active {
-			  background-color: #36705f;
-			}
-			
-			a.class1 {
-			  margin-top: 0vw;
-			  margin-bottom: 1vw;
-			  margin-right: 0vw;
-			  margin-left: 0vw;
-			  border-radius: 0vw;
-						  
-			  width: 100%;
-  			  padding: 5px 1px;
-			  display: inline-block;
-			  border: none;
-			  box-shadow: none;
-			  box-sizing: border-box;
-			  cursor: pointer;
-			  font-size: 1.5vmin;
-			  font-weight: 600;
-			  box-shadow: none;
-			}
-			
-			.collapsible {
-			  background-color: #777;
-			  color: white;
-			  cursor: pointer;
-			  outline: none;
-			}
-
-			.active, .collapsible:hover {
-			  background-color: #555;
-			}
-
-			
-		</style>
+		<link rel="stylesheet" href="mystyle.css">
 	</head>
 	<body>
 		
@@ -84,45 +31,15 @@
 							<button type="button" id="zoomIn" onclick="zoomIn()" style="color: black;">+</button>
 							<button type="button" id="zoomOut" onclick="zoomOut()" style="color: black;">-</button></td>
 						</tr>
+						<tr><td>
+							<button type="button" id="moveCamera" onclick="moveCamera()" style="color: green;">move camera</button></td>
+						</tr>
+						<tr><td>
+							<button type="button" id="elevonControlOff" onclick="elevonControlOff_func()" style="color: green;">Control OFF</button></td>
+						</tr>
 						<tr>
 						<td>
 						<p id="UI"></p>
-						</td>
-						</tr>
-						
-						<tr>
-						<td>
-						<button type="button" class="collapsible">Simulation Settings</button>
-						<div style="font-size: 10px; display:none;">
-						  	<table style="font-size: 10px;">
-						  		
-								<tr><td>
-									<button type="button" id="moveCamera" onclick="moveCamera()" style="color: green;">move camera</button></td>
-								</tr>
-								<tr><td>
-									<button type="button" id="elevonControlOff" onclick="elevonControlOff_func()" style="color: green;">Control OFF</button></td>
-								</tr>
-						  		<tr>
-									<td>
-										time step = <p id="zeitschritt">1/100</p>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<input type="range" id="timestep_multiplier_exponent" min="0" max="4" style="height: 5px;">
-									</td>
-								</tr>
-								
-								
-								<tr>
-									<td>
-										Autopilot-Log = <p id="autopilot_logging"></p>
-									</td>
-								</tr>
-						  		
-						  	</table>
-						  	<hr>
-						</div>
 						</td>
 						</tr>
 						
@@ -299,6 +216,12 @@
 				
 				
 				// SIMULATION SETTINGS
+				simulationSettingsCollapsible = new Collapsible("simSettings", "Simulation Settings");
+				collapsibles.push(simulationSettingsCollapsible);
+				
+				let zeitschrittUIElement = simulationSettingsCollapsible.add( new UIElement("zeitschritt") );
+				let timestep_multiplier_exponentSlider = simulationSettingsCollapsible.add( new SlidableVariable("timestep_multiplier_exponent", "TimeStepExp", 0, 4, 2, 1, 0, "") );
+				timestep_multiplier_exponentSlider.oninput = function(that){ timestep_multiplier = 10**that.value; zeitschrittUIElement.setString("Timestep: 1/" + timestep_multiplier); }
 				
 				
 				// ASSEMBLING AND SETTING PAGE LAYOUT
@@ -313,18 +236,6 @@
 					collapsibles[i].init();
 				}
 				
-				//var y_angle_offset = document.getElementById("y_angle_offset");			y_angle_offset.value = 15;
-				
-				var timestep_multiplier_exponent = document.getElementById("timestep_multiplier_exponent");
-																						timestep_multiplier_exponent.value = 2;
-				
-				
-				
-				timestep_multiplier_exponent.oninput = function(){
-					timestep_multiplier = 10**this.value;
-					document.getElementById("zeitschritt").innerHTML = "1/" + timestep_multiplier;
-				}
-				
 				wind = new Wind();
 				
 				kite = new Kite();
@@ -337,7 +248,7 @@
 				let c_l_by_c_d = 5;
 				// min8T, max8T, minLT, maxLT, minLS, maxLS
 				groundstation = new Groundstation(100, 100/*30, 1000*/, 2, 30, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
-				smoothLineTension = new Actuator(500, 0, 1000); //TODO: 250 as first argument (speed) keeps vibrations short when transitioning to landing mode, maybe better to communicate with groundstation to tell it to instantly decrease tension (even when reeling out).
+				smoothLineTension = new Actuator(500, 0, 1000);
 				
 				visualization = new KiteVisualization("canvas_for_visualization", kite, wind);
 				
@@ -360,7 +271,7 @@
 					wind.update();
 					
 					var controlData = autopilot.step(kite.getSensorData(), kite.positionR.length(), line_tensionSlider.getSliderElement().value, timestep_in_s);
-					document.getElementById("autopilot_logging").innerHTML = autopilot.loggingString;
+					
 					// UI and LINE TENSION
 					line_tensionSlider.setSlider(controlData.line_tension);
 					smoothLineTension.step(timestep_in_s);

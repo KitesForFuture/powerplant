@@ -1,0 +1,49 @@
+buttonInactive{
+  background-color: gray;
+  color: white;
+  padding: 5px 1px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
+a.class1:link, a.class1:visited {
+  background-color: #4fa48a;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+}
+
+a.class1:hover, a.class1:active {
+  background-color: #36705f;
+}
+
+a.class1 {
+  margin-top: 0vw;
+  margin-bottom: 1vw;
+  margin-right: 0vw;
+  margin-left: 0vw;
+  border-radius: 0vw;
+			  
+  width: 100%;
+  padding: 5px 1px;
+  display: inline-block;
+  border: none;
+  box-shadow: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-size: 1.5vmin;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.collapsible {
+  background-color: #777;
+  color: white;
+  cursor: pointer;
+  outline: none;
+}
+
+.active, .collapsible:hover {
+  background-color: #555;
+}
