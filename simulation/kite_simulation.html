@@ -89,6 +89,7 @@
 		<script src="Wind.js"></script>
 		<script src="RigidBody.js"></script>
 		<script src="VectorVis.js"></script>
+		<script src="CGIndicator.js"></script>
 		<script src="Kite.js"></script>
 		<script src="SensorData.js"></script>
 		<script src="ControlData.js"></script>
@@ -165,16 +166,24 @@
 				kiteDimensionsCollapsible = new Collapsible("kite_dimensions", "Kite Dimensions");
 				collapsibles.push(kiteDimensionsCollapsible);
 				
-				let wingspanSlider = kiteDimensionsCollapsible.add( new SlidableVariable("wingspan", "Wingspan", 0, 1000, 200, 1, 0, " cm") );
-				wingspanSlider.oninput = function(that){ kite.dimensions.y = that.value*0.01; kite.updateDimensionsAndPositionsOfParts();};
+				let wingspanSlider = kiteDimensionsCollapsible.add( new SlidableVariable("wingspan", "Wingspan", 1, 100, 20, 10, 0, " cm") );
+				wingspanSlider.oninput = function(that){ kite.dimensions.y = that.value*0.1; kite.updateDimensionsAndPositionsOfParts(); massUIElement.setString("mass: " + kite.mass.toFixed(3) + " kg");};
+				let prop_distSlider = kiteDimensionsCollapsible.add( new SlidableVariable("prop_dist", "Dist Prop from Center", 0, 100, 75, 1, 0, "%") );
+				let elevon_spanSlider = kiteDimensionsCollapsible.add( new SlidableVariable("elevon_span", "Elevon length", 1, 50, 5, 10, 0, " cm") );
+				elevon_spanSlider.oninput = function(that){ kite.elevonData.dimensions.y = that.value*0.1; kite.updateDimensionsAndPositionsOfParts(); };
+				let stabilizer_distanceSlider = kiteDimensionsCollapsible.add( new SlidableVariable("stabilizer_distance", "Stabilizer Distance", 0, 200, 15, 1, 0, " cm") );
+				stabilizer_distanceSlider.oninput = function(that){ kite.rudderData.distanceFromCG = that.value*0.01; kite.updateDimensionsAndPositionsOfParts(); };
+				let stabilizer_depthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("stabilizer_depth", "Stabilizer Depth", 0, 100, 25, 1, 0, " cm") );
+				stabilizer_depthSlider.oninput = function(that){ kite.rudderData.StabilizerDimensions.x = that.value*0.01; kite.updateDimensionsAndPositionsOfParts(); };
 				
 				let tannenbaum_lengthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("tannenbaum_length", "Line Attachment Length", 0, 50, 5, 1, 0, " cm") );
-				let bridle_lengthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("bridle_length", "Bridle Length", -50, 50, 20, 1, 0, " cm") );
-				let prop_distSlider = kiteDimensionsCollapsible.add( new SlidableVariable("prop_dist", "Dist Prop from Center", 0, 100, 75, 1, 0, "%") );
+				let bridle_lengthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("bridle_length", "Bridle Length", 0, 100, 20, 1, 0, " cm") );
 				
 				tannenbaum_lengthSlider.oninput = function(that){ kite.setTannenbaumLengthAndBridleLength(that.value*0.01, bridle_lengthSlider.getSliderElement().value*0.01); };
 				bridle_lengthSlider.oninput = function(that){console.log("test");kite.setTannenbaumLengthAndBridleLength(tannenbaum_lengthSlider.getSliderElement().value*0.01, that.value*0.01); };
 				prop_distSlider.oninput = function(that){ kite.setPropellerDistance(that.value * 0.01); };
+				
+				let massUIElement = kiteDimensionsCollapsible.add( new UIElement("mass") );
 				
 				// AUTOPILOT SETTINGS
 				
@@ -250,7 +259,7 @@
 				
 				let c_l_by_c_d = 5;
 				// min8T, max8T, minLT, maxLT, minLS, maxLS
-				groundstation = new Groundstation(60, 60/*30, 1000*/, 2, 60, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
+				groundstation = new Groundstation(100, 100/*30, 1000*/, 2, 100, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
 				smoothLineTension = new Actuator(500, 0, 1000);
 				
 				visualization = new KiteVisualization("canvas_for_visualization", kite, wind);

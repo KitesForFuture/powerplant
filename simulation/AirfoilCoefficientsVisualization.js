@@ -168,61 +168,6 @@ class AirfoilCoefficientsVisualization{
 		this.diagram.diagramLines[5].color[1] = 0.5;
 		this.diagram.diagramLines[5].color[2] = 0.5;
 		
-		
-		
-		
-		
-		if(this.diagramType == "L,D"){
-			this.diagram.diagramLines[3].reset(0, 0, Math.PI, 2); // graph Lift
-			this.diagram.diagramLines[1].reset(0, 0, Math.PI, 2); // graph Drag
-			this.diagram.diagramLines[0].reset(0, 0, Math.PI, 2); // coordinate system
-			
-			this.diagram.diagramLines[0].addPoint(0, 0);
-			this.diagram.diagramLines[0].addPoint(Math.PI, 0);
-			this.diagram.diagramLines[0].addPoint(Math.PI, 0.1);
-			this.diagram.diagramLines[0].addPoint(Math.PI, 0);
-			this.diagram.diagramLines[0].addPoint(0, 0);
-			this.diagram.diagramLines[0].addPoint(0, 2);
-			this.diagram.diagramLines[0].addPoint(0.06, 2);
-			this.diagram.diagramLines[0].addPoint(0, 2);
-			this.diagram.diagramLines[0].addPoint(0, -2);
-			this.diagram.diagramLines[0].addPoint(0.06, -2);
-			this.diagram.diagramLines[0].addPoint(0, -2);
-			
-			
-			
-			let resolution = 400;
-			for(let i = 0; i < resolution; i++){
-				let AoA = i * Math.PI / resolution;
-				let C_L = lift_coefficient(AoA, this.wing1);
-				let C_D = drag_coefficient(AoA, 2*this.wing1.dimensions.y/this.wing1.dimensions.x, this.wing1);
-				this.diagram.diagramLines[3].addPoint(AoA, C_L);
-				this.diagram.diagramLines[1].addPoint(AoA, C_D);
-			}
-		}else if(this.diagramType = "L/D"){
-			this.diagram.diagramLines[0].reset(0, -2, 0.5, 2); // coordinate system
-			this.diagram.diagramLines[1].reset(0, -2, 0.5, 2); // graph
-			//this.diagram.diagramLines[5].reset(0, -2, 0.5, 2); // cross hair
-			
-			this.diagram.diagramLines[0].addPoint(0, 0);
-			this.diagram.diagramLines[0].addPoint(0.5, 0);
-			this.diagram.diagramLines[0].addPoint(0.5, 0.1);
-			this.diagram.diagramLines[0].addPoint(0.5, 0);
-			this.diagram.diagramLines[0].addPoint(0, 0);
-			this.diagram.diagramLines[0].addPoint(0, 2);
-			this.diagram.diagramLines[0].addPoint(0.01, 2);
-			this.diagram.diagramLines[0].addPoint(0, 2);
-			this.diagram.diagramLines[0].addPoint(0, -2);
-			this.diagram.diagramLines[0].addPoint(0.01, -2);
-			this.diagram.diagramLines[0].addPoint(0, -2);
-			for(let i = -500; i < 1000; i++){
-				let AoA = i * 0.5 * Math.PI / 1000;
-				let C_L = lift_coefficient(AoA, this.wing1);
-				let C_D = drag_coefficient(AoA, 2*this.wing1.dimensions.y/this.wing1.dimensions.x, this.wing1);
-				this.diagram.diagramLines[1].addPoint(C_D, C_L);
-			}
-		}
-		
 		var vis = this;
 		
 		var animate = function(time) {
@@ -237,11 +182,63 @@ class AirfoilCoefficientsVisualization{
 			
 			
 			if(vis.diagramType == "L,D"){
+				// GRAPH
+				vis.diagram.diagramLines[3].reset(0, 0, Math.PI, 2); // graph Lift
+				vis.diagram.diagramLines[1].reset(0, 0, Math.PI, 2); // graph Drag
+				vis.diagram.diagramLines[0].reset(0, 0, Math.PI, 2); // coordinate system
+				
+				vis.diagram.diagramLines[0].addPoint(0, 0);
+				vis.diagram.diagramLines[0].addPoint(Math.PI, 0);
+				vis.diagram.diagramLines[0].addPoint(Math.PI, 0.1);
+				vis.diagram.diagramLines[0].addPoint(Math.PI, 0);
+				vis.diagram.diagramLines[0].addPoint(0, 0);
+				vis.diagram.diagramLines[0].addPoint(0, 2);
+				vis.diagram.diagramLines[0].addPoint(0.06, 2);
+				vis.diagram.diagramLines[0].addPoint(0, 2);
+				vis.diagram.diagramLines[0].addPoint(0, -2);
+				vis.diagram.diagramLines[0].addPoint(0.06, -2);
+				vis.diagram.diagramLines[0].addPoint(0, -2);
+				
+				let resolution = 400;
+				for(let i = 0; i < resolution; i++){
+					let AoA = i * Math.PI / resolution;
+					let C_L = lift_coefficient(AoA, vis.wing1);
+					let C_D = drag_coefficient(AoA, 2*vis.wing1.dimensions.y/vis.wing1.dimensions.x, vis.wing1);
+					vis.diagram.diagramLines[3].addPoint(AoA, C_L);
+					vis.diagram.diagramLines[1].addPoint(AoA, C_D);
+				}
+				
+				// CROSSHAIR
 				vis.diagram.diagramLines[2].reset(0, 0, Math.PI, 2);
 				
 				vis.diagram.diagramLines[2].addPoint(vis.wing1.AoA_for_vis, -2);
 				vis.diagram.diagramLines[2].addPoint(vis.wing1.AoA_for_vis, 2);
 			}else if(vis.diagramType = "L/D"){
+				
+				// GRAPH
+				vis.diagram.diagramLines[0].reset(0, -2, 0.5, 2); // coordinate system
+				vis.diagram.diagramLines[1].reset(0, -2, 0.5, 2); // graph
+				//vis.diagram.diagramLines[5].reset(0, -2, 0.5, 2); // cross hair
+				
+				vis.diagram.diagramLines[0].addPoint(0, 0);
+				vis.diagram.diagramLines[0].addPoint(0.5, 0);
+				vis.diagram.diagramLines[0].addPoint(0.5, 0.1);
+				vis.diagram.diagramLines[0].addPoint(0.5, 0);
+				vis.diagram.diagramLines[0].addPoint(0, 0);
+				vis.diagram.diagramLines[0].addPoint(0, 2);
+				vis.diagram.diagramLines[0].addPoint(0.01, 2);
+				vis.diagram.diagramLines[0].addPoint(0, 2);
+				vis.diagram.diagramLines[0].addPoint(0, -2);
+				vis.diagram.diagramLines[0].addPoint(0.01, -2);
+				vis.diagram.diagramLines[0].addPoint(0, -2);
+				for(let i = -500; i < 1000; i++){
+					let AoA = i * 0.5 * Math.PI / 1000;
+					let C_L = lift_coefficient(AoA, vis.wing1);
+					let C_D = drag_coefficient(AoA, 2*vis.wing1.dimensions.y/vis.wing1.dimensions.x, vis.wing1);
+					vis.diagram.diagramLines[1].addPoint(C_D, C_L);
+				}
+				
+				// CROSSHAIR
 				vis.diagram.diagramLines[2].reset(0, -2, 0.5, 2);
 				
 				let AoA = vis.wing1.AoA_for_vis;

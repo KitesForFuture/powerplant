@@ -127,6 +127,9 @@ class KiteVisualization extends Visualization{
 	}
 	
 	updateSmoke(timestep_in_s){
+		this.smoke.setScale(0.2/this.camera.zoom);
+		this.path.setScale(0.2/this.camera.zoom);
+		
 		if(timestep_in_s == 0) return;
 		
 		// SMOKE
@@ -160,5 +163,6 @@ class KiteVisualization extends Visualization{
 		}else{
 			this.diagram.position.set(0,0,0);
 		}
+		
 	}
 }

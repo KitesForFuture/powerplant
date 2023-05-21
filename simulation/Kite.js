@@ -11,6 +11,9 @@ class Kite extends RigidBody{
 	}
 	
 	updateDimensionsAndPositionsOfParts(){
+	
+		this.stabilizerLeft.setDimensions(this.rudderData.StabilizerDimensions.x, this.rudderData.StabilizerDimensions.y, this.rudderData.StabilizerDimensions.z);
+		this.stabilizerLeft.position.x = -this.rudderData.distanceFromCG - this.rudderData.StabilizerDimensions.x * 0.5;
 		this.stabilizerLeft.position.z = 0;//this.rudderData.StabilizerDimensions.y*0.5;
 		this.stabilizerLeft.position.y = 0;//this.dimensions.y*0.5;
 		
@@ -27,6 +30,8 @@ class Kite extends RigidBody{
 		this.rightReflex.rotation.y = Math.PI * 15/180;
 		this.reflexMeshRight.position.y = - 0.25;//this.dimensions.y * 0.25;
 		
+		this.elevonMeshLeft.setDimensions(this.elevonData.dimensions.x, this.elevonData.dimensions.y, this.elevonData.dimensions.z);
+		this.elevonMeshRight.setDimensions(this.elevonData.dimensions.x, this.elevonData.dimensions.y, this.elevonData.dimensions.z);
 		this.elevonMeshLeft.position.x = - this.elevonData.dimensions.x*0.5;
 		this.leftElevon.position.x = - this.dimensions.x * ( 1 - this.center_of_gravity_from_front );// + 0.2;
 		
@@ -50,6 +55,9 @@ class Kite extends RigidBody{
 		this.rightPropeller.position.x = this.dimensions.x*this.center_of_gravity_from_front + this.propeller_radius;
 		
 		this.setPropellerDistance(this.elevonData.distanceFromCenter);
+		
+		this.cgIndicator.setScale(this.dimensions.y + 0.01);
+		
 		this.calculateAndSetAngularInertiaAndMass();
 	}
 	
@@ -68,7 +76,7 @@ class Kite extends RigidBody{
 		this.rudderData = new Object();
 		this.rudderData.dimensions = new THREE.Vector3(0.1, 0.4, 0.005);
 		this.rudderData.StabilizerDimensions = new THREE.Vector3(0.25, 0.2, 0.005);
-		this.rudderData.distanceFromCG = 0.45;
+		this.rudderData.distanceFromCG = 0.15;
 		this.reflexData = new Object();
 		this.reflexData.dimensions = new THREE.Vector3(0.10, 0.5, 0.005);
 		this.maxPropellerThrust = 8;
@@ -77,7 +85,6 @@ class Kite extends RigidBody{
 		// STABILIZER
 		this.stabilizerLeft = new FlatPlate(this.rudderData.StabilizerDimensions.x, this.rudderData.StabilizerDimensions.y, this.rudderData.StabilizerDimensions.z, this , 'blue', false);
 		this.stabilizerLeft.rotation.x = 0.5*Math.PI;
-		this.stabilizerLeft.position.x = -this.rudderData.distanceFromCG + this.rudderData.dimensions.x*0.5 + this.rudderData.StabilizerDimensions.x * 0.5;
 		
 		/*
 		this.stabilizerRight = new FlatPlate(this.rudderData.StabilizerDimensions.x, this.rudderData.StabilizerDimensions.y, this.rudderData.StabilizerDimensions.z, this , 'blue', false);
@@ -130,16 +137,7 @@ class Kite extends RigidBody{
 		this.simpleWing1 = new FlatPlate(this.dimensions.x, this.dimensions.y*0.5, this.dimensions.z, this, 'white', true);
 		this.simpleWing2 = new FlatPlate(this.dimensions.x, this.dimensions.y*0.5, this.dimensions.z, this, 'white', true);
 		
-		
-		
-		
-		//this.wingDrag = new FlatPlate(0.0025, this.dimensions.y, this.dimensions.z, this, 'white', false);
-		//this.wingDrag.position.x = this.dimensions.x * 0.25;
-		//this.wingDrag.rotation.y = 0.5*Math.PI;
-		
 		// PROPELLERS
-		
-		
 		
 		this.leftPropeller = new Propeller(this.propeller_radius, this, this.maxPropellerThrust);
 		this.leftPropeller.rotation.z = -Math.PI*0.5;
@@ -148,6 +146,8 @@ class Kite extends RigidBody{
 		
 		this.rightPropeller = new Propeller(this.propeller_radius, this, this.maxPropellerThrust);
 		this.rightPropeller.rotation.z = -Math.PI*0.5;
+		
+		this.cgIndicator = new CGIndicator(this);
 		
 		this.updateDimensionsAndPositionsOfParts();
 		
@@ -175,6 +175,7 @@ class Kite extends RigidBody{
 			//this.Wing1TorqueVis,
 			//this.Wing2TorqueVis,
 			//this.StabilizerTorqueVis
+			this.cgIndicator,
 		];
 		
 		this.kiteMeshes = new THREE.Object3D();
@@ -220,7 +221,7 @@ class Kite extends RigidBody{
 		var xps_mass = 0.200 * this.dimensions.x*this.dimensions.y*this.dimensions.z/0.012;;
 		var xps_inertia = getInertia(xps_mass, this.dimensions.x, this.dimensions.y, this.dimensions.z);
 		
-		var cfk_mass = 0.250 * this.dimensions.x*this.dimensions.y*this.dimensions.z/0.012;
+		var cfk_mass = 0.050 * this.dimensions.x*this.dimensions.y*this.dimensions.z/0.012;
 		var cfk_inertia = getInertia(cfk_mass, this.dimensions.x, this.dimensions.y, this.dimensions.z);
 		
 		var battery_mass = 0.180;
@@ -267,8 +268,8 @@ class Kite extends RigidBody{
 	setPropellerDistance(prop_dist){
 		this.elevonData.distanceFromCenter = prop_dist;
 		
-		this.elevonMeshLeft.position.y = this.elevonData.distanceFromCenter;
-		this.elevonMeshRight.position.y = - this.elevonData.distanceFromCenter;
+		this.elevonMeshLeft.position.y = this.dimensions.y*0.5 * this.elevonData.distanceFromCenter;
+		this.elevonMeshRight.position.y = - this.dimensions.y*0.5 * this.elevonData.distanceFromCenter;
 		
 		this.leftPropeller.position.y = this.dimensions.y*0.5 * this.elevonData.distanceFromCenter;
 		this.rightPropeller.position.y = -this.dimensions.y*0.5 * this.elevonData.distanceFromCenter;
