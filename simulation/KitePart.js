@@ -1,9 +1,13 @@
 "use strict";
 
-class KitePart extends THREE.Mesh{
+class KitePart extends THREE.Object3D{
 	
 	constructor(geometry, material, rigidBody){
-		super(geometry, material);
+		super();
+		this.mesh = new THREE.Mesh(geometry, material);
+		this.scalingObject = new THREE.Object3D();
+		this.scalingObject.add(this.mesh);
+		this.add(this.scalingObject);
 		this.rigidBody = rigidBody;
 	}
 	

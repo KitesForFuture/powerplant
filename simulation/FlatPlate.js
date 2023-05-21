@@ -3,9 +3,10 @@
 class FlatPlate extends KitePart{
 	
 	constructor(x, y, z, rigidBody, colorName, camber){
-		super(new THREE.BoxBufferGeometry(x, y, z), new THREE.MeshBasicMaterial( { color: new THREE.Color(colorName) } ), rigidBody);
+		super(new THREE.BoxBufferGeometry(1, 1, 1), new THREE.MeshBasicMaterial( { color: new THREE.Color(colorName) } ), rigidBody);
 		
-		this.dimensions = new THREE.Vector3(x, y, z);
+		this.dimensions = new THREE.Vector3(1, 1, 1);
+		this.setDimensions(x, y, z);
 		
 		this.additionalAirflow = new THREE.Vector3(0,0,0);
 		
@@ -15,6 +16,29 @@ class FlatPlate extends KitePart{
 		this.torqueVis = new VectorVis(new THREE.Color('red'));
 		
 		this.AoA_for_vis = 0;
+	}
+	
+	setDimensions(x, y, z){
+		console.log("changing dimensions");
+		this.scalingObject.scale.x = x;
+		this.dimensions.x = x;
+		this.scalingObject.scale.y = y;
+		this.dimensions.y = y;
+		this.scalingObject.scale.z = z;
+		this.dimensions.z = z;
+	}
+	
+	setDim(x){
+		this.scalingObject.scale.x = x;
+		this.dimensions.x = x;
+	}
+	setDimY(y){
+		this.scalingObject.scale.y = y;
+		this.dimensions.y = y;
+	}
+	setDimZ(z){
+		this.scalingObject.scale.z = z;
+		this.dimensions.z = z;
 	}
 	
 	setAdditionalWind(vec){

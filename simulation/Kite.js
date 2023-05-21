@@ -2,6 +2,57 @@
 
 class Kite extends RigidBody{
 	
+	setDimensions(x, y, z){
+		this.dimensions.x = x;
+		this.dimensions.y = y;
+		this.dimensions.z = z;
+		
+		this.updateDimensionsOfParts();
+	}
+	
+	updateDimensionsAndPositionsOfParts(){
+		this.stabilizerLeft.position.z = 0;//this.rudderData.StabilizerDimensions.y*0.5;
+		this.stabilizerLeft.position.y = 0;//this.dimensions.y*0.5;
+		
+		this.rudder.position.x = -this.rudderData.distanceFromCG;
+		this.rudder.position.z = 0;//this.rudderData.dimensions.y*0.5;
+		
+		this.reflexMeshLeft.position.x = - this.reflexData.dimensions.x*0.5;
+		this.leftReflex.position.x = - this.dimensions.x * ( 1 - this.center_of_gravity_from_front );// + 0.2;
+		this.leftReflex.rotation.y = Math.PI * 15/180;
+		this.reflexMeshLeft.position.y = 0.25;//this.dimensions.y * 0.25;
+		
+		this.reflexMeshRight.position.x = - this.reflexData.dimensions.x*0.5;
+		this.rightReflex.position.x = - this.dimensions.x * ( 1 - this.center_of_gravity_from_front );// + 0.2;
+		this.rightReflex.rotation.y = Math.PI * 15/180;
+		this.reflexMeshRight.position.y = - 0.25;//this.dimensions.y * 0.25;
+		
+		this.elevonMeshLeft.position.x = - this.elevonData.dimensions.x*0.5;
+		this.leftElevon.position.x = - this.dimensions.x * ( 1 - this.center_of_gravity_from_front );// + 0.2;
+		
+		this.elevonMeshRight.position.x = - this.elevonData.dimensions.x*0.5;
+		this.rightElevon.position.x = - this.dimensions.x*(1 - this.center_of_gravity_from_front);// + 0.2;
+		
+		
+		this.setTannenbaumLengthAndBridleLength(this.tannenbaum_length, this.bridle_length);
+		
+		this.simpleWing1.setDimensions(this.dimensions.x, this.dimensions.y*0.5, this.dimensions.z);
+		this.simpleWing2.setDimensions(this.dimensions.x, this.dimensions.y*0.5, this.dimensions.z);
+		
+		this.simpleWing1.position.x = - this.dimensions.x*(0.5-this.center_of_gravity_from_front);
+		this.simpleWing2.position.x = - this.dimensions.x*(0.5-this.center_of_gravity_from_front);
+		
+		this.simpleWing1.position.y = + this.dimensions.y*0.25;
+		this.simpleWing2.position.y = - this.dimensions.y*0.25;
+		
+		
+		this.leftPropeller.position.x = this.dimensions.x*this.center_of_gravity_from_front + this.propeller_radius;
+		this.rightPropeller.position.x = this.dimensions.x*this.center_of_gravity_from_front + this.propeller_radius;
+		
+		this.setPropellerDistance(this.elevonData.distanceFromCenter);
+		this.calculateAndSetAngularInertiaAndMass();
+	}
+	
 	constructor(){ super();
 		
 		this.positionR.set(2, 0, 2);//this.positionR.set(40, 0, 82);//
@@ -21,13 +72,13 @@ class Kite extends RigidBody{
 		this.reflexData = new Object();
 		this.reflexData.dimensions = new THREE.Vector3(0.10, 0.5, 0.005);
 		this.maxPropellerThrust = 8;
+		this.propeller_radius = 0.1;
 		
 		// STABILIZER
 		this.stabilizerLeft = new FlatPlate(this.rudderData.StabilizerDimensions.x, this.rudderData.StabilizerDimensions.y, this.rudderData.StabilizerDimensions.z, this , 'blue', false);
 		this.stabilizerLeft.rotation.x = 0.5*Math.PI;
 		this.stabilizerLeft.position.x = -this.rudderData.distanceFromCG + this.rudderData.dimensions.x*0.5 + this.rudderData.StabilizerDimensions.x * 0.5;
-		this.stabilizerLeft.position.z = 0;//this.rudderData.StabilizerDimensions.y*0.5;
-		this.stabilizerLeft.position.y = 0;//this.dimensions.y*0.5;
+		
 		/*
 		this.stabilizerRight = new FlatPlate(this.rudderData.StabilizerDimensions.x, this.rudderData.StabilizerDimensions.y, this.rudderData.StabilizerDimensions.z, this , 'blue', false);
 		this.stabilizerRight.rotation.x = 0.5*Math.PI;
@@ -38,57 +89,47 @@ class Kite extends RigidBody{
 		// RUDDER
 		this.rudder = new FlatPlate(this.rudderData.dimensions.x, this.rudderData.dimensions.y, this.rudderData.dimensions.z, this , 'magenta', false);
 		this.rudder.rotation.x = 0.5*Math.PI;
-		this.rudder.position.x = -this.rudderData.distanceFromCG;
-		this.rudder.position.z = 0;//this.rudderData.dimensions.y*0.5;
+		
 		
 		// LEFT REFLEX
 		this.reflexMeshLeft = new FlatPlate(this.reflexData.dimensions.x, this.reflexData.dimensions.y, this.reflexData.dimensions.z, this, 'teal', false);
-		this.reflexMeshLeft.position.x -= this.reflexData.dimensions.x*0.5;
+		
 		this.leftReflex = new THREE.Object3D();
 		this.leftReflex.add (this.reflexMeshLeft);
-		this.leftReflex.position.x -= this.dimensions.x * ( 1 - this.center_of_gravity_from_front );// + 0.2;
-		this.leftReflex.rotation.y = Math.PI * 15/180;
-		this.reflexMeshLeft.position.y = 0.25;//this.dimensions.y * 0.25;
+		
+		
 		
 		// RIGHT REFLEX
 		this.reflexMeshRight = new FlatPlate(this.reflexData.dimensions.x, this.reflexData.dimensions.y, this.reflexData.dimensions.z, this, 'teal', false);
-		this.reflexMeshRight.position.x -= this.reflexData.dimensions.x*0.5;
+		
 		this.rightReflex = new THREE.Object3D();
 		this.rightReflex.add (this.reflexMeshRight);
-		this.rightReflex.position.x -= this.dimensions.x * ( 1 - this.center_of_gravity_from_front );// + 0.2;
-		this.rightReflex.rotation.y = Math.PI * 15/180;
-		this.reflexMeshRight.position.y = - 0.25;//this.dimensions.y * 0.25;
+		
 		
 		// LEFT ELEVON
 		this.elevonMeshLeft = new FlatPlate(this.elevonData.dimensions.x, this.elevonData.dimensions.y, this.elevonData.dimensions.z, this, 'magenta', false);
-		this.elevonMeshLeft.position.x -= this.elevonData.dimensions.x*0.5;
+		
 		this.leftElevon = new THREE.Object3D();
 		this.leftElevon.add ( this.elevonMeshLeft );
-		this.leftElevon.position.x -= this.dimensions.x * ( 1 - this.center_of_gravity_from_front );// + 0.2;
+		
 		this.leftElevon.rotation.y = 0;//Math.PI * 0.1;
 		
 		// RIGHT ELEVON
 		this.elevonMeshRight = new FlatPlate(this.elevonData.dimensions.x, this.elevonData.dimensions.y, this.elevonData.dimensions.z, this, 'magenta', false);
-		this.elevonMeshRight.position.x -= this.elevonData.dimensions.x*0.5;
+		
 		this.rightElevon = new THREE.Object3D();
 		this.rightElevon.add(this.elevonMeshRight);
-		this.rightElevon.position.x -= this.dimensions.x*(1 - this.center_of_gravity_from_front);// + 0.2;
+		
 		this.rightElevon.rotation.y = 0;//Math.PI * 0.1;
 		
 		// TANNENBAUM
 		this.tannenbaumLeft = new THREE.Mesh(new THREE.BoxBufferGeometry(0.03, 0.001, 1), new THREE.MeshBasicMaterial( { color: new THREE.Color('blue') } ) );
 		this.tannenbaumRight = new THREE.Mesh(new THREE.BoxBufferGeometry(0.03, 0.001, 1), new THREE.MeshBasicMaterial( { color: new THREE.Color('blue') } ) );
-		this.setTannenbaumLengthAndBridleLength(this.tannenbaum_length, this.bridle_length);
 		
 		// WINGS
 		this.simpleWing1 = new FlatPlate(this.dimensions.x, this.dimensions.y*0.5, this.dimensions.z, this, 'white', true);
 		this.simpleWing2 = new FlatPlate(this.dimensions.x, this.dimensions.y*0.5, this.dimensions.z, this, 'white', true);
 		
-		this.simpleWing1.position.x -= this.dimensions.x*(0.5-this.center_of_gravity_from_front);
-		this.simpleWing2.position.x -= this.dimensions.x*(0.5-this.center_of_gravity_from_front);
-		
-		this.simpleWing1.position.y = + this.dimensions.y*0.25;
-		this.simpleWing2.position.y = - this.dimensions.y*0.25;
 		
 		
 		
@@ -98,18 +139,17 @@ class Kite extends RigidBody{
 		
 		// PROPELLERS
 		
-		var propeller_radius = 0.1;
 		
-		this.leftPropeller = new Propeller(propeller_radius, this, this.maxPropellerThrust);
+		
+		this.leftPropeller = new Propeller(this.propeller_radius, this, this.maxPropellerThrust);
 		this.leftPropeller.rotation.z = -Math.PI*0.5;
-		this.leftPropeller.position.x = this.dimensions.x*this.center_of_gravity_from_front + propeller_radius;
+		
 		this.leftPropeller.fold();
 		
-		this.rightPropeller = new Propeller(propeller_radius, this, this.maxPropellerThrust);
+		this.rightPropeller = new Propeller(this.propeller_radius, this, this.maxPropellerThrust);
 		this.rightPropeller.rotation.z = -Math.PI*0.5;
-		this.rightPropeller.position.x = this.dimensions.x*this.center_of_gravity_from_front + propeller_radius;
 		
-		this.setPropellerDistance(this.elevonData.distanceFromCenter);
+		this.updateDimensionsAndPositionsOfParts();
 		
 		this.lineTensionTorqueVis = new VectorVis(new THREE.Color('red'));
 		//this.Wing1TorqueVis = new VectorVis(new THREE.Color('blue'));

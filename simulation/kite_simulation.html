@@ -165,6 +165,9 @@
 				kiteDimensionsCollapsible = new Collapsible("kite_dimensions", "Kite Dimensions");
 				collapsibles.push(kiteDimensionsCollapsible);
 				
+				let wingspanSlider = kiteDimensionsCollapsible.add( new SlidableVariable("wingspan", "Wingspan", 0, 1000, 200, 1, 0, " cm") );
+				wingspanSlider.oninput = function(that){ kite.dimensions.y = that.value*0.01; kite.updateDimensionsAndPositionsOfParts();};
+				
 				let tannenbaum_lengthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("tannenbaum_length", "Line Attachment Length", 0, 50, 5, 1, 0, " cm") );
 				let bridle_lengthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("bridle_length", "Bridle Length", -50, 50, 20, 1, 0, " cm") );
 				let prop_distSlider = kiteDimensionsCollapsible.add( new SlidableVariable("prop_dist", "Dist Prop from Center", 0, 100, 75, 1, 0, "%") );
@@ -247,7 +250,7 @@
 				
 				let c_l_by_c_d = 5;
 				// min8T, max8T, minLT, maxLT, minLS, maxLS
-				groundstation = new Groundstation(100, 100/*30, 1000*/, 2, 30, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
+				groundstation = new Groundstation(60, 60/*30, 1000*/, 2, 60, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
 				smoothLineTension = new Actuator(500, 0, 1000);
 				
 				visualization = new KiteVisualization("canvas_for_visualization", kite, wind);
