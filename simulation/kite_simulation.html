@@ -45,14 +45,15 @@
 						
 					</table>
 				</td>
-				<td>
+				<td style = "position: relative;">
 					<canvas id="canvas_for_visualization" width = "800" height= "600" style="overflow: scroll;width:100%;"> </canvas>
+					<div style="position: absolute; left: 0pt; bottom: 0pt; opacity: 0.5;"><canvas id="canvas_for_wind_diagram" width = "400" height= "200" style="overflow: scroll;width:100%;"> </canvas></div>
 				</td>
 				<td>
 				 	<table style="width:100%">
 					  <tr>
 						<td style = "position: relative;">
-							<canvas id="canvas_for_coefficients" width = "400" height= "300" style="overflow: scroll;width:100%;"> </canvas>
+							<canvas id="canvas_for_coefficients" width = "400" height= "200" style="overflow: scroll;width:100%;"> </canvas>
 							<div style="position: absolute; left: 3pt; top: 0;">C<sub>L</sub>, C<sub>D</sub> = 2</div>
 							<div style="position: absolute; left: 3pt; bottom: 0;">C<sub>L</sub>, C<sub>D</sub> = -2</div>
 							<div style="position: absolute; left: 3pt; bottom: 50%;">AoA = 0</div>
@@ -61,11 +62,18 @@
 					  </tr>
 					  <tr>
 						<td style = "position: relative;">
-							<canvas id="canvas_for_l_d" width = "400" height= "300" style="overflow: scroll;width:100%;"> </canvas>
+							<canvas id="canvas_for_l_d" width = "400" height= "200" style="overflow: scroll;width:100%;"> </canvas>
 							<div style="position: absolute; left: 3pt; top: 0;">C<sub>L</sub> = 2</div>
 							<div style="position: absolute; left: 3pt; bottom: 0;">C<sub>L</sub> = -2</div>
 							<div style="position: absolute; left: 3pt; bottom: 50%;">C<sub>D</sub> = 0</div>
 							<div style="position: absolute; right: 3pt; bottom: 50%;">C<sub>D</sub> = 0.5</div>
+						</td>
+					  </tr>
+					  <tr>
+						<td style = "position: relative;">
+							<canvas id="canvas_for_data" width = "400" height= "200" style="overflow: scroll;width:100%;"> </canvas>
+							<div style="position: absolute; left: 3pt; bottom: 0pt;color: red;"><p id="power_in_graph"></p></div>
+							<div style="position: absolute; right: 3pt; bottom: 0;color: black;"><p id="energy_in_graph"></p></div>
 						</td>
 					  </tr>
 					</table> 
@@ -86,6 +94,8 @@
 		<script src="Propeller.js"></script>
 		<script src="KiteVisualization.js"></script>
 		<script src="AirfoilCoefficientsVisualization.js"></script>
+		<script src="DataPlot.js"></script>
+		<script src="WindDiagram.js"></script>
 		<script src="Wind.js"></script>
 		<script src="RigidBody.js"></script>
 		<script src="VectorVis.js"></script>
@@ -127,6 +137,8 @@
 			var visualization;
 			var airfoilVisualization;
 			var airfoilVisualization2;
+			var dataPlot;
+			var windDiagram;
 			var energy = 0;
 			var time = 0;
 			var timestep_multiplier = 100;
@@ -266,6 +278,9 @@
 				
 				airfoilVisualization = new AirfoilCoefficientsVisualization("canvas_for_coefficients", kite.simpleWing1, kite.simpleWing2, "L,D");
 				airfoilVisualization2 = new AirfoilCoefficientsVisualization("canvas_for_l_d", kite.simpleWing1, kite.simpleWing2, "L/D");
+				dataPlot = new DataPlot("canvas_for_data");
+				windDiagram = new WindDiagram("canvas_for_wind_diagram");
+				
 				
 				animate();
 			}
@@ -281,6 +296,8 @@
 					//autopilot.hover.Y.P = 1.5**y_p.value;
 					
 					wind.update();
+					windDiagram.setWindVector(wind.speed, Math.sqrt(kite.velocity.z*kite.velocity.z + kite.velocity.y*kite.velocity.y), kite.velocity.x);
+					console.log("" + wind.speed + ", " + Math.sqrt(kite.velocity.z*kite.velocity.z + kite.velocity.y*kite.velocity.y) + ", " + kite.velocity.x);
 					
 					var controlData = autopilot.step(kite.getSensorData(), kite.positionR.length(), line_tensionSlider.getSliderElement().value, timestep_in_s);
 					
@@ -309,8 +326,8 @@
 						}
 						let power = kite_line_length_difference*line_tensionSlider.getSliderElement().value/timestep_in_s;
 						energy += power * timestep_in_s;
-						powerUIElement.setString("Power: " + power.toFixed(0) + " W (" + (energy/time).toFixed(0) + " W avg)");
-						energyUIElement.setString("Energy: " + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)");
+						powerUIElement.setString("Power: " + power.toFixed(0) + " W (" + (energy/time).toFixed(0) + " W avg)"); dataPlot.addPoint(2, time, power); document.getElementById("power_in_graph").innerHTML = "Power:<br>"+power.toFixed(0)+" W";
+						energyUIElement.setString("Energy: " + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)"); dataPlot.addPoint(0, time, energy); document.getElementById("energy_in_graph").innerHTML = "Energy:<br>" + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)";
 						electricity_costUIElement.setString("Electricity Cost: " + (850/(energy/time)).toFixed(1) + " ct/kWh)");
 						
 					}

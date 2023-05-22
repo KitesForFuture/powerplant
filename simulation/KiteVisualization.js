@@ -27,7 +27,7 @@ class KiteVisualization extends Visualization{
 		
 		// KITE SMOKE AND PATH
 		this.smoke = new Smoke(15, 'yellow');
-		this.path = new Smoke(300, 'black');
+		this.path = new Smoke(1000, 'black');
 		this.pathIndex = 0;
 		
 		// KITE LINE

@@ -19,7 +19,6 @@ class FlatPlate extends KitePart{
 	}
 	
 	setDimensions(x, y, z){
-		console.log("changing dimensions");
 		this.scalingObject.scale.x = x;
 		this.dimensions.x = x;
 		this.scalingObject.scale.y = y;
