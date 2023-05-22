@@ -211,6 +211,9 @@
 				qr_neutralSlider.oninput = function(that){ autopilot.qr_neutral = that.value; };
 				y_pSlider.oninput = function(that){ autopilot.hover.Y.P = 1.5**that.value; };
 				
+				let reelout_tensionSlider = autopilotSettingsCollapsible.add( new SlidableVariable("reelout_tension", "Reelout tension", 0, 1000, 100, 1, 0, " N") );
+				reelout_tensionSlider.oninput = function(that){ groundstation.max8Tension = that.value; groundstation.min8Tension = that.value; groundstation.maxLandingTension = that.value;};
+				
 				// ENVIRONMENT
 				
 				environmentCollapsible = new Collapsible("environment", "Environment Settings");
@@ -296,8 +299,11 @@
 					//autopilot.hover.Y.P = 1.5**y_p.value;
 					
 					wind.update();
-					windDiagram.setWindVector(wind.speed, Math.sqrt(kite.velocity.z*kite.velocity.z + kite.velocity.y*kite.velocity.y), kite.velocity.x);
-					console.log("" + wind.speed + ", " + Math.sqrt(kite.velocity.z*kite.velocity.z + kite.velocity.y*kite.velocity.y) + ", " + kite.velocity.x);
+					let lineDir = kite.positionR.clone();
+					let kiteVelocity = kite.velocity.clone();
+					let reelOutVector = projectToNormedVector(kiteVelocity, lineDir.normalize());
+					windDiagram.setWindVector(wind.speed, wind.speed - Math.sqrt(reelOutVector.z*reelOutVector.z + reelOutVector.y*reelOutVector.y), reelOutVector.x);
+					//console.log("" + wind.speed + ", " + Math.sqrt(kite.velocity.z*kite.velocity.z + kite.velocity.y*kite.velocity.y) + ", " + kite.velocity.x);
 					
 					var controlData = autopilot.step(kite.getSensorData(), kite.positionR.length(), line_tensionSlider.getSliderElement().value, timestep_in_s);
 					
