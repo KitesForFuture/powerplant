@@ -203,9 +203,9 @@ void main_task(void* arg)
 	
 	initAutopilot(&autopilot, config_values);
 	
-	//autopilot.mode = FINAL_LANDING_MODE;//EIGHT_MODE;//FINAL_LANDING_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
+	//autopilot.mode = EIGHT_MODE;//FINAL_LANDING_MODE;//EIGHT_MODE;//FINAL_LANDING_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
 	
-	int propellerBootState = 0;
+	int propellerBootState = -500;
 	float propellerFactor = 0;
 	
 	while(1) {
@@ -222,7 +222,10 @@ void main_task(void* arg)
 		
 		//updatePWMInput();
 		//propellerFactor = getPWMInput0to1normalized(2);
-		if(propellerBootState == 0 && getAccelX() < 0){ // kite nose pointing down
+		if(propellerBootState < 0 && getAccelX() < 0){ // kite nose pointing down
+			propellerBootState++;
+		}
+		if(propellerBootState == 0){ // kite nose pointing down
 			propellerBootState = 1;
 			propellerFactor = 0.1;
 		}
@@ -242,6 +245,7 @@ void main_task(void* arg)
 		//TODO: decide size of timestep_in_s in main.c and pass to stepAutopilot(), or use same method as used in updateRotationMatrix
 		ControlData control_data;
 		
+		//autopilot.mode = EIGHT_MODE;
 		//DEBUGGING
 		stepAutopilot(&autopilot, &control_data, sensorData, line_length, 3/*line tension*/);
 		

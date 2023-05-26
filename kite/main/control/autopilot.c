@@ -212,7 +212,7 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	// ELEVATOR
 	float y_axis_control = autopilot->eight.elevator - 1 * autopilot->eight.Y.D * sensor_data.gyro[1];
 	
-	sendDebuggingData(sensor_data.height, z_axis_angle_from_zenith*180/PI, target_angle_adjustment, slowly_changing_target_angle_local, z_axis_offset, z_axis_control);
+	sendDebuggingData(sensor_data.height, sensor_data.gyro[0], sensor_data.gyro[2], slowly_changing_target_angle_local, y_axis_control, z_axis_control);
 	
 	initControlData(control_data_out, 0, 0, y_axis_control - clamp(0.5*z_axis_control, -22, 22), y_axis_control + clamp(0.5*z_axis_control, -22, 22), 0, 0.0*z_axis_control, LINE_TENSION_EIGHT); return;
 }
@@ -227,7 +227,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	float line_angle = safe_asin(sensor_data.height/(line_length == 0 ? 1.0 : line_length));
 	
 	//TODO: cleanup all those constants!
-	float height_control_normed = clamp(0.55 - 1.15*5.8*autopilot->hover.H.P * (line_angle-PI/6.0) - 1.15*autopilot->hover.H.D * clamp(d_height, -1.0, 1.0), 0.4, 1.2);
+	float height_control_normed = clamp(0.55 - 1.15*5.8*autopilot->hover.H.P * (line_angle-PI/6.0) - 1.15*autopilot->hover.H.D * clamp(d_height, -1.0, 1.0), 0.4, 1.5);
 	
 	
 	// autopilot is an approximation to the airflow seen by the elevons (propeller airflow + velocity in height direction)
