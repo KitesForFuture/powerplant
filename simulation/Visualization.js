@@ -8,13 +8,48 @@ class Visualization{
 		
 		// CAMERA SETUP
 		
-		this.camera = new THREE.OrthographicCamera(-2, 2, 1.5, -1.5, -580, 580);
+		this.camera = new THREE.PerspectiveCamera( 20, 4 / 3, 0.1, 1000 );//new THREE.OrthographicCamera(-2, 2, 1.5, -1.5, -580, 580);
+		this.camera.position.z = -10;
 		this.camera.rotation.x = -Math.PI;
 		this.camera.rotation.z = -Math.PI/2;
 		//this.camera.position.z = -80;
-		this.camera.zoom = 0.5;
+		//this.camera.zoom = 0.5;
 		this.camera.updateProjectionMatrix();
 		
+		// LIGHTS
+		
+		const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1 );
+		hemiLight.color.setRGB( 0.8, 0.8, 1 );
+		hemiLight.groundColor.setRGB( 0.8, 0.8, 1 );
+		hemiLight.position.set( 0, 50, 0 );
+		//hemiLight.rotation.x = Math.PI*0.5;
+				
+				
+
+		this.dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
+		this.dirLight.color.setRGB( 0.7, 0.7, 0.5 );
+		this.dirLight.position.set( -10, -5, 5 );
+		//scene.add( dirLight );
+
+		this.dirLight.castShadow = true;
+
+
+		this.dirLight.shadow.mapSize.width = 256;
+		this.dirLight.shadow.mapSize.height = 256;
+
+		const d = 2;
+
+		this.dirLight.shadow.camera.left = - d;
+		this.dirLight.shadow.camera.right = d;
+		this.dirLight.shadow.camera.top = d;
+		this.dirLight.shadow.camera.bottom = - d;
+
+		this.dirLight.shadow.camera.far = 3500;
+		this.dirLight.shadow.bias = - 0.0001;
+		
+		//dirLight.target = 
+
+		//const dirLightHelper = new THREE.DirectionalLightHelper( dirLight, 10 );
 		
 		// COORDINATE SYSTEM GEOMETRY
 		
@@ -45,6 +80,8 @@ class Visualization{
 		
 		this.canvas = document.getElementById(canvasName);
 		this.renderer = new THREE.WebGLRenderer( {canvas: this.canvas, antialias: true } );
+		this.renderer.shadowMap.enabled = true;
+		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 		
 		
 		// SCENE SETUP
@@ -53,6 +90,9 @@ class Visualization{
 		this.scene.background = new THREE.Color(0x87ceeb);
 		this.scene.add(lineMeshX); this.scene.add(lineMeshY); this.scene.add(lineMeshZ);
 		this.scene.add(this.diagram);
+		///this.scene.add( this.dirLight );
+		this.scene.add( hemiLight );
+		//this.scene.add(new THREE.CameraHelper(this.dirLight.shadow.camera));
 		
 		
 		// EVENT HANDLING

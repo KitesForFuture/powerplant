@@ -33,8 +33,8 @@
 
 #include "control/autopilot.h"
 
-#define MAX_SERVO_DEFLECTION 50
-#define MAX_BRAKE_DEFLECTION 50
+#define MAX_SERVO_DEFLECTION 80
+#define MAX_BRAKE_DEFLECTION 80
 #define MAX_PROPELLER_SPEED 90 // AT MOST 90
 
 struct i2c_bus bus0 = {14, 25};
@@ -205,7 +205,7 @@ void main_task(void* arg)
 	
 	//autopilot.mode = EIGHT_MODE;//FINAL_LANDING_MODE;//EIGHT_MODE;//FINAL_LANDING_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
 	
-	int propellerBootState = -500;
+	int propellerBootState = -200;
 	float propellerFactor = 0;
 	
 	while(1) {
@@ -227,7 +227,7 @@ void main_task(void* arg)
 		}
 		if(propellerBootState == 0){ // kite nose pointing down
 			propellerBootState = 1;
-			propellerFactor = 0.1;
+			propellerFactor = 0.2;
 		}
 		if(propellerBootState == 1 && getAccelX() > 0){ // kite nose pointing up
 			propellerBootState = 2;

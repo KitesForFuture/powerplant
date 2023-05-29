@@ -7,8 +7,9 @@ class KiteVisualization extends Visualization{
 		super(canvasName);
 		
 		// GROUND PLANE
-		this.groundPlane = new THREE.Mesh(new THREE.BoxBufferGeometry(0.2, 300, 300), new THREE.MeshBasicMaterial( { color: new THREE.Color(0x30a000),transparent: true, opacity: 0.8 } ) );
+		this.groundPlane = new THREE.Mesh(new THREE.BoxBufferGeometry(0.2, 3000, 3000), new THREE.MeshPhongMaterial( { color: new THREE.Color(0.2, 0.5, 0),transparent: true, opacity: 0.8 } ) );
 		this.groundPlane.position.x = -0.1;
+		this.groundPlane.receiveShadow = true;
 		
 		for(let i = -10; i < 10; i++){
 			for(let j = -10; j < 10; j++){
@@ -23,6 +24,8 @@ class KiteVisualization extends Visualization{
 		this.cameraAttachedToKite = true;
 		
 		this.kite = kite;
+		this.dirLight.target = this.kite;
+		this.scene.add( this.dirLight );
 		this.wind = wind;
 		
 		// KITE SMOKE AND PATH
@@ -34,7 +37,9 @@ class KiteVisualization extends Visualization{
 		this.kitelineMesh = new THREE.Line(this.lineGeometry2, new THREE.LineBasicMaterial({ color: new THREE.Color('grey') }));
 		this.kitelineMeshLeft = new THREE.Line(this.lineGeometry2, new THREE.LineBasicMaterial({ color: new THREE.Color('grey') }));
 		this.kitelineMeshRight = new THREE.Line(this.lineGeometry2, new THREE.LineBasicMaterial({ color: new THREE.Color('grey') }));
-		
+		this.kitelineMeshRight.castShadow = true;
+		this.kitelineMeshLeft.castShadow = true;
+		this.kitelineMesh.castShadow = true;
 		// WIND VECTOR
 		this.windVector = new THREE.Object3D();
 		this.windVector.position.x = 0.5;
@@ -127,8 +132,8 @@ class KiteVisualization extends Visualization{
 	}
 	
 	updateSmoke(timestep_in_s){
-		this.smoke.setScale(0.2/this.camera.zoom);
-		this.path.setScale(0.2/this.camera.zoom);
+		this.smoke.setScale(0.5/this.camera.zoom);
+		this.path.setScale(0.5/this.camera.zoom);
 		
 		if(timestep_in_s == 0) return;
 		
@@ -158,6 +163,8 @@ class KiteVisualization extends Visualization{
 		this.updateWindVectorDirection();
 		this.updateKiteLineVisualization();
 		this.updateSmoke(timestep_in_s);
+		this.dirLight.position.copy(this.kite.positionR);
+		this.dirLight.position.add(new THREE.Vector3(10, 0, 0));
 		if(this.cameraAttachedToKite){
 			this.diagram.position.copy(this.kite.positionR);
 		}else{

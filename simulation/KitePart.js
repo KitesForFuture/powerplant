@@ -9,6 +9,8 @@ class KitePart extends THREE.Object3D{
 		this.scalingObject.add(this.mesh);
 		this.add(this.scalingObject);
 		this.rigidBody = rigidBody;
+		this.mesh.castShadow = true;
+		//this.mesh.receiveShadow = true;
 	}
 	
 	//Matrix to go from RigidBody to FlatPlate (inverse of M)

@@ -27,6 +27,9 @@
 							<button type="button" id="launch" onclick="launch()" style="color: black;">LAUNCH</button></td>
 						</tr>
 						<tr><td>
+							<button type="button" id="toggleWurftest" onclick="toggleWurftest()" style="color: green;">Throw Wing</button></td>
+						</tr>
+						<tr><td>
 							Zoom: 
 							<button type="button" id="zoomIn" onclick="zoomIn()" style="color: black;">+</button>
 							<button type="button" id="zoomOut" onclick="zoomOut()" style="color: black;">-</button></td>
@@ -166,6 +169,8 @@
 			var electricity_costUIElement;
 			var line_tensionSlider;
 			
+			var wurftest = false;
+			
 			init();
 			
 			function init() {
@@ -212,7 +217,7 @@
 				y_pSlider.oninput = function(that){ autopilot.hover.Y.P = 1.5**that.value; };
 				
 				let reelout_tensionSlider = autopilotSettingsCollapsible.add( new SlidableVariable("reelout_tension", "Reelout tension", 0, 1000, 100, 1, 0, " N") );
-				reelout_tensionSlider.oninput = function(that){ groundstation.max8Tension = that.value; groundstation.min8Tension = that.value; groundstation.maxLandingTension = that.value;};
+				reelout_tensionSlider.oninput = function(that){ groundstation.max8Tension = that.value; groundstation.min8Tension = that.value;};
 				
 				// ENVIRONMENT
 				
@@ -339,6 +344,15 @@
 					}
 					old_kite_line_length = kite_line_length;
 					
+					if(wurftest){
+						line_tensionSlider.setSlider(0);
+						controlData.left_elevon = 0;
+						controlData.right_elevon = 0;
+						controlData.left_prop = 0;
+						controlData.right_prop = 0;
+						wind.setSpeedAndDirection(0.0, 0.0);
+					}
+					
 					
 					// PHYSICS
 					
@@ -384,6 +398,14 @@
 					document.getElementById("startPauseSimulation").style.color = "green";
 				else
 					document.getElementById("startPauseSimulation").style.color = "red";
+			}
+			
+			function toggleWurftest(){
+				wurftest = !wurftest;
+				if(wurftest)
+					document.getElementById("toggleWurftest").style.color = "blue";
+				else
+					document.getElementById("toggleWurftest").style.color = "green";
 			}
 			
 			function zoomIn(){

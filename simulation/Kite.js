@@ -71,19 +71,19 @@ class Kite extends RigidBody{
 		this.tannenbaum_length = 0.05;
 		this.height_of_c_g = 0;//-0.08;// with respect to the c_g of the wing geometry.
 		this.elevonData = new Object();
-		this.elevonData.dimensions = new THREE.Vector3(0.08, 0.5, 0.005);
+		this.elevonData.dimensions = new THREE.Vector3(0.08, 0.5, 0.01);
 		this.elevonData.distanceFromCenter = 0.75;
 		this.rudderData = new Object();
-		this.rudderData.dimensions = new THREE.Vector3(0.1, 0.4, 0.005);
-		this.rudderData.StabilizerDimensions = new THREE.Vector3(0.25, 0.2, 0.005);
+		this.rudderData.dimensions = new THREE.Vector3(0.1, 0.4, 0.01);
+		this.rudderData.StabilizerDimensions = new THREE.Vector3(0.25, 0.2, 0.01);
 		this.rudderData.distanceFromCG = 0.15;
 		this.reflexData = new Object();
-		this.reflexData.dimensions = new THREE.Vector3(0.10, 0.5, 0.005);
+		this.reflexData.dimensions = new THREE.Vector3(0.10, 0.5, 0.01);
 		this.maxPropellerThrust = 8;
 		this.propeller_radius = 0.1;
 		
 		// STABILIZER
-		this.stabilizerLeft = new FlatPlate(this.rudderData.StabilizerDimensions.x, this.rudderData.StabilizerDimensions.y, this.rudderData.StabilizerDimensions.z, this , 'blue', false);
+		this.stabilizerLeft = new FlatPlate(this.rudderData.StabilizerDimensions.x, this.rudderData.StabilizerDimensions.y, this.rudderData.StabilizerDimensions.z, this , 'cornflowerblue', false);
 		this.stabilizerLeft.rotation.x = 0.5*Math.PI;
 		
 		/*
@@ -94,12 +94,12 @@ class Kite extends RigidBody{
 		this.stabilizerRight.position.y = -this.dimensions.y*0.5;
 		*/
 		// RUDDER
-		this.rudder = new FlatPlate(this.rudderData.dimensions.x, this.rudderData.dimensions.y, this.rudderData.dimensions.z, this , 'magenta', false);
+		this.rudder = new FlatPlate(this.rudderData.dimensions.x, this.rudderData.dimensions.y, this.rudderData.dimensions.z, this , 'cornflowerblue', false);
 		this.rudder.rotation.x = 0.5*Math.PI;
 		
 		
 		// LEFT REFLEX
-		this.reflexMeshLeft = new FlatPlate(this.reflexData.dimensions.x, this.reflexData.dimensions.y, this.reflexData.dimensions.z, this, 'teal', false);
+		this.reflexMeshLeft = new FlatPlate(this.reflexData.dimensions.x, this.reflexData.dimensions.y, this.reflexData.dimensions.z, this, 'gold', false);
 		
 		this.leftReflex = new THREE.Object3D();
 		this.leftReflex.add (this.reflexMeshLeft);
@@ -107,14 +107,14 @@ class Kite extends RigidBody{
 		
 		
 		// RIGHT REFLEX
-		this.reflexMeshRight = new FlatPlate(this.reflexData.dimensions.x, this.reflexData.dimensions.y, this.reflexData.dimensions.z, this, 'teal', false);
+		this.reflexMeshRight = new FlatPlate(this.reflexData.dimensions.x, this.reflexData.dimensions.y, this.reflexData.dimensions.z, this, 'gold', false);
 		
 		this.rightReflex = new THREE.Object3D();
 		this.rightReflex.add (this.reflexMeshRight);
 		
 		
 		// LEFT ELEVON
-		this.elevonMeshLeft = new FlatPlate(this.elevonData.dimensions.x, this.elevonData.dimensions.y, this.elevonData.dimensions.z, this, 'magenta', false);
+		this.elevonMeshLeft = new FlatPlate(this.elevonData.dimensions.x, this.elevonData.dimensions.y, this.elevonData.dimensions.z, this, 'coral', false);
 		
 		this.leftElevon = new THREE.Object3D();
 		this.leftElevon.add ( this.elevonMeshLeft );
@@ -122,7 +122,7 @@ class Kite extends RigidBody{
 		this.leftElevon.rotation.y = 0;//Math.PI * 0.1;
 		
 		// RIGHT ELEVON
-		this.elevonMeshRight = new FlatPlate(this.elevonData.dimensions.x, this.elevonData.dimensions.y, this.elevonData.dimensions.z, this, 'magenta', false);
+		this.elevonMeshRight = new FlatPlate(this.elevonData.dimensions.x, this.elevonData.dimensions.y, this.elevonData.dimensions.z, this, 'coral', false);
 		
 		this.rightElevon = new THREE.Object3D();
 		this.rightElevon.add(this.elevonMeshRight);
@@ -130,8 +130,8 @@ class Kite extends RigidBody{
 		this.rightElevon.rotation.y = 0;//Math.PI * 0.1;
 		
 		// TANNENBAUM
-		this.tannenbaumLeft = new THREE.Mesh(new THREE.BoxBufferGeometry(0.03, 0.001, 1), new THREE.MeshBasicMaterial( { color: new THREE.Color('blue') } ) );
-		this.tannenbaumRight = new THREE.Mesh(new THREE.BoxBufferGeometry(0.03, 0.001, 1), new THREE.MeshBasicMaterial( { color: new THREE.Color('blue') } ) );
+		this.tannenbaumLeft = new THREE.Mesh(new THREE.BoxBufferGeometry(0.03, 0.001, 1), new THREE.MeshPhongMaterial( { color: new THREE.Color('cornflowerblue') } ) );
+		this.tannenbaumRight = new THREE.Mesh(new THREE.BoxBufferGeometry(0.03, 0.001, 1), new THREE.MeshPhongMaterial( { color: new THREE.Color('cornflowerblue') } ) );
 		
 		// WINGS
 		this.simpleWing1 = new FlatPlate(this.dimensions.x, this.dimensions.y*0.5, this.dimensions.z, this, 'white', true);

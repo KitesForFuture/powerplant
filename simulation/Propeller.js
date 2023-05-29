@@ -4,7 +4,7 @@ class Propeller extends KitePart{
 	
 	constructor(radius, rigidBody, maxThrustInNewton){
 		//super(new THREE.CylinderGeometry( radius, radius, 0.01, 20 ), new THREE.MeshBasicMaterial( { side: THREE.DoubleSide, color: new THREE.Color('red') } ), rigidBody);
-		super(new THREE.BoxBufferGeometry(radius*2, 0.001, 0.02), new THREE.MeshBasicMaterial( { side: THREE.DoubleSide, color: new THREE.Color('red') } ), rigidBody);
+		super(new THREE.BoxBufferGeometry(radius*2, 0.001, 0.02), new THREE.MeshPhongMaterial( { side: THREE.DoubleSide, color: new THREE.Color('darkslategrey') } ), rigidBody);
 		
 		
 		this.thrust = 0;
