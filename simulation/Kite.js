@@ -152,6 +152,7 @@ class Kite extends RigidBody{
 		this.updateDimensionsAndPositionsOfParts();
 		
 		this.lineTensionTorqueVis = new VectorVis(new THREE.Color('red'));
+		this.lineTensionTorqueVis2 = new VectorVis(new THREE.Color('red'));
 		//this.Wing1TorqueVis = new VectorVis(new THREE.Color('blue'));
 		//this.Wing2TorqueVis = new VectorVis(new THREE.Color('blue'));
 		//this.StabilizerTorqueVis = new VectorVis(new THREE.Color('yellow'));
@@ -172,6 +173,7 @@ class Kite extends RigidBody{
 			//this.stabilizerRight,
 			//this.rudder
 			this.lineTensionTorqueVis,
+			this.lineTensionTorqueVis2,
 			//this.Wing1TorqueVis,
 			//this.Wing2TorqueVis,
 			//this.StabilizerTorqueVis
@@ -295,6 +297,7 @@ class Kite extends RigidBody{
 	
 	getPositionOfLineKnot(){
 		var y_axis = new THREE.Vector3(this.matrix.elements[4], this.matrix.elements[5], this.matrix.elements[6]); // it's norm = 1
+		this.kiteMeshes.updateWorldMatrix(true, false);
 		var pos_of_kite = new THREE.Vector3(this.kiteMeshes.matrixWorld.elements[12], this.kiteMeshes.matrixWorld.elements[13], this.kiteMeshes.matrixWorld.elements[14]);
 		var z_axis = new THREE.Vector3(this.matrix.elements[8], this.matrix.elements[9], this.matrix.elements[10]);
 		var lineKnotDir = projectToComplementOfNormedVector(pos_of_kite.clone().add(z_axis.clone().multiplyScalar(-this.tannenbaum_length)), y_axis);
@@ -343,7 +346,8 @@ class Kite extends RigidBody{
 		//console.log(line_force_dir_in_kite_coords);
 		force.add(direction_of_line_tension_force.multiplyScalar(-line_tension));
 		torque.add(line_force_dir_in_kite_coords.clone().cross(this.getRelativePositionOfLineKnotInKiteCoordinates()).multiplyScalar(line_tension));
-		this.lineTensionTorqueVis.set(this.getRelativePositionOfLineKnotInKiteCoordinates(), line_force_dir_in_kite_coords.multiplyScalar(-line_tension));
+		this.lineTensionTorqueVis.set(this.getRelativePositionOfLineKnotInKiteCoordinates().add(new THREE.Vector3(0.01, 0, 0)), line_force_dir_in_kite_coords.multiplyScalar(-line_tension));
+		this.lineTensionTorqueVis2.set(this.getRelativePositionOfLineKnotInKiteCoordinates().add(new THREE.Vector3(-0.01, 0, 0)), line_force_dir_in_kite_coords);
 		
 		// add gravity to force
 		let gravity = new THREE.Vector3(-9.81, 0, 0);

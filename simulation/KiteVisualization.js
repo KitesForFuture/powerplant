@@ -92,7 +92,7 @@ class KiteVisualization extends Visualization{
 		this.kitelineMesh.matrixAutoUpdate = false;
 		this.kitelineMesh.matrix = mat;
 		
-		
+		this.kite.tannenbaumLeft.updateWorldMatrix(true, false);
 		var tblm = this.kite.tannenbaumLeft.matrixWorld.elements;
 		var factor = this.kite.tannenbaum_length;
 		var z_displacement = new THREE.Vector3(tblm[8], tblm[9], tblm[10]);
@@ -113,7 +113,7 @@ class KiteVisualization extends Visualization{
 		this.kitelineMeshLeft.matrixAutoUpdate = false;
 		this.kitelineMeshLeft.matrix = matLeft;
 		
-		
+		this.kite.tannenbaumRight.updateWorldMatrix(true, false);
 		var tbrm = this.kite.tannenbaumRight.matrixWorld.elements;
 		z_displacement = new THREE.Vector3(tblm[8], tblm[9], tblm[10]);
 		z_displacement.normalize();
@@ -132,8 +132,8 @@ class KiteVisualization extends Visualization{
 	}
 	
 	updateSmoke(timestep_in_s){
-		this.smoke.setScale(0.5/this.camera.zoom);
-		this.path.setScale(0.5/this.camera.zoom);
+		this.smoke.setScale(0.1*this.camera.position.z);
+		this.path.setScale(0.1*this.camera.position.z);
 		
 		if(timestep_in_s == 0) return;
 		

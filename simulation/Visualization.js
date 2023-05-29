@@ -8,7 +8,7 @@ class Visualization{
 		
 		// CAMERA SETUP
 		
-		this.camera = new THREE.PerspectiveCamera( 20, 4 / 3, 0.1, 1000 );//new THREE.OrthographicCamera(-2, 2, 1.5, -1.5, -580, 580);
+		this.camera = new THREE.PerspectiveCamera( 45, 4 / 3, 0.1, 1000 );//new THREE.OrthographicCamera(-2, 2, 1.5, -1.5, -580, 580);
 		this.camera.position.z = -10;
 		this.camera.rotation.x = -Math.PI;
 		this.camera.rotation.z = -Math.PI/2;
@@ -122,7 +122,8 @@ class Visualization{
 		
 		let mouseWheel = function(event) {
 			var scale = Math.pow(1.1, Math.sign(event.deltaY));
-			this.camera.zoom *= scale;
+			this.camera.position.z /= scale;
+			//this.camera.zoom *= scale;
 			/*this.camera.left *= scale;
 			this.camera.right *= scale;
 			this.camera.top *= scale;
@@ -171,7 +172,8 @@ class Visualization{
 				this.touchZoomDistanceEnd = Math.sqrt( dx * dx + dy * dy );
 				
 				//alert("zooming with factor " + (this.touchZoomDistanceEnd/this.touchZoomDistanceStart));
-				this.camera.zoom *= this.touchZoomDistanceEnd/this.touchZoomDistanceStart;
+				this.camera.position.z /= this.touchZoomDistanceEnd/this.touchZoomDistanceStart;
+				//this.camera.zoom *= this.touchZoomDistanceEnd/this.touchZoomDistanceStart;
 				this.camera.updateProjectionMatrix();
 				
 				this.touchZoomDistanceStart = this.touchZoomDistanceEnd;

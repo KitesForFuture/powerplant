@@ -12,7 +12,7 @@ class VectorVis extends THREE.Object3D{
 		pOsitions2.push(1, 0, 0.0);
 		this.lineGeometry3.addAttribute('position', new THREE.Float32BufferAttribute(pOsitions2, 3));
 		
-		this.windVectorLine = new THREE.Line(this.lineGeometry3, new THREE.LineBasicMaterial({ color: colorArg }));
+		this.windVectorLine = new THREE.Line(this.lineGeometry3, new THREE.LineBasicMaterial({ color: colorArg /*linewidth no longer supported by current OpenGL implementations*/}));
 		//this.windVectorLine.rotation.y = -Math.PI/2;
 		
 		/*this.windVectorArrowHalf = new THREE.Line(this.lineGeometry3, new THREE.LineBasicMaterial({ color: new THREE.Color('yellow') }));
