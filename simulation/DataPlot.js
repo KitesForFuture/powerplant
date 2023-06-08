@@ -180,7 +180,7 @@ class DataPlot{
 			vis.gl.clearColor(1.0, 1.0, 1.0, 1.0);
 			vis.gl.clearDepth(1.0);
 			
-			vis.gl.viewport(0.0, 0.0, 400, 200);
+			vis.gl.viewport(0.0, 0.0, 400, 300);
 			vis.gl.clear(vis.gl.COLOR_BUFFER_BIT | vis.gl.DEPTH_BUFFER_BIT);
 			
 			

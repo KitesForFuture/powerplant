@@ -1,0 +1,670 @@
+<html><head>
+		<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+		<meta http-equiv="Pragma" content="no-cache" />
+		<meta http-equiv="Expires" content="0" />
+		<meta charset="utf-8">
+		<meta name="viewport" >
+		<link rel="stylesheet" href="mystyle.css">
+	</head>
+	<body>
+		
+		<table style="height:100vh;width:100%">
+			<tr style="vertical-align: top;">
+				<td>
+					
+					<table style="width:100%;font-size: 10px;">
+						<tr><td>
+							<a href="https://www.kitesforfuture.de" target="_top" class="class1" style="width:50%; background-color: black;">&#8678; Kites for Future</a>
+							<button onclick="window.location='https://www.kitesforfuture.de/simulation/logout.php';">Logout</button>
+							</td>
+						</tr>
+						
+						
+						<tr><td>
+							<button type="button" id="startPauseSimulation" onclick="startPauseSimulation()" style="color: green;">start/pause</button>
+							<button type="button" id="fast_forward" onclick="fast_forward()" style="color: green;">fast forward</button></td>
+						</tr>
+						<tr><td>
+							<button type="button" id="land" onclick="land()" style="color: black;">LAND</button>
+							<button type="button" id="launch" onclick="launch()" style="color: black;">LAUNCH</button></td>
+						</tr>
+						<tr><td>
+							Zoom: 
+							<button type="button" id="zoomIn" onclick="zoomIn()" style="color: black;">+</button>
+							<button type="button" id="zoomOut" onclick="zoomOut()" style="color: black;">-</button>
+							<button type="button" id="save" onclick="save()" style="color: black;">Save</button>
+							<button type="button" id="load" onclick="load()" style="color: black;">Load</button>
+							</td>
+						</tr>
+						<tr><td>
+							<button type="button" id="moveCamera" onclick="moveCamera()" style="color: green;">move camera</button> <button type="button" id="togglePerspective" onclick="togglePerspective()" style="color: green;">Perspective</button></td>
+						</tr>
+						<tr><td>
+							<button type="button" id="elevonControlOff" onclick="elevonControlOff_func()" style="color: green;">Control OFF</button>
+							<button type="button" id="toggleWurftest" onclick="toggleWurftest()" style="color: green;">Throw Wing</button></td>
+						</tr>
+						
+						<tr>
+						<td>
+						<div id="" style="overflow:auto; max-height:75vh;"><p id="UI"></p></div>
+						</td>
+						</tr>
+						
+					</table>
+				</td>
+				<td style = "position: relative;">
+					<canvas id="canvas_for_visualization" width = "1200" height= "900" style="overflow: scroll;width:100%;"> </canvas>
+					<div style="position: absolute; left: 0pt; bottom: 0pt; opacity: 0.5;"><canvas id="canvas_for_wind_diagram" width = "400" height= "200" style="overflow: scroll;width:100%;"> </canvas></div>
+				</td>
+				<td>
+				 	<table style="width:100%">
+					  <tr>
+						<td style = "position: relative;">
+							<canvas id="canvas_for_coefficients" width = "400" height= "300" style="overflow: scroll;width:100%;"> </canvas>
+							<div style="position: absolute; left: 3pt; top: 0;">C<sub>L</sub>, C<sub>D</sub> = 2</div>
+							<div style="position: absolute; left: 3pt; bottom: 0;">C<sub>L</sub>, C<sub>D</sub> = -2</div>
+							<div style="position: absolute; left: 3pt; bottom: 50%;">AoA = 0</div>
+							<div style="position: absolute; right: 3pt; bottom: 50%;">AoA = &#960;</div>
+						</td>
+					  </tr>
+					  <tr>
+						<td style = "position: relative;">
+							<canvas id="canvas_for_l_d" width = "400" height= "300" style="overflow: scroll;width:100%;"> </canvas>
+							<div style="position: absolute; left: 3pt; top: 0;">C<sub>L</sub> = 2</div>
+							<div style="position: absolute; left: 3pt; bottom: 0;">C<sub>L</sub> = -2</div>
+							<div style="position: absolute; left: 3pt; bottom: 50%;">C<sub>D</sub> = 0</div>
+							<div style="position: absolute; right: 3pt; bottom: 50%;">C<sub>D</sub> = 0.5</div>
+						</td>
+					  </tr>
+					  <tr>
+						<td style = "position: relative;">
+							<canvas id="canvas_for_data" width = "400" height= "300" style="overflow: scroll;width:100%;"> </canvas>
+							<div style="position: absolute; left: 3pt; bottom: 0pt;color: red;"><p id="power_in_graph"></p></div>
+							<div style="position: absolute; right: 3pt; bottom: 0;color: black;"><p id="energy_in_graph"></p></div>
+						</td>
+					  </tr>
+					</table> 
+				</td>
+			</tr>
+		</table>
+		
+		<script src="three.min.js"></script>
+		<script src="three_additional_math.js"></script>
+		<script src="communication.js"></script>
+		<script src="Timer.js"></script>
+		<script src="AsyncTimer.js"></script>
+		<script src="math.js"></script>
+		<script src="Smoke.js"></script>
+		<script src="Visualization.js"></script>
+		<script src="ForceData.js"></script>
+		<script src="KitePart.js"></script>
+		<script src="AirfoilGeometry.js"></script>
+		<script src="FlatPlate.js"></script>
+		<script src="Propeller.js"></script>
+		<script src="KiteVisualization.js"></script>
+		<script src="AirfoilCoefficientsVisualization.js"></script>
+		<script src="DataPlot.js"></script>
+		<script src="WindDiagram.js"></script>
+		<script src="Wind.js"></script>
+		<script src="RigidBody.js"></script>
+		<script src="VectorVis.js"></script>
+		<script src="CGIndicator.js"></script>
+		<script src="Kite.js"></script>
+		<script src="SensorData.js"></script>
+		<script src="ControlData.js"></script>
+		<script src="Autopilot.js"></script>
+		<script src="Actuator.js"></script>
+		<script src="SlowlyChangingAngle.js"></script>
+		<script src="Groundstation.js"></script>
+		<script src="Servo.js"></script>
+		<script src="BLDCMotor.js"></script>
+		<script src="UIElement.js"></script>
+		<script src="SlidableVariable.js"></script>
+		<script src="LogarithmicVariable.js"></script>
+		<script src="Collapsible.js"></script>
+		
+		<script>
+		
+			"use strict";
+			
+			var width, height, dpr;
+			
+			var running = true;
+			var camAttachedToKite = true;
+			var elevonControlOff = false;
+			
+			// SIMULATION and VISUALIZATION of the KITE
+			var wind;
+			var kite;
+			var rudderServo;
+			var leftElevonServo;
+			var rightElevonServo;
+			var leftBLDC;
+			var rightBLDC;
+			var autopilot;
+			var groundstation;
+			var smoothLineTension;
+			var visualization;
+			var airfoilVisualization;
+			var airfoilVisualization2;
+			var dataPlot;
+			var windDiagram;
+			var energy = 0;
+			var time = 0;
+			var timestep_multiplier = 10;
+			
+			var testBall = new THREE.Mesh(new THREE.SphereBufferGeometry(0.05, ), new THREE.MeshBasicMaterial( { color: new THREE.Color('red') } ) );
+			
+			var old_kite_line_length = 0;
+			
+			// UI
+			
+			var kiteDimensionsCollapsible;
+			var autopilotSettingsCollapsible;
+			var environmentCollapsible;
+			var measurementsCollapsible;
+			var simulationSettingsCollapsible;
+			
+			var timeUIElement;
+			var rope_lengthUIElement;
+			var rope_angle_horizonUIElement;
+			var flying_heightUIElement;
+			var speedUIElement;
+			var glide_ratioUIElement;
+			var powerUIElement;
+			var energyUIElement;
+			var electricity_costUIElement;
+			var line_tensionSlider;
+			
+			var fast_forward_factor = 1;
+			
+			var wurftest = false;
+			
+			var ap_config = [];
+			
+			init();
+			
+			function init() {
+				
+				// ORGANIZING PAGE LAYOUT
+				let collapsibles = [];
+				
+				// KITE DIMENSIONS
+				
+				kiteDimensionsCollapsible = new Collapsible("kite_dimensions", "Kite Dimensions");
+				collapsibles.push(kiteDimensionsCollapsible);
+				
+				let wingspanSlider = kiteDimensionsCollapsible.add( new SlidableVariable("wingspan", "Wingspan", 1, 100, 20, 10, 0, " cm") );
+				wingspanSlider.oninput = function(value){
+					let oldValue = kite.dimensions.y;
+					kite.dimensions.y = value*0.01;
+					//kite.reflexData.dimensions.y *= kite.dimensions.y / oldValue;
+					kite.updateDimensionsAndPositionsOfParts();
+					massUIElement.setString("mass: " + kite.mass.toFixed(3) + " kg");
+				};
+				let prop_distSlider = kiteDimensionsCollapsible.add( new SlidableVariable("prop_dist", "Dist Prop from Center", 0, 99, 50, 1, 0, "%") );
+				let elevon_spanSlider = kiteDimensionsCollapsible.add( new SlidableVariable("elevon_span", "Elevon length", 1, 99, 50, 1, 0, "%") );
+				elevon_spanSlider.oninput = function(value){
+					kite.elevonData.dimensions.y = value*0.01;
+					kite.updateDimensionsAndPositionsOfParts();
+				};
+				let stabilizer_distanceSlider = kiteDimensionsCollapsible.add( new SlidableVariable("stabilizer_distance", "Stabilizer Distance", 0, 200, 15, 1, 0, " cm") );
+				stabilizer_distanceSlider.oninput = function(value){ kite.rudderData.distanceFromCG = value*0.01; kite.updateDimensionsAndPositionsOfParts(); };
+				let stabilizer_depthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("stabilizer_depth", "Stabilizer Depth", 0, 100, 25, 1, 0, " cm") );
+				stabilizer_depthSlider.oninput = function(value){ kite.rudderData.StabilizerDimensions.x = value*0.01; kite.updateDimensionsAndPositionsOfParts(); };
+				
+				let tannenbaum_lengthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("tannenbaum_length", "Line Attachment Length", 0, 50, 5, 1, 0, " cm") );
+				let bridle_lengthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("bridle_length", "Bridle Length", 1, 100, 20, 1, 0, "%") );
+				
+				tannenbaum_lengthSlider.oninput = function(value){
+					kite.setTannenbaumLengthAndBridleLength(value*0.01);
+				};
+				bridle_lengthSlider.oninput = function(value){
+					kite.bridle_length_percentage = value*0.01;
+					kite.updateDimensionsAndPositionsOfParts();
+					
+				};
+				prop_distSlider.oninput = function(value){ kite.propDistanceFromCenter = value * 0.01;kite.updateDimensionsAndPositionsOfParts(); };
+				
+				let massUIElement = kiteDimensionsCollapsible.add( new UIElement("mass") );
+				
+				let reflexSlider = kiteDimensionsCollapsible.add( new SlidableVariable("reflex", "Reflex", 0, 45, 5, 1, 0, "°") );
+				// AUTOPILOT SETTINGS
+				
+				autopilotSettingsCollapsible = new Collapsible("autopilot_settings", "Autopilot Settings");
+				collapsibles.push(autopilotSettingsCollapsible);
+				
+				
+				//let qr_neutralSlider = autopilotSettingsCollapsible.add( new SlidableVariable("qr_neutral", "QR Neutral Pos", -25, 25, 15, 1, 0, "°") );
+				//let y_pSlider = autopilotSettingsCollapsible.add( new SlidableVariable("y_p", "y_p", -10, 10, 0, 1, 0, "") );
+				
+				ap_config[14] = autopilotSettingsCollapsible.add( new LogarithmicVariable("hover.Y.P", "HOVER Y-Compensation", 1, 1.3, ""));
+				ap_config[14].oninput = function(value){autopilot.hover.Y.P = value};
+				ap_config[15] = autopilotSettingsCollapsible.add( new LogarithmicVariable("hover.Y.D", "HOVER Y-Damping", 1, 1.3, ""));
+				ap_config[15].oninput = function(value){autopilot.hover.Y.D = value};
+				
+				ap_config[17] = autopilotSettingsCollapsible.add( new LogarithmicVariable("hover.Z.P", "HOVER Z-Compensation", 1, 1.3, ""));
+				ap_config[17].oninput = function(value){autopilot.hover.Z.P = value};
+				ap_config[18] = autopilotSettingsCollapsible.add( new LogarithmicVariable("hover.Z.D", "HOVER Z-Damping", 1, 1.3, ""));
+				ap_config[18].oninput = function(value){autopilot.hover.Z.D = value};
+				
+				ap_config[19] = autopilotSettingsCollapsible.add( new LogarithmicVariable("hover.X.D", "HOVER X-Damping", 1, 1.3, ""));
+				ap_config[19].oninput = function(value){autopilot.hover.X.Ds = value};
+				
+				ap_config[20] = autopilotSettingsCollapsible.add( new LogarithmicVariable("hover.H.P", "HOVER H-Compensation", 1, 1.3, ""));
+				ap_config[20].oninput = function(value){autopilot.hover.H.P = value};
+				ap_config[21] = autopilotSettingsCollapsible.add( new LogarithmicVariable("hover.H.D", "HOVER H-Damping", 1, 1.3, ""));
+				ap_config[21].oninput = function(value){autopilot.hover.H.D = value};
+				
+				ap_config[27] = autopilotSettingsCollapsible.add( new LogarithmicVariable("eight.Z.P", "EIGHTS Z-Compensation", 1, 1.3, ""));
+				ap_config[27].oninput = function(value){autopilot.eight.Z.P = value};
+				ap_config[28] = autopilotSettingsCollapsible.add( new LogarithmicVariable("eight.Z.D", "EIGHTS Z-Damping", 1, 1.3, ""));
+				ap_config[28].oninput = function(value){autopilot.eight.Z.D = value};
+				
+				ap_config[29] = autopilotSettingsCollapsible.add( new LogarithmicVariable("eight.Y.D", "EIGHTS Y-Damping", 1, 1.3, ""));
+				ap_config[29].oninput = function(value){autopilot.eight.Y.D = value};
+				
+				
+				ap_config[23] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.Y.P", "LANDING Y-Compensation", 1, 1.3, ""));
+				ap_config[23].oninput = function(value){autopilot.landing.Y.P = value};
+				ap_config[24] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.Y.D", "LANDING Y-Damping", 1, 1.3, ""));
+				ap_config[24].oninput = function(value){autopilot.landing.Y.D = value};
+				ap_config[25] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.X.P", "LANDING X-Compensation", 1, 1.3, ""));
+				ap_config[25].oninput = function(value){autopilot.landing.X.P = value};
+				
+				ap_config[34] = autopilotSettingsCollapsible.add( new LogarithmicVariable("eight.beta_P", "EIGHT beta Compensation", 1, 1.3, ""));
+				ap_config[34].oninput = function(value){autopilot.eight.beta_P = value};
+				ap_config[36] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.dive_angle_P", "LANDING dive angle Compensation", 1, 1.3, ""));
+				ap_config[36].oninput = function(value){autopilot.landing.dive_angle_P = value};
+				
+				
+				ap_config[16] = autopilotSettingsCollapsible.add( new LogarithmicVariable("hover.y_angle_offset", "HOVER y angle offset", 1, 1.3, ""));
+				ap_config[16].oninput = function(value){autopilot.hover.y_angle_offset = value*Math.PI/180;};
+				ap_config[31] = autopilotSettingsCollapsible.add( new SlidableVariable("transition_y_angle_offset", "transition Y angle offset", -25, 25, 0, 1, 0, "°") );
+				ap_config[31].oninput = function(value){autopilot.transition_y_angle_offset = value*Math.PI/180;};
+				
+				ap_config[26] = autopilotSettingsCollapsible.add( new SlidableVariable("landing.desired_height", "landing desired height", -4, 6, 0, 0.5, 1, "m") );
+				ap_config[26].oninput = function(value){autopilot.landing.desired_height = value;};
+				
+				ap_config[13] = autopilotSettingsCollapsible.add( new SlidableVariable("turning_speed", "eights turning speed", 1, 18, 9, 10, 0, "°/s") );
+				ap_config[13].oninput = function(value){autopilot.turning_speed = value*Math.PI/180; autopilot.slowly_changing_target_angle.speed = autopilot.turning_speed};
+				
+				ap_config[12] = autopilotSettingsCollapsible.add( new SlidableVariable("sideways_flying_time", "sideways flying time", 1, 20, 7, 1, 0, "s") );
+				ap_config[12].oninput = function(value){autopilot.sideways_flying_time = value;};
+				
+				
+				ap_config[22] = autopilotSettingsCollapsible.add( new SlidableVariable("brake", "Brake Angle", -25, 25, 0, 1, 0, "°") );
+				ap_config[22].oninput = function(value){autopilot.brake = value*Math.PI/180;};
+				ap_config[30] = autopilotSettingsCollapsible.add( new SlidableVariable("eight.elevator", "Eight Elevator Angle", -10, 10, 0, 1, 0, "°") );
+				ap_config[30].oninput = function(value){autopilot.eight.elevator = value*Math.PI/180;};
+				
+				ap_config[32] = autopilotSettingsCollapsible.add( new SlidableVariable("eight.desired_line_angle_from_zenith", "Eight Angle from Zenith", 10, 80, 45, 1, 0, "°") );
+				ap_config[32].oninput = function(value){autopilot.eight.desired_line_angle_from_zenith = value*Math.PI/180;};
+				
+				ap_config[33] = autopilotSettingsCollapsible.add( new SlidableVariable("eight.target_angle_beta_clamp", "Eight target angle beta clamp", 1, 10, 4, 0.1, 1, "") );
+				ap_config[33].oninput = function(value){autopilot.eight.target_angle_beta_clamp = value;};
+				
+				ap_config[35] = autopilotSettingsCollapsible.add( new SlidableVariable("eight.neutral_beta_sideways_flying_angle_fraction", "Sideways flying angle fraction", 1, 10, 9, 0.1, 1, "") );
+				ap_config[35].oninput = function(value){autopilot.eight.neutral_beta_sideways_flying_angle_fraction = value;};
+				
+				
+				reflexSlider.oninput = function(value){ kite.setReflex(parseFloat(value) * Math.PI / 180); };
+				//qr_neutralSlider.oninput = function(value){ autopilot.qr_neutral = value; };
+				//y_pSlider.oninput = function(value){ autopilot.hover.Y.P = 1.5**value; };
+				
+				let reelout_tensionSlider = autopilotSettingsCollapsible.add( new SlidableVariable("reelout_tension", "Reelout tension", 0, 1000, 100, 1, 0, " N") );
+				reelout_tensionSlider.oninput = function(value){ groundstation.max8Tension = value; groundstation.min8Tension = value;};
+				
+				// ENVIRONMENT
+				
+				environmentCollapsible = new Collapsible("environment", "Environment Settings");
+				collapsibles.push(environmentCollapsible);
+				
+				let wind_speedSlider = environmentCollapsible.add( new SlidableVariable("wind_speed", "Wind speed", 0, 50, 25, 0.5, 1, " m/s") );
+				let wind_directionSlider = environmentCollapsible.add( new SlidableVariable("wind_direction", "Wind direction", -200, 200, 0, 1, 0, "°") );
+				
+				wind_speedSlider.oninput = function(value){ wind.setSpeedAndDirection(value*0.5, wind_directionSlider.getSliderElement().value); };
+				wind_directionSlider.oninput = function(value){ wind.setSpeedAndDirection(wind_speedSlider.getSliderElement().value*0.5, value); };
+				
+				// MEASUREMENTS
+				
+				measurementsCollapsible = new Collapsible("measurements", "Measurements");
+				collapsibles.push(measurementsCollapsible);
+				
+				timeUIElement = measurementsCollapsible.add( new UIElement("time") );
+				rope_lengthUIElement = measurementsCollapsible.add( new UIElement("rope_length") );
+				rope_angle_horizonUIElement = measurementsCollapsible.add( new UIElement("rope_angle_horizon") );
+				flying_heightUIElement = measurementsCollapsible.add( new UIElement("flying_height") );
+				speedUIElement = measurementsCollapsible.add( new UIElement("speed") );
+				glide_ratioUIElement = measurementsCollapsible.add( new UIElement("glide_ratio") );
+				powerUIElement = measurementsCollapsible.add( new UIElement("power") );
+				energyUIElement = measurementsCollapsible.add( new UIElement("energy") );
+				electricity_costUIElement = measurementsCollapsible.add( new UIElement("electricity_cost") );
+				line_tensionSlider = measurementsCollapsible.add( new SlidableVariable("line_tension", "Line tension", 0, 1000, 1, 1, 0, " N") );
+				
+				
+				// SIMULATION SETTINGS
+				simulationSettingsCollapsible = new Collapsible("simSettings", "Simulation Settings");
+				collapsibles.push(simulationSettingsCollapsible);
+				
+				let zeitschrittUIElement = simulationSettingsCollapsible.add( new UIElement("zeitschritt") );
+				let timestep_multiplier_exponentSlider = simulationSettingsCollapsible.add( new SlidableVariable("timestep_multiplier_exponent", "TimeStepExp", 0, 4, 1, 1, 0, "") );
+				timestep_multiplier_exponentSlider.oninput = function(value){ timestep_multiplier = 10**value; zeitschrittUIElement.setString("Timestep: 1/" + timestep_multiplier); }
+				
+				
+				// ASSEMBLING AND SETTING PAGE LAYOUT
+				
+				document.getElementById("UI").innerHTML += collapsibles[0].getHTML();
+				for(let i = 1; i < collapsibles.length; i++){
+					document.getElementById("UI").innerHTML += "<br>";
+					document.getElementById("UI").innerHTML += collapsibles[i].getHTML();
+				}
+				
+				for(let i = 0; i < collapsibles.length; i++){
+					collapsibles[i].init();
+				}
+				
+				wind = new Wind();
+				
+				kite = new Kite();
+				kite.angular_velocity.set(0, 0, 0);//0.1, 0.1, 0.1);
+				
+				
+				rudderServo = new Servo(); leftElevonServo = new Servo(); rightElevonServo = new Servo(); leftBLDC = new BLDCMotor(); rightBLDC = new BLDCMotor();
+				
+				autopilot = new Autopilot();
+				
+				let c_l_by_c_d = 5;
+				// min8T, max8T, minLT, maxLT, minLS, maxLS
+				groundstation = new Groundstation(100, 100/*30, 1000*/, 2, 100, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
+				smoothLineTension = new Actuator(500, 0, 1000);
+				
+				visualization = new KiteVisualization("canvas_for_visualization", kite, wind);
+				
+				visualization.pauseCallback = function(){
+					startPauseSimulation();
+				};
+				visualization.beginFF = begin_fast_forward;
+				visualization.endFF = end_fast_forward;
+				visualization.beginSpeed = begin_very_fast_forward;
+				visualization.endSpeed = end_very_fast_forward;
+				
+				airfoilVisualization = new AirfoilCoefficientsVisualization("canvas_for_coefficients", kite.simpleWing1, kite.simpleWing2, "L,D");
+				airfoilVisualization2 = new AirfoilCoefficientsVisualization("canvas_for_l_d", kite.simpleWing1, kite.simpleWing2, "L/D");
+				dataPlot = new DataPlot("canvas_for_data");
+				windDiagram = new WindDiagram("canvas_for_wind_diagram");
+				
+				load();
+				animate();
+			}
+			
+			function animate() {
+				
+				for(let i_fast_forward_factor = 0; i_fast_forward_factor < fast_forward_factor; i_fast_forward_factor++){
+					var timestep_in_ms = 1000/50; // 50Hz
+					var timestep_in_s = 0.001*timestep_in_ms;
+					
+					if(running){
+						
+						// AUTOPILOT
+						//autopilot.hover.Y.P = 1.5**y_p.value;
+						
+						wind.update();
+						let lineDir = kite.positionR.clone();
+						let kiteVelocity = kite.velocity.clone();
+						let reelOutVector = projectToNormedVector(kiteVelocity, lineDir.normalize());
+						windDiagram.setWindVector(wind.speed, wind.speed - Math.sqrt(reelOutVector.z*reelOutVector.z + reelOutVector.y*reelOutVector.y), reelOutVector.x);
+						//console.log("" + wind.speed + ", " + Math.sqrt(kite.velocity.z*kite.velocity.z + kite.velocity.y*kite.velocity.y) + ", " + kite.velocity.x);
+						
+						var controlData = autopilot.step(kite.getSensorData(), kite.positionR.length(), line_tensionSlider.getSliderElement().value, timestep_in_s);
+						
+						// UI and LINE TENSION
+						//console.log(controlData.line_tension)
+						line_tensionSlider.setValue(controlData.line_tension);
+						smoothLineTension.setTargetValue(line_tensionSlider.getSliderElement().value);
+						smoothLineTension.step(timestep_in_s);
+						
+						let kite_line_length = kite.positionR.length();
+						time += timestep_in_s;
+						timeUIElement.setString("Time: " + time.toFixed(0) + " s (" + (time/3600).toFixed(3) + " h)");
+						rope_lengthUIElement.setString("Line length: " + kite_line_length.toFixed(0) + " m");
+						rope_angle_horizonUIElement.setString("Line angle to horizon: " + (180/Math.PI*Math.asin(projectToNormedVector(kite.positionR.clone().normalize(), new THREE.Vector3(1, 0, 0)).length())).toFixed(0) + "°");
+						flying_heightUIElement.setString("Height: " + kite.positionR.x.toFixed(0) + " m");
+						speedUIElement.setString("Speed: " + kite.velocity.length().toFixed(0) + " m/s");
+						let AoA = kite.simpleWing1.AoA_for_vis;
+						let C_L = lift_coefficient(AoA, kite.simpleWing1);
+						let C_D = drag_coefficient(AoA, 2*kite.simpleWing1.dimensions.y/kite.simpleWing1.dimensions.x, kite.simpleWing1);
+						glide_ratioUIElement.setString("L/D: " + (C_L/C_D).toFixed(1));
+						if(old_kite_line_length != 0){
+							let kite_line_length_difference = kite_line_length - old_kite_line_length;
+							if(line_tensionSlider.getSliderElement().value != 1){
+								//groundstation.factor = autopilot.hover.Y.P;
+								smoothLineTension.setTargetValue( groundstation.getLineTension(kite_line_length_difference/timestep_in_s) );
+								line_tensionSlider.setValue(smoothLineTension.getValue());
+							}
+							let power = kite_line_length_difference*line_tensionSlider.getSliderElement().value/timestep_in_s;
+							energy += power * timestep_in_s;
+							powerUIElement.setString("Power: " + power.toFixed(0) + " W (" + (energy/time).toFixed(0) + " W avg)"); dataPlot.addPoint(2, time, power); document.getElementById("power_in_graph").innerHTML = "Power:<br>"+power.toFixed(0)+" W";
+							energyUIElement.setString("Energy: " + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)"); dataPlot.addPoint(0, time, energy); document.getElementById("energy_in_graph").innerHTML = "Energy:<br>" + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)";
+							electricity_costUIElement.setString("Electricity Cost: " + (850/(energy/time)).toFixed(1) + " ct/kWh)");
+							
+						}
+						old_kite_line_length = kite_line_length;
+						
+						if(wurftest){
+							line_tensionSlider.setValue(0);
+							controlData.left_elevon = 0;
+							controlData.right_elevon = 0;
+							controlData.left_prop = 0;
+							controlData.right_prop = 0;
+							wind.setSpeedAndDirection(0.0, 0.0);
+						}
+						
+						if(autopilot.mode == EIGHT_MODE){
+							let northVector = projectToComplementOfNormedVector(new THREE.Vector3(1,0,0), kite.positionR.clone().normalize()).normalize().multiplyScalar(50);
+							let sidewaysVector = northVector.clone().cross(kite.positionR.clone().normalize());
+							kite.tangentCoordsVisNorth.set(new THREE.Vector3(0,0,0), kite.world2kite(northVector));
+							kite.tangentCoordsVisLeft.set(new THREE.Vector3(0,0,0), kite.world2kite(sidewaysVector));
+							kite.targetAngleVis.set(new THREE.Vector3(0,0,0), northVector.clone().multiplyScalar(Math.cos(autopilot.target_angle)).add(sidewaysVector.clone().multiplyScalar(Math.sin(autopilot.target_angle))));
+							kite.diveAngleVis.set(new THREE.Vector3(0,0,0), northVector.clone().multiplyScalar(Math.cos(autopilot.slowly_changing_target_angle.getValue())).add(sidewaysVector.clone().multiplyScalar(Math.sin(autopilot.slowly_changing_target_angle.getValue()))));
+						}else if(autopilot.mode == LANDING_MODE || autopilot.mode == FINAL_LANDING_MODE){
+							let horizontalVector = projectToComplementOfNormedVector(kite.positionR.clone(), new THREE.Vector3(1,0,0)).normalize().multiplyScalar(-20);
+							let verticalVector = (new THREE.Vector3(-1,0,0)).multiplyScalar(20);
+							kite.tangentCoordsVisNorth.set(new THREE.Vector3(0,0,0), kite.world2kite(horizontalVector));
+							kite.tangentCoordsVisLeft.set(new THREE.Vector3(0,0,0), kite.world2kite(verticalVector));
+							kite.targetAngleVis.set(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
+							kite.diveAngleVis.set(new THREE.Vector3(0,0,0), horizontalVector.clone().multiplyScalar(Math.cos(autopilot.desired_dive_angle)).add(verticalVector.clone().multiplyScalar(Math.sin(-autopilot.desired_dive_angle))));
+						}else{
+							kite.tangentCoordsVisNorth.set(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
+							kite.tangentCoordsVisLeft.set(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
+							kite.targetAngleVis.set(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
+							kite.diveAngleVis.set(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
+						}
+						
+						// PHYSICS
+						
+						let timestep_fraction_in_s = timestep_in_s / timestep_multiplier;
+						for (let i = 0; i < timestep_multiplier; i++){
+						
+							leftElevonServo.setTargetValue(controlData.left_elevon * Math.PI/180); leftElevonServo.step(timestep_fraction_in_s);
+							rightElevonServo.setTargetValue(controlData.right_elevon * Math.PI/180); rightElevonServo.step(timestep_fraction_in_s);
+							rudderServo.setTargetValue(controlData.rudder * Math.PI/180); rudderServo.step(timestep_fraction_in_s);
+							leftBLDC.setTargetValue(controlData.left_prop); leftBLDC.step(timestep_fraction_in_s);
+							rightBLDC.setTargetValue(controlData.right_prop); rightBLDC.step(timestep_fraction_in_s);
+							
+							kite.leftPropeller.setThrust(leftBLDC.getValue());
+							kite.rightPropeller.setThrust(rightBLDC.getValue());
+							if(!elevonControlOff){
+								kite.leftElevon.rotation.y = leftElevonServo.getValue();
+								kite.rightElevon.rotation.y = rightElevonServo.getValue();
+							}
+							kite.rudder.rotation.y = rudderServo.getValue();
+							
+							kite.update(wind, line_tensionSlider.getSliderElement().value, timestep_fraction_in_s);
+							kite.leftPropeller.update();
+							kite.rightPropeller.update();
+						}
+					}
+					
+					visualization.update(timestep_in_s*running);
+					
+					//console.log(vec2Str(kite.velocity));
+					
+					//render(); // TODO: render() has side effects on the physics!!! not good :( TODO: find out why.
+					
+					//console.log(vec2Str(kite.velocity));
+					
+					//console.log(" ");
+				}
+				
+				render();
+				
+				setTimeout(function(){
+				    requestAnimationFrame( animate )
+				}, timestep_in_ms);
+			}
+			
+			function render(){
+				visualization.render();
+			}
+			
+			function startPauseSimulation(){
+				running = !running;
+				if(running)
+					document.getElementById("startPauseSimulation").style.color = "green";
+				else
+					document.getElementById("startPauseSimulation").style.color = "red";
+			}
+			
+			function fast_forward(){
+				if(fast_forward_factor == 1){
+					begin_fast_forward();
+				}else{
+					end_fast_forward();
+				}
+			}
+			
+			function begin_fast_forward(){
+				fast_forward_factor = 5;
+			}
+			
+			function end_fast_forward(){
+				fast_forward_factor = 1;
+			}
+			
+			function begin_very_fast_forward(){
+				fast_forward_factor = 20;
+			}
+			
+			function end_very_fast_forward(){
+				fast_forward_factor = 1;
+			}
+			
+			function toggleWurftest(){
+				wurftest = !wurftest;
+				if(wurftest)
+					document.getElementById("toggleWurftest").style.color = "blue";
+				else
+					document.getElementById("toggleWurftest").style.color = "green";
+			}
+			
+			function zoomIn(){
+				visualization.camera.zoom *= 1.5;
+				visualization.camera.updateProjectionMatrix();
+			}
+			
+			function zoomOut(){
+				visualization.camera.zoom *= 0.66;
+				visualization.camera.updateProjectionMatrix();
+			}
+			
+			function save(){
+				//sendData(JSON.stringify(kite.dimensions), "storeConfigVars.php?", function(){
+				
+				let data = [];
+				for(let i = 0; i < ap_config.length; i++){
+					if(ap_config[i])
+						data[i] = [i, ap_config[i].id, ap_config[i].displayName, ap_config[i].currentValue];
+				}
+				//.replace(/\,\[/g, ",\n[")
+				sendData(JSON.stringify(data), "storeConfigVars.php?field=config_values", function(){
+					//do something when data sent successfully
+				});
+				
+				let kite_dimensions = [];
+				kite_dimensions[0] = "test"; kite_dimensions[1] = "bla";
+				sendData(JSON.stringify(kite_dimensions), "storeConfigVars.php?field=kite_dimensions", function(){
+					//do something when data sent successfully
+				});
+			}
+			
+			function load(){
+				getData("readConfigVars.php?field=config_values", function(text){
+					//console.log(text);
+					try{
+						let json_object = JSON.parse(text);
+						//console.log(json_object);
+						//console.log(ap_config);
+						for(let i = 0; i < ap_config.length; i++){
+							//console.log(ap_config[i]);
+							if(ap_config[i] && json_object[i]){
+								//console.log("setting ap_congig[" + i + "] = " + json_object[i][3]);
+								ap_config[i].setValue(json_object[i][3]);
+								
+							}
+						}
+					}catch(err){
+						console.log("could not load config vars from server. using default.");
+					}
+				});
+				
+				getData("readConfigVars.php?field=kite_dimensions", function(text){
+					//console.log(text);
+					try{
+						let json_object = JSON.parse(text);
+						console.log("kite_dimensions are:");
+						console.log(json_object);
+					}catch(err){
+						console.log("could not load kite dimensions from server. using default.");
+					}
+				});
+			}
+			
+			function moveCamera(){
+				
+				if(camAttachedToKite){
+					visualization.cameraAttachedToKite = false;
+				}else{
+					visualization.cameraAttachedToKite = true;
+				}
+				camAttachedToKite = !camAttachedToKite;
+			}
+			
+			function togglePerspective(){
+				visualization.toggleCameraPerspective();
+			}
+			
+			function land(){
+				autopilot.mode = FINAL_LANDING_MODE;
+			}
+			
+			function launch(){
+				autopilot.mode = HOVER_MODE;
+			}
+			
+			function elevonControlOff_func(){
+				if(elevonControlOff){
+					
+					document.getElementById("elevonControlOff").style.color = "green";
+					elevonControlOff = false;
+				}else{
+					
+					document.getElementById("elevonControlOff").style.color = "red";
+					elevonControlOff = true;
+				}
+			}
+
+		</script>
+
+	</body>
+</html>

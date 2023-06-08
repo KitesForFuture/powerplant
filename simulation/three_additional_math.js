@@ -1,4 +1,14 @@
 
+function vec2Str(vector){
+	return "vec = (" + vector.x + ", " + vector.y + ", " + vector.z + ")";
+}
+
+function mat2Str(n){
+	let m = n.elements;
+	return "vec = \n(" + m[0] + ", " + m[1] + ", " + m[2] + "\n"
+	+ m[3] + ", " + m[4] + ", " + m[5] + "\n"
+	+ m[6] + ", " + m[7] + ", " + m[8] + ")";
+}
 
 function projectToNormedVector(a, n){
 	return n.clone().multiplyScalar(a.clone().dot(n));

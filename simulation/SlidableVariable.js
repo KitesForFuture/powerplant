@@ -8,6 +8,7 @@ class SlidableVariable extends UIElement{
 		this.min = min;
 		this.max = max;
 		this.initialValue = initialValue;
+		this.currentValue = initialValue*factor;
 		this.displayName = displayName;
 		this.factor = factor;
 		this.digitsbehindComma = digitsbehindComma;
@@ -37,13 +38,16 @@ class SlidableVariable extends UIElement{
 		this.getSliderElement().oninput = function(){
 			//console.log(parseFloat(that.getSliderElement().value)*this.factor);
 			that.setString(that.displayName + ": " + (that.getSliderElement().value*that.factor).toFixed(that.digitsbehindComma) + that.unit);
-			that.oninput(this);
+			//console.log("value = " + this.value + "factor = " + this.factor);
+			that.currentValue = this.value*that.factor;
+			that.oninput(this.value*that.factor);
 		};
 	}
 	
-	setSlider(value){
-		this.getSliderElement().value = value;
-		this.setString(this.displayName + ": " + (value*this.factor).toFixed(this.digitsbehindComma) + this.unit);
+	setValue(value){
+		this.getSliderElement().value = value/this.factor;
+		this.currentValue = value;
+		this.setString(this.displayName + ": " + (value).toFixed(this.digitsbehindComma) + this.unit);
 	}
 	
 	getSliderElement(){

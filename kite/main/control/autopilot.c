@@ -48,10 +48,6 @@ void initAutopilot(Autopilot* autopilot, float* config_values){
     
 	loadConfigVariables(autopilot, config_values);
 	
-	autopilot->eight.Y.P = 1;
-	autopilot->landing.X.D = 1;
-	
-	
 	autopilot->y_angle_offset = autopilot->hover.y_angle_offset;
 	
 	autopilot->mode = HOVER_MODE;
@@ -168,8 +164,6 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	
 	float x_axis_control = -100 * mat[3] * autopilot->landing.X.P;// - 0*50*autopilot->landing.X.D * sensor_data.gyro[0];
 	
-	autopilot->brake = clamp(autopilot->brake, 0, 35);
-	
 	sendDebuggingData(height, line_length, height_error, desired_dive_angle_smooth, x_axis_control, y_axis_control);
 	initControlData(control_data_out, 0, 0, autopilot->brake - y_axis_control-1*x_axis_control, autopilot->brake - y_axis_control+1*x_axis_control, -autopilot->brake-5, 0, LINE_TENSION_LANDING); return;
 }
@@ -210,7 +204,7 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	//}
 	
 	// ELEVATOR
-	float y_axis_control = autopilot->eight.elevator - 1 * autopilot->eight.Y.D * sensor_data.gyro[1];
+	float y_axis_control = autopilot->eight.elevator - autopilot->eight.Y.D * sensor_data.gyro[1];
 	
 	sendDebuggingData(sensor_data.height, sensor_data.gyro[0], sensor_data.gyro[2], slowly_changing_target_angle_local, y_axis_control, z_axis_control);
 	
@@ -258,11 +252,11 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	x_axis_control *= 100;
 	
 	// FOR DEBUGGING
-	if(autopilot->RC_switch > 0.5){
+	/*if(autopilot->RC_switch > 0.5){
 		x_axis_control += 45 * autopilot->RC_target_angle; // move ailerons directly
 	}else{
 		z_axis_control += 45 * autopilot->RC_target_angle; // differentiate propeller thrust
-	}
+	}*/
 	
 	// MIXING
 	

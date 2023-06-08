@@ -10,6 +10,9 @@ groundstation/sdkconfig
 in_flight_config/build
 in_flight_config/sdkconfig
 
+simulation/php
+simulation/simulator.php
+
 esp_internet_control/build
 esp_internet_control/sdkconfig
 control_backend

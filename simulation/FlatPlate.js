@@ -2,8 +2,8 @@
 
 class FlatPlate extends KitePart{
 	
-	constructor(x, y, z, rigidBody, colorName, camber){
-		super(new THREE.BoxBufferGeometry(1, 1, 1), new THREE.MeshPhongMaterial( { color: new THREE.Color(colorName) } ), rigidBody);
+	constructor(x, y, z, rigidBody, colorName, camber, qr){
+		super(camber?new AirfoilGeometry(qr):new THREE.BoxBufferGeometry(1, 1, 1), new THREE.MeshPhongMaterial( { color: new THREE.Color(colorName) } ), rigidBody);
 		
 		this.dimensions = new THREE.Vector3(1, 1, 1);
 		this.setDimensions(x, y, z);

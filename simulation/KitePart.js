@@ -7,7 +7,9 @@ class KitePart extends THREE.Object3D{
 		this.mesh = new THREE.Mesh(geometry, material);
 		this.scalingObject = new THREE.Object3D();
 		this.scalingObject.add(this.mesh);
-		this.add(this.scalingObject);
+		this.rotationObject = new THREE.Object3D();
+		this.rotationObject.add(this.scalingObject);
+		this.add(this.rotationObject);
 		this.rigidBody = rigidBody;
 		this.mesh.castShadow = true;
 		//this.mesh.receiveShadow = true;
@@ -15,6 +17,7 @@ class KitePart extends THREE.Object3D{
 	
 	//Matrix to go from RigidBody to FlatPlate (inverse of M)
 	getN(){
+		this.updateWorldMatrix(true, false);
 		
 		var mat = this.matrix.clone();
 		var ancestor = this.parent;
