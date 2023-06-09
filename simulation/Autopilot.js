@@ -80,7 +80,7 @@ class Autopilot{
 		this.eight.Z.D = 0.2;
 		this.eight.Y = new Object();
 		this.eight.Y.D = 1;
-		this.eight.elevator = 0;
+		this.eight.elevator = 5*Math.PI/180;
 		this.eight.target_angle_beta_clamp = 0.4;
 		this.landing = new Object();
 		this.landing.X = new Object();
@@ -128,7 +128,7 @@ class Autopilot{
 				this.timer.reset();
 			}
 			this.y_angle_offset = 0.1;
-			return this.hover_control(sensor_data, line_length, 3);
+			return this.hover_control(sensor_data, line_length, 1);
 		}else if(this.mode == TRANSITION_MODE){
 			if(this.timer.timeElapsedInSeconds() > 1){ // 3s
 				this.timer.reset();
@@ -267,7 +267,7 @@ class Autopilot{
 		
 		//TODO: cleanup all those constants!
 		var height_control_normed = clamp(0.55 - 1.15*5.8*this.hover.H.P * (line_angle-Math.PI/6) - 1.15*this.hover.H.D * clamp(d_height, -1, 1), 0.7, 5);
-		//console.log("height: " + sensor_data.height + ", line_angle: " + line_angle*180/Math.PI + ", height_control_normed: " + height_control_normed);
+		console.log("height: " + sensor_data.height + ", line_angle: " + line_angle*180/Math.PI + ", height_control_normed: " + height_control_normed);
 		// this is an approximation to the airflow seen by the elevons (propeller airflow + velocity in height direction)
 		var normed_airflow = height_control_normed + sensor_data.d_height*7*1.15/8/5;
 		var height_control = height_control_normed * 55.901;
@@ -293,10 +293,10 @@ class Autopilot{
 		x_axis_control *= 100;
 		
 		// MIXING
-		height_control = clamp(height_control, 0, 50);
+		height_control = clamp(height_control, 0, 90);
 		
-		var left_elevon = y_axis_control + x_axis_control;
-		var right_elevon = y_axis_control - x_axis_control;
+		var left_elevon = clamp(y_axis_control + x_axis_control, -35, 35);
+		var right_elevon = clamp(y_axis_control - x_axis_control, -35, 35);
 		var left_prop = height_control + z_axis_control;
 		var right_prop = height_control - z_axis_control;
 		var rudder = z_axis_control; // just to move it out of the way, so it doesn't provide drag for the wind

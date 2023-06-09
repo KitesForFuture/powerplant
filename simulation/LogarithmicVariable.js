@@ -44,7 +44,7 @@ class LogarithmicVariable extends UIElement{
 	
 	setValue(value){
 		this.currentValue = value;
-		this.setString(this.displayName + ": " + (this.currentValue).toFixed(4) + this.unit);
+		this.setString(this.displayName + ": " + (this.currentValue).toFixed(2) + this.unit);
 	}
 	
 	getPlusElement(){

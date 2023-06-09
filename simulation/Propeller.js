@@ -10,19 +10,12 @@ class Propeller extends KitePart{
 		this.thrust = 0;
 		this.maxThrustInNewton = maxThrustInNewton;
 		
+		this.torqueVis = new VectorVis(new THREE.Color('blue'));
 	}
 	
 	setThrust(th){
 		this.thrust = th * this.maxThrustInNewton/90.0; // max is 8N of thrust
 	}
-	
-	/*getForce(){
-		if(this.thrust == 0) this.fold();
-		else this.unfold();
-		// so far ignoring cancelling effect of relative velocity of kite!
-		var propeller_direction_in_world_coordinates = new THREE.Vector3(this.matrixWorld.elements[4], this.matrixWorld.elements[5], this.matrixWorld.elements[6]);
-		return propeller_direction_in_world_coordinates.multiplyScalar(this.thrust);
-	}*/
 	
 	getForceAndCentreOfPressureInKiteCoords(){
 		if(this.thrust == 0) this.fold();

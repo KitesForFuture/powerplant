@@ -40,7 +40,7 @@ class SlidableVariable extends UIElement{
 			that.setString(that.displayName + ": " + (that.getSliderElement().value*that.factor).toFixed(that.digitsbehindComma) + that.unit);
 			//console.log("value = " + this.value + "factor = " + this.factor);
 			that.currentValue = this.value*that.factor;
-			that.oninput(this.value*that.factor);
+			that.oninput(that.currentValue);
 		};
 	}
 	

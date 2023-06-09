@@ -11,12 +11,12 @@ class Kite extends RigidBody{
 	}
 	
 	updateDimensionsAndPositionsOfParts(){
-	
+		this.rudderData.StabilizerDimensions.x = this.rudderData.stabilizerDepth*this.dimensions.y*0.5
 		this.stabilizerLeft.setDimensions(this.rudderData.StabilizerDimensions.x, this.rudderData.StabilizerDimensions.y, this.rudderData.StabilizerDimensions.z);
 		this.stabilizerLeft.position.x = -this.rudderData.distanceFromCG - this.rudderData.StabilizerDimensions.x * 0.5;
 		this.stabilizerLeft.position.z = 0;//this.rudderData.StabilizerDimensions.y*0.5;
 		this.stabilizerLeft.position.y = 0;//this.dimensions.y*0.5;
-		
+		this.rudderData.distanceFromCG = this.rudderData.distanceFromCGInPercent*this.dimensions.y*0.5;
 		this.rudder.position.x = -this.rudderData.distanceFromCG;
 		this.rudder.position.z = 0;//this.rudderData.dimensions.y*0.5;
 		
@@ -70,9 +70,26 @@ class Kite extends RigidBody{
 		this.calculateAndSetAngularInertiaAndMass();
 	}
 	
-	constructor(){ super();
+	reset(){
+		//console.log("RigidBody.reset()");
+		this.positionR.set(2, 0, 2);
 		
-		this.positionR.set(2, 0, 2);//this.positionR.set(40, 0, 82);//
+		this.velocity = new THREE.Vector3(0, 0, 0);
+		
+		this.rotation_matrix.set(
+			0,   0, 1,
+			0,   1, 0,
+			-1,   0, 0
+		);
+		
+		this.angular_velocity = new THREE.Vector3(0, 0, 0);
+	}
+	
+	constructor(){
+		
+		super();
+		//this.positionR.set(2, 0, 2);//this.positionR.set(40, 0, 82);//
+		this.reset();
 		this.dimensions = new THREE.Vector3(0.2, 2, 0.03);
 		
 		this.center_of_gravity_from_front = 0.25;//30;//0.33;//0.33;//fraction of the full chord length
@@ -84,7 +101,9 @@ class Kite extends RigidBody{
 		this.propDistanceFromCenter = 0.5;
 		this.rudderData = new Object();
 		this.rudderData.dimensions = new THREE.Vector3(0.1, 0.4, 0.01);
+		this.rudderData.stabilizerDepth = 0.2;
 		this.rudderData.StabilizerDimensions = new THREE.Vector3(0.25, 0.2, 0.01);
+		this.rudderData.distanceFromCGInPercent = 0.15;
 		this.rudderData.distanceFromCG = 0.15;
 		this.reflexData = new Object();
 		this.reflexData.dimensions = new THREE.Vector3(0.10, 0.5, 0.03);
@@ -162,6 +181,7 @@ class Kite extends RigidBody{
 		
 		this.lineTensionTorqueVis = new VectorVis(new THREE.Color('red'));
 		this.lineTensionTorqueVis2 = new VectorVis(new THREE.Color('red'));
+		this.massVis = new VectorVis(new THREE.Color('black'));
 		
 		this.tangentCoordsVisNorth = new VectorVis(new THREE.Color('black'));
 		this.tangentCoordsVisLeft = new VectorVis(new THREE.Color('black'));
@@ -188,6 +208,7 @@ class Kite extends RigidBody{
 			//this.rudder
 			this.lineTensionTorqueVis,
 			this.lineTensionTorqueVis2,
+			this.massVis,
 			this.targetAngleVis,
 			this.diveAngleVis,
 			this.tangentCoordsVisNorth,
@@ -223,7 +244,7 @@ class Kite extends RigidBody{
 		];
 		
 		for (let part of this.aerodynamicKiteParts){
-			if(part.type == "FlatPlate")
+			if(part.torqueVis)
 				this.kiteMeshes.add(part.torqueVis);
 		}
 	}
@@ -328,8 +349,15 @@ class Kite extends RigidBody{
 	
 	update(wind, line_tension, timestep_in_s){
 		
-		this.elevonMeshLeft.setAdditionalWind(this.leftPropeller.getForceAndCentreOfPressureInKiteCoords().force.multiplyScalar(-1));
-		this.elevonMeshRight.setAdditionalWind(this.rightPropeller.getForceAndCentreOfPressureInKiteCoords().force.multiplyScalar(-1));
+		let leftForceVec = this.leftPropeller.getForceAndCentreOfPressureInKiteCoords().force;
+		let rightForceVec = this.rightPropeller.getForceAndCentreOfPressureInKiteCoords().force;
+		if(leftForceVec.length() > 0.001 && rightForceVec.length() > 0.001){
+			this.elevonMeshLeft.setAdditionalWind(leftForceVec.multiplyScalar(-2/Math.sqrt(leftForceVec.length())));
+			this.elevonMeshRight.setAdditionalWind(rightForceVec.multiplyScalar(-2/Math.sqrt(rightForceVec.length())));
+		}else{
+			this.elevonMeshLeft.setAdditionalWind(new THREE.Vector3(0,0,0));
+			this.elevonMeshRight.setAdditionalWind(new THREE.Vector3(0,0,0));
+		}
 		
 		let wind_vector = wind.getWindVector();
 		let force = new THREE.Vector3();
@@ -340,8 +368,7 @@ class Kite extends RigidBody{
 			let forceData = kitePart.getForceAndCentreOfPressureInKiteCoords(wind_vector);
 			force.add(forceData.force);
 			torque.add(forceData.pressure_centre.clone().cross(this.world2kite(forceData.force.clone())));
-			if(kitePart.type == "FlatPlate") kitePart.torqueVis.set(forceData.pressure_centre, this.world2kite(forceData.force));
-			
+			if(kitePart.torqueVis) kitePart.torqueVis.set(forceData.pressure_centre, this.world2kite(forceData.force));
 		}
 		
 		/*
@@ -366,7 +393,7 @@ class Kite extends RigidBody{
 		torque.add(line_force_dir_in_kite_coords.clone().cross(this.getRelativePositionOfLineKnotInKiteCoordinates()).multiplyScalar(line_tension));
 		this.lineTensionTorqueVis.set(this.getRelativePositionOfLineKnotInKiteCoordinates().add(new THREE.Vector3(0.001, 0, 0)), line_force_dir_in_kite_coords.multiplyScalar(-line_tension));
 		this.lineTensionTorqueVis2.set(this.getRelativePositionOfLineKnotInKiteCoordinates().add(new THREE.Vector3(-0.001, 0, 0)), line_force_dir_in_kite_coords);
-		
+		this.massVis.set(new THREE.Vector3(0, 0, 0), this.world2kite(new THREE.Vector3(-10*this.mass, 0, 0)));
 		// add gravity to force
 		let gravity = new THREE.Vector3(-9.81, 0, 0);
 		force.add(new THREE.Vector3(-10*this.mass, 0, 0));

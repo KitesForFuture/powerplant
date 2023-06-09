@@ -5,7 +5,7 @@ class Wind{
 	constructor(){
 		this.windvector = new THREE.Vector3();
 		
-		this.setSpeedAndDirection(12.5, 0);
+		this.setSpeedAndDirection(6.5, 0);
 	}
 	
 	update(){

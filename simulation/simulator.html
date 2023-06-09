@@ -26,7 +26,8 @@
 						</tr>
 						<tr><td>
 							<button type="button" id="land" onclick="land()" style="color: black;">LAND</button>
-							<button type="button" id="launch" onclick="launch()" style="color: black;">LAUNCH</button></td>
+							<button type="button" id="launch" onclick="launch()" style="color: black;">LAUNCH</button>
+							<button type="button" id="reset" onclick="reset()" style="color: black;">RESET</button></td>
 						</tr>
 						<tr><td>
 							Zoom: 
@@ -181,6 +182,7 @@
 			var wurftest = false;
 			
 			var ap_config = [];
+			var kite_dimensions = [];
 			
 			init();
 			
@@ -194,41 +196,47 @@
 				kiteDimensionsCollapsible = new Collapsible("kite_dimensions", "Kite Dimensions");
 				collapsibles.push(kiteDimensionsCollapsible);
 				
-				let wingspanSlider = kiteDimensionsCollapsible.add( new SlidableVariable("wingspan", "Wingspan", 1, 100, 20, 10, 0, " cm") );
-				wingspanSlider.oninput = function(value){
+				kite_dimensions[0] = kiteDimensionsCollapsible.add( new SlidableVariable("wingspan", "Wingspan", 1, 100, 20, 10, 0, " cm") );
+				kite_dimensions[0].oninput = function(value){
 					let oldValue = kite.dimensions.y;
 					kite.dimensions.y = value*0.01;
 					//kite.reflexData.dimensions.y *= kite.dimensions.y / oldValue;
 					kite.updateDimensionsAndPositionsOfParts();
 					massUIElement.setString("mass: " + kite.mass.toFixed(3) + " kg");
 				};
-				let prop_distSlider = kiteDimensionsCollapsible.add( new SlidableVariable("prop_dist", "Dist Prop from Center", 0, 99, 50, 1, 0, "%") );
-				let elevon_spanSlider = kiteDimensionsCollapsible.add( new SlidableVariable("elevon_span", "Elevon length", 1, 99, 50, 1, 0, "%") );
-				elevon_spanSlider.oninput = function(value){
+				kite_dimensions[1] = kiteDimensionsCollapsible.add( new SlidableVariable("prop_dist", "Dist Prop from Center", 0, 99, 50, 1, 0, "%") );
+				kite_dimensions[2] = kiteDimensionsCollapsible.add( new SlidableVariable("elevon_span", "Elevon length", 1, 99, 50, 1, 0, "%") );
+				kite_dimensions[2].oninput = function(value){
 					kite.elevonData.dimensions.y = value*0.01;
 					kite.updateDimensionsAndPositionsOfParts();
 				};
-				let stabilizer_distanceSlider = kiteDimensionsCollapsible.add( new SlidableVariable("stabilizer_distance", "Stabilizer Distance", 0, 200, 15, 1, 0, " cm") );
-				stabilizer_distanceSlider.oninput = function(value){ kite.rudderData.distanceFromCG = value*0.01; kite.updateDimensionsAndPositionsOfParts(); };
-				let stabilizer_depthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("stabilizer_depth", "Stabilizer Depth", 0, 100, 25, 1, 0, " cm") );
-				stabilizer_depthSlider.oninput = function(value){ kite.rudderData.StabilizerDimensions.x = value*0.01; kite.updateDimensionsAndPositionsOfParts(); };
+				kite_dimensions[3] = kiteDimensionsCollapsible.add( new SlidableVariable("stabilizer_distance", "Stabilizer Distance", 1, 100, 15, 1, 0, "%") );
+				kite_dimensions[3].oninput = function(value){
+					kite.rudderData.distanceFromCGInPercent = value*0.01;
+					kite.updateDimensionsAndPositionsOfParts(); 
+				};
+				kite_dimensions[4] = kiteDimensionsCollapsible.add( new SlidableVariable("stabilizer_depth", "Stabilizer Depth", 1, 100, 25, 1, 0, "%") );
+				kite_dimensions[4].oninput = function(value){ kite.rudderData.stabilizerDepth = value*0.01; kite.updateDimensionsAndPositionsOfParts(); };
 				
-				let tannenbaum_lengthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("tannenbaum_length", "Line Attachment Length", 0, 50, 5, 1, 0, " cm") );
-				let bridle_lengthSlider = kiteDimensionsCollapsible.add( new SlidableVariable("bridle_length", "Bridle Length", 1, 100, 20, 1, 0, "%") );
+				kite_dimensions[5] = kiteDimensionsCollapsible.add( new SlidableVariable("tannenbaum_length", "Line Attachment Length", 0, 50, 5, 1, 0, " cm") );
+				kite_dimensions[6] = kiteDimensionsCollapsible.add( new SlidableVariable("bridle_length", "Bridle Length", 1, 100, 20, 1, 0, "%") );
 				
-				tannenbaum_lengthSlider.oninput = function(value){
+				kite_dimensions[5].oninput = function(value){
 					kite.setTannenbaumLengthAndBridleLength(value*0.01);
 				};
-				bridle_lengthSlider.oninput = function(value){
+				kite_dimensions[6].oninput = function(value){
 					kite.bridle_length_percentage = value*0.01;
 					kite.updateDimensionsAndPositionsOfParts();
 					
 				};
-				prop_distSlider.oninput = function(value){ kite.propDistanceFromCenter = value * 0.01;kite.updateDimensionsAndPositionsOfParts(); };
+				kite_dimensions[1].oninput = function(value){ kite.propDistanceFromCenter = value * 0.01;kite.updateDimensionsAndPositionsOfParts(); };
 				
 				let massUIElement = kiteDimensionsCollapsible.add( new UIElement("mass") );
 				
-				let reflexSlider = kiteDimensionsCollapsible.add( new SlidableVariable("reflex", "Reflex", 0, 45, 5, 1, 0, "°") );
+				kite_dimensions[7]= kiteDimensionsCollapsible.add( new SlidableVariable("reflex", "Reflex", 0, 45, 5, 1, 0, "°") );
+				kite_dimensions[7].oninput = function(value){
+					kite.setReflex(value * Math.PI / 180);
+				};
 				// AUTOPILOT SETTINGS
 				
 				autopilotSettingsCollapsible = new Collapsible("autopilot_settings", "Autopilot Settings");
@@ -265,16 +273,16 @@
 				ap_config[29].oninput = function(value){autopilot.eight.Y.D = value};
 				
 				
-				ap_config[23] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.Y.P", "LANDING Y-Compensation", 1, 1.3, ""));
+				ap_config[23] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.Y.P", "LAND Y-Compensation", 1, 1.3, ""));
 				ap_config[23].oninput = function(value){autopilot.landing.Y.P = value};
-				ap_config[24] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.Y.D", "LANDING Y-Damping", 1, 1.3, ""));
+				ap_config[24] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.Y.D", "LAND Y-Damping", 1, 1.3, ""));
 				ap_config[24].oninput = function(value){autopilot.landing.Y.D = value};
-				ap_config[25] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.X.P", "LANDING X-Compensation", 1, 1.3, ""));
+				ap_config[25] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.X.P", "LAND X-Compensation", 1, 1.3, ""));
 				ap_config[25].oninput = function(value){autopilot.landing.X.P = value};
 				
 				ap_config[34] = autopilotSettingsCollapsible.add( new LogarithmicVariable("eight.beta_P", "EIGHT beta Compensation", 1, 1.3, ""));
 				ap_config[34].oninput = function(value){autopilot.eight.beta_P = value};
-				ap_config[36] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.dive_angle_P", "LANDING dive angle Compensation", 1, 1.3, ""));
+				ap_config[36] = autopilotSettingsCollapsible.add( new LogarithmicVariable("landing.dive_angle_P", "LAND dive angle Compensation", 1, 1.3, ""));
 				ap_config[36].oninput = function(value){autopilot.landing.dive_angle_P = value};
 				
 				
@@ -283,7 +291,7 @@
 				ap_config[31] = autopilotSettingsCollapsible.add( new SlidableVariable("transition_y_angle_offset", "transition Y angle offset", -25, 25, 0, 1, 0, "°") );
 				ap_config[31].oninput = function(value){autopilot.transition_y_angle_offset = value*Math.PI/180;};
 				
-				ap_config[26] = autopilotSettingsCollapsible.add( new SlidableVariable("landing.desired_height", "landing desired height", -4, 6, 0, 0.5, 1, "m") );
+				ap_config[26] = autopilotSettingsCollapsible.add( new SlidableVariable("landing.desired_height", "LAND desired height", -4, 6, 0, 0.5, 1, "m") );
 				ap_config[26].oninput = function(value){autopilot.landing.desired_height = value;};
 				
 				ap_config[13] = autopilotSettingsCollapsible.add( new SlidableVariable("turning_speed", "eights turning speed", 1, 18, 9, 10, 0, "°/s") );
@@ -295,7 +303,7 @@
 				
 				ap_config[22] = autopilotSettingsCollapsible.add( new SlidableVariable("brake", "Brake Angle", -25, 25, 0, 1, 0, "°") );
 				ap_config[22].oninput = function(value){autopilot.brake = value*Math.PI/180;};
-				ap_config[30] = autopilotSettingsCollapsible.add( new SlidableVariable("eight.elevator", "Eight Elevator Angle", -10, 10, 0, 1, 0, "°") );
+				ap_config[30] = autopilotSettingsCollapsible.add( new SlidableVariable("eight.elevator", "Eight Elevator Angle", -10, 10, 5, 1, 0, "°") );
 				ap_config[30].oninput = function(value){autopilot.eight.elevator = value*Math.PI/180;};
 				
 				ap_config[32] = autopilotSettingsCollapsible.add( new SlidableVariable("eight.desired_line_angle_from_zenith", "Eight Angle from Zenith", 10, 80, 45, 1, 0, "°") );
@@ -308,7 +316,7 @@
 				ap_config[35].oninput = function(value){autopilot.eight.neutral_beta_sideways_flying_angle_fraction = value;};
 				
 				
-				reflexSlider.oninput = function(value){ kite.setReflex(parseFloat(value) * Math.PI / 180); };
+				
 				//qr_neutralSlider.oninput = function(value){ autopilot.qr_neutral = value; };
 				//y_pSlider.oninput = function(value){ autopilot.hover.Y.P = 1.5**value; };
 				
@@ -320,7 +328,7 @@
 				environmentCollapsible = new Collapsible("environment", "Environment Settings");
 				collapsibles.push(environmentCollapsible);
 				
-				let wind_speedSlider = environmentCollapsible.add( new SlidableVariable("wind_speed", "Wind speed", 0, 50, 25, 0.5, 1, " m/s") );
+				let wind_speedSlider = environmentCollapsible.add( new SlidableVariable("wind_speed", "Wind speed", 0, 50, 13, 0.5, 1, " m/s") );
 				let wind_directionSlider = environmentCollapsible.add( new SlidableVariable("wind_direction", "Wind direction", -200, 200, 0, 1, 0, "°") );
 				
 				wind_speedSlider.oninput = function(value){ wind.setSpeedAndDirection(value*0.5, wind_directionSlider.getSliderElement().value); };
@@ -364,6 +372,14 @@
 					collapsibles[i].init();
 				}
 				
+				// KEY INPUT
+				document.addEventListener("keydown", function(event){
+					if(event.keyCode == 82){
+						//event.preventDefault();
+						reset();
+					}
+				}, false);
+				
 				wind = new Wind();
 				
 				kite = new Kite();
@@ -395,6 +411,7 @@
 				windDiagram = new WindDiagram("canvas_for_wind_diagram");
 				
 				load();
+				reset();
 				animate();
 			}
 			
@@ -591,9 +608,14 @@
 					//do something when data sent successfully
 				});
 				
-				let kite_dimensions = [];
-				kite_dimensions[0] = "test"; kite_dimensions[1] = "bla";
-				sendData(JSON.stringify(kite_dimensions), "storeConfigVars.php?field=kite_dimensions", function(){
+				data = [];
+				//kite_dimensions[0] = "test"; kite_dimensions[1] = "bla";
+				for(let i = 0; i < kite_dimensions.length; i++){
+					if(kite_dimensions[i]){
+						data[i] = [i, kite_dimensions[i].id, kite_dimensions[i].displayName, kite_dimensions[i].currentValue];
+					}
+				}
+				sendData(JSON.stringify(data), "storeConfigVars.php?field=kite_dimensions", function(){
 					//do something when data sent successfully
 				});
 			}
@@ -616,18 +638,36 @@
 					}catch(err){
 						console.log("could not load config vars from server. using default.");
 					}
+					
 				});
+				for(let i = 0; i < ap_config.length; i++){
+					if(ap_config[i]){
+						ap_config[i].oninput(ap_config[i].currentValue);
+					}
+				}
 				
 				getData("readConfigVars.php?field=kite_dimensions", function(text){
 					//console.log(text);
 					try{
 						let json_object = JSON.parse(text);
-						console.log("kite_dimensions are:");
-						console.log(json_object);
+						for(let i = 0; i < kite_dimensions.length; i++){
+							//console.log(ap_config[i]);
+							if(kite_dimensions[i] && json_object[i]){
+								//console.log("setting ap_congig[" + i + "] = " + json_object[i][3]);
+								kite_dimensions[i].setValue(json_object[i][3]);
+							}
+						}
 					}catch(err){
 						console.log("could not load kite dimensions from server. using default.");
 					}
+					
+					kite.updateDimensionsAndPositionsOfParts();
 				});
+				for(let i = 0; i < kite_dimensions.length; i++){
+					if(kite_dimensions[i]){
+						kite_dimensions[i].oninput(kite_dimensions[i].currentValue);
+					}
+				}
 			}
 			
 			function moveCamera(){
@@ -650,6 +690,11 @@
 			
 			function launch(){
 				autopilot.mode = HOVER_MODE;
+			}
+			
+			function reset(){
+				kite.reset();
+				launch();
 			}
 			
 			function elevonControlOff_func(){
