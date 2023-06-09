@@ -56,8 +56,8 @@ class Kite extends RigidBody{
 		this.simpleWing2.position.y = - this.dimensions.y*0.25;
 		
 		
-		this.leftPropeller.position.x = this.dimensions.x*this.center_of_gravity_from_front + this.propeller_radius;
-		this.rightPropeller.position.x = this.dimensions.x*this.center_of_gravity_from_front + this.propeller_radius;
+		this.leftPropeller.position.x = this.dimensions.x*this.center_of_gravity_from_front + 0.05;// + this.propeller_radius;
+		this.rightPropeller.position.x = this.dimensions.x*this.center_of_gravity_from_front + 0.05;// + this.propeller_radius;
 		this.leftPropeller.position.y = this.dimensions.y*0.5 * ((1-this.elevonData.dimensions.y) + this.propDistanceFromCenter*this.elevonData.dimensions.y);
 		this.rightPropeller.position.y = -this.dimensions.y*0.5 * ((1-this.elevonData.dimensions.y) + this.propDistanceFromCenter*this.elevonData.dimensions.y);
 		
@@ -107,8 +107,8 @@ class Kite extends RigidBody{
 		this.rudderData.distanceFromCG = 0.15;
 		this.reflexData = new Object();
 		this.reflexData.dimensions = new THREE.Vector3(0.10, 0.5, 0.03);
-		this.maxPropellerThrust = 8;
-		this.propeller_radius = 0.1;
+		this.maxPropellerThrust = 26;
+		this.propeller_radius = 0.18;
 		this.bridle_length_percentage = 0.2;
 		// STABILIZER
 		this.stabilizerLeft = new FlatPlate(this.rudderData.StabilizerDimensions.x, this.rudderData.StabilizerDimensions.y, this.rudderData.StabilizerDimensions.z, this , 'cornflowerblue', false, false);

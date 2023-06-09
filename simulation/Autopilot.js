@@ -143,9 +143,8 @@ class Autopilot{
 			//return this.transition_control(sensor_data, line_length);
 			
 		}else if(this.mode == EIGHT_MODE){
-			if(sensor_data.height > 130){
+			if(sensor_data.height > 100 && sensor_data.rotation_matrix.elements[3] < 0.1 && sensor_data.rotation_matrix.elements[3] > -0.1){
 				this.mode = LANDING_MODE;
-				
 			}
 			return this.eight_control(sensor_data, line_length, timestep_in_s);
 		}else if(this.mode == LANDING_MODE){
@@ -191,7 +190,7 @@ class Autopilot{
 		
 		let line_angle_error = line_angle-desired_line_angle;// negative -> too low, positive -> too high
 		this.desired_dive_angle = -desired_line_angle - 2 * line_angle_error;
-		this.desired_dive_angle = clamp(this.desired_dive_angle, -Math.PI/12, Math.PI/6);
+		this.desired_dive_angle = clamp(this.desired_dive_angle, -Math.PI/12, Math.PI/2);
 		if(transition){
 			this.desired_dive_angle = Math.PI/4;
 		}
@@ -209,7 +208,8 @@ class Autopilot{
 		let x_axis_control = -100 * mat[3] * this.landing.X.P;
 		//console.log(y_axis_control);
 		//x_axis_control *= 100;
-		//x_axis_control = clamp(x_axis_control, -15, 15);
+		x_axis_control = clamp(x_axis_control, -15, 15);
+		y_axis_control = clamp(y_axis_control, -25, 25);
 		
 		return new ControlData(0, 0, y_axis_control-1*x_axis_control, y_axis_control+1*x_axis_control, x_axis_control, 2);
 	}
@@ -266,8 +266,8 @@ class Autopilot{
 		var line_angle = asin_clamp(sensor_data.height/line_length);
 		
 		//TODO: cleanup all those constants!
-		var height_control_normed = clamp(0.55 - 1.15*5.8*this.hover.H.P * (line_angle-Math.PI/6) - 1.15*this.hover.H.D * clamp(d_height, -1, 1), 0.7, 5);
-		console.log("height: " + sensor_data.height + ", line_angle: " + line_angle*180/Math.PI + ", height_control_normed: " + height_control_normed);
+		var height_control_normed = clamp(0.3 - 1.15*5.8*this.hover.H.P * (line_angle-Math.PI/6) - 1.15*this.hover.H.D * clamp(d_height, -1, 1), 0.2, 2);
+		console.log("line_ange = " + (line_angle*180/Math.PI) + ", line_angle-PI/6 = " + (line_angle-Math.PI/6) + ", height: " + sensor_data.height + ", line_angle: " + line_angle*180/Math.PI + ", height_control_normed: " + height_control_normed);
 		// this is an approximation to the airflow seen by the elevons (propeller airflow + velocity in height direction)
 		var normed_airflow = height_control_normed + sensor_data.d_height*7*1.15/8/5;
 		var height_control = height_control_normed * 55.901;
@@ -293,7 +293,7 @@ class Autopilot{
 		x_axis_control *= 100;
 		
 		// MIXING
-		height_control = clamp(height_control, 0, 90);
+		height_control = clamp(height_control, 0, 50);
 		
 		var left_elevon = clamp(y_axis_control + x_axis_control, -35, 35);
 		var right_elevon = clamp(y_axis_control - x_axis_control, -35, 35);
