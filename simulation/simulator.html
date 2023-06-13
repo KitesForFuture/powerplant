@@ -55,6 +55,7 @@
 				</td>
 				<td style = "position: relative;">
 					<canvas id="canvas_for_visualization" width = "1200" height= "900" style="overflow: scroll;width:100%;"> </canvas>
+					<div style="position: absolute; left: 3pt; top: 0;color: black;"><p id="avg_power_in_canvas"></p></div>
 					<div style="position: absolute; left: 0pt; bottom: 0pt; opacity: 0.5;"><canvas id="canvas_for_wind_diagram" width = "400" height= "200" style="overflow: scroll;width:100%;"> </canvas></div>
 				</td>
 				<td>
@@ -268,6 +269,8 @@
 				ap_config[27].oninput = function(value){autopilot.eight.Z.P = value};
 				ap_config[28] = autopilotSettingsCollapsible.add( new LogarithmicVariable("eight.Z.D", "EIGHTS Z-Damping", 1, 1.3, ""));
 				ap_config[28].oninput = function(value){autopilot.eight.Z.D = value};
+				ap_config[100] = autopilotSettingsCollapsible.add( new LogarithmicVariable("eight.Z.D2", "EIGHTS ZY-Damping", 1, 1.3, ""));
+				ap_config[100].oninput = function(value){autopilot.eight.Z.D2 = value};
 				
 				ap_config[29] = autopilotSettingsCollapsible.add( new LogarithmicVariable("eight.Y.D", "EIGHTS Y-Damping", 1, 1.3, ""));
 				ap_config[29].oninput = function(value){autopilot.eight.Y.D = value};
@@ -321,7 +324,12 @@
 				//y_pSlider.oninput = function(value){ autopilot.hover.Y.P = 1.5**value; };
 				
 				let reelout_tensionSlider = autopilotSettingsCollapsible.add( new SlidableVariable("reelout_tension", "Reelout tension", 0, 1000, 100, 1, 0, " N") );
-				reelout_tensionSlider.oninput = function(value){ groundstation.max8Tension = value; groundstation.min8Tension = value;};
+				reelout_tensionSlider.oninput = function(value){
+					console.log("setting gsTension to " + value);
+					groundstation.max8Tension = value;
+					groundstation.min8Tension = value;
+					groundstation.maxLandingTension = value;
+				};
 				
 				// ENVIRONMENT
 				
@@ -331,8 +339,8 @@
 				let wind_speedSlider = environmentCollapsible.add( new SlidableVariable("wind_speed", "Wind speed", 0, 50, 13, 0.5, 1, " m/s") );
 				let wind_directionSlider = environmentCollapsible.add( new SlidableVariable("wind_direction", "Wind direction", -200, 200, 0, 1, 0, "°") );
 				
-				wind_speedSlider.oninput = function(value){ wind.setSpeedAndDirection(value*0.5, wind_directionSlider.getSliderElement().value); };
-				wind_directionSlider.oninput = function(value){ wind.setSpeedAndDirection(wind_speedSlider.getSliderElement().value*0.5, value); };
+				wind_speedSlider.oninput = function(value){ wind.setSpeedAndDirection(value, wind_directionSlider.getSliderElement().value); };
+				wind_directionSlider.oninput = function(value){ wind.setSpeedAndDirection(wind_speedSlider.currentValue, value); };
 				
 				// MEASUREMENTS
 				
@@ -378,6 +386,11 @@
 						//event.preventDefault();
 						reset();
 					}
+					console.log(event.keyCode);
+					if(event.keyCode == 76){
+						//event.preventDefault();
+						land();
+					}
 				}, false);
 				
 				wind = new Wind();
@@ -392,7 +405,7 @@
 				
 				let c_l_by_c_d = 5;
 				// min8T, max8T, minLT, maxLT, minLS, maxLS
-				groundstation = new Groundstation(100, 100/*30, 1000*/, 2, 100, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
+				groundstation = new Groundstation(100, 100/*30, 1000*/, 3, 100, 2, 3, c_l_by_c_d, kite.dimensions.x * kite.dimensions.y);
 				smoothLineTension = new Actuator(500, 0, 1000);
 				
 				visualization = new KiteVisualization("canvas_for_visualization", kite, wind);
@@ -416,7 +429,7 @@
 			}
 			
 			function animate() {
-				
+				//console.log(wind.speed);
 				for(let i_fast_forward_factor = 0; i_fast_forward_factor < fast_forward_factor; i_fast_forward_factor++){
 					var timestep_in_ms = 1000/50; // 50Hz
 					var timestep_in_s = 0.001*timestep_in_ms;
@@ -439,7 +452,7 @@
 						//console.log(controlData.line_tension)
 						line_tensionSlider.setValue(controlData.line_tension);
 						smoothLineTension.setTargetValue(line_tensionSlider.getSliderElement().value);
-						smoothLineTension.step(timestep_in_s);
+						
 						
 						let kite_line_length = kite.positionR.length();
 						time += timestep_in_s;
@@ -456,16 +469,20 @@
 							let kite_line_length_difference = kite_line_length - old_kite_line_length;
 							if(line_tensionSlider.getSliderElement().value != 1){
 								//groundstation.factor = autopilot.hover.Y.P;
+								console.log("gs 8 tension min = " + groundstation.min8Tension);
+								console.log("groundstation.getLineTension(kite_line_length_difference/timestep_in_s) = " + groundstation.getLineTension(kite_line_length_difference/timestep_in_s));
 								smoothLineTension.setTargetValue( groundstation.getLineTension(kite_line_length_difference/timestep_in_s) );
 								line_tensionSlider.setValue(smoothLineTension.getValue());
 							}
 							let power = kite_line_length_difference*line_tensionSlider.getSliderElement().value/timestep_in_s;
 							energy += power * timestep_in_s;
 							powerUIElement.setString("Power: " + power.toFixed(0) + " W (" + (energy/time).toFixed(0) + " W avg)"); dataPlot.addPoint(2, time, power); document.getElementById("power_in_graph").innerHTML = "Power:<br>"+power.toFixed(0)+" W";
+							document.getElementById("avg_power_in_canvas").innerHTML = "Power: " + power.toFixed(0) + " W (" + (energy/time).toFixed(0) + " W avg)";
 							energyUIElement.setString("Energy: " + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)"); dataPlot.addPoint(0, time, energy); document.getElementById("energy_in_graph").innerHTML = "Energy:<br>" + energy.toFixed(0) + " Ws" + " (" + (energy/3600000).toFixed(6) + " kWh)";
 							electricity_costUIElement.setString("Electricity Cost: " + (850/(energy/time)).toFixed(1) + " ct/kWh)");
 							
 						}
+						smoothLineTension.step(timestep_in_s);
 						old_kite_line_length = kite_line_length;
 						
 						if(wurftest){
@@ -484,13 +501,13 @@
 							kite.tangentCoordsVisLeft.set(new THREE.Vector3(0,0,0), kite.world2kite(sidewaysVector));
 							kite.targetAngleVis.set(new THREE.Vector3(0,0,0), northVector.clone().multiplyScalar(Math.cos(autopilot.target_angle)).add(sidewaysVector.clone().multiplyScalar(Math.sin(autopilot.target_angle))));
 							kite.diveAngleVis.set(new THREE.Vector3(0,0,0), northVector.clone().multiplyScalar(Math.cos(autopilot.slowly_changing_target_angle.getValue())).add(sidewaysVector.clone().multiplyScalar(Math.sin(autopilot.slowly_changing_target_angle.getValue()))));
-						}else if(autopilot.mode == LANDING_MODE || autopilot.mode == FINAL_LANDING_MODE){
+						}else if(autopilot.mode == LANDING_MODE || autopilot.mode == FINAL_LANDING_MODE || autopilot.mode == LANDING_EIGHT_TRANSITION){
 							let horizontalVector = projectToComplementOfNormedVector(kite.positionR.clone(), new THREE.Vector3(1,0,0)).normalize().multiplyScalar(-20);
 							let verticalVector = (new THREE.Vector3(-1,0,0)).multiplyScalar(20);
 							kite.tangentCoordsVisNorth.set(new THREE.Vector3(0,0,0), kite.world2kite(horizontalVector));
 							kite.tangentCoordsVisLeft.set(new THREE.Vector3(0,0,0), kite.world2kite(verticalVector));
 							kite.targetAngleVis.set(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
-							kite.diveAngleVis.set(new THREE.Vector3(0,0,0), horizontalVector.clone().multiplyScalar(Math.cos(autopilot.desired_dive_angle)).add(verticalVector.clone().multiplyScalar(Math.sin(-autopilot.desired_dive_angle))));
+							kite.diveAngleVis.set(new THREE.Vector3(0,0,0), horizontalVector.clone().multiplyScalar(Math.cos(autopilot.desired_dive_angle_smooth)).add(verticalVector.clone().multiplyScalar(Math.sin(autopilot.desired_dive_angle_smooth))));
 						}else{
 							kite.tangentCoordsVisNorth.set(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
 							kite.tangentCoordsVisLeft.set(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
@@ -621,6 +638,7 @@
 			}
 			
 			function load(){
+				console.log("loading");
 				getData("readConfigVars.php?field=config_values", function(text){
 					//console.log(text);
 					try{
@@ -638,13 +656,14 @@
 					}catch(err){
 						console.log("could not load config vars from server. using default.");
 					}
-					
-				});
-				for(let i = 0; i < ap_config.length; i++){
-					if(ap_config[i]){
-						ap_config[i].oninput(ap_config[i].currentValue);
+					console.log("updating values");
+					for(let i = 0; i < ap_config.length; i++){
+						if(ap_config[i]){
+							ap_config[i].oninput(ap_config[i].currentValue);
+						}
 					}
-				}
+				});
+				
 				
 				getData("readConfigVars.php?field=kite_dimensions", function(text){
 					//console.log(text);
@@ -660,14 +679,14 @@
 					}catch(err){
 						console.log("could not load kite dimensions from server. using default.");
 					}
-					
+					for(let i = 0; i < kite_dimensions.length; i++){
+						if(kite_dimensions[i]){
+							kite_dimensions[i].oninput(kite_dimensions[i].currentValue);
+						}
+					}
 					kite.updateDimensionsAndPositionsOfParts();
 				});
-				for(let i = 0; i < kite_dimensions.length; i++){
-					if(kite_dimensions[i]){
-						kite_dimensions[i].oninput(kite_dimensions[i].currentValue);
-					}
-				}
+				
 			}
 			
 			function moveCamera(){

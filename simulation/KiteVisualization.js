@@ -159,7 +159,7 @@ class KiteVisualization extends Visualization{
 	
 	update(timestep_in_s){
 		// OPACITY OF THE GROUND PLANE FROM BELOW
-		if(this.diagram2.rotation.y < 0) this.groundPlane.material.opacity = 0.9; else this.groundPlane.material.opacity = 0.2;
+		if(this.diagram2.rotation.y < 0) this.groundPlane.material.opacity = 0.9; else this.groundPlane.material.opacity = 0;
 		this.updateWindVectorDirection();
 		this.updateKiteLineVisualization();
 		this.updateSmoke(timestep_in_s);

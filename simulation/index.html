@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>Kites For Future</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+body {font-family: "Lato", sans-serif}
+.mySlides {display: none}
+</style>
+<body>
+
+<!-- Navbar -->
+<div class="w3-top">
+  <div class="w3-bar w3-black w3-card">
+    <a class="w3-bar-item w3-button w3-padding-large w3-hide-medium w3-hide-large w3-right" href="javascript:void(0)" onclick="myFunction()" title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
+    <a href="#" class="w3-bar-item w3-button w3-hide-small"><h4>Kites For Future</h4></a>
+    <a href="#" class="w3-bar-item w3-button w3-hide-large w3-hide-medium w3-padding-small"><h5>Kites For Future</h5></a>
+    <a href="#ziel" class="w3-bar-item w3-button w3-padding-medium w3-padding-24 w3-hide-small">ZIEL</a>
+    <a href="#loesung" class="w3-bar-item w3-button w3-padding-medium w3-padding-24 w3-hide-small">L&OumlSUNG</a>
+    <a href="#band" class="w3-bar-item w3-button w3-padding-medium w3-padding-24 w3-hide-small">&UumlBER UNS</a>
+    <!-- <a href="#contact" class="w3-bar-item w3-button w3-padding-medium w3-padding-24 w3-hide-small">KONTAKT</a> -->
+    <div class="w3-dropdown-hover w3-hide-small">
+      <button class="w3-padding-medium w3-padding-24 w3-button" title="More">MEHR<i class="fa fa-caret-down"></i></button>     
+      <div class="w3-dropdown-content w3-bar-block w3-card-4">
+        <a href="#hackaday" class="w3-bar-item w3-button">HACKADAY</a>
+        <a href="#tech" class="w3-bar-item w3-button">TECHNOLOGIE</a>
+        <a href="#entwickler" class="w3-bar-item w3-button">ENTWICKLER</a>
+        <a href="#kosten" class="w3-bar-item w3-button">KOSTEN</a>
+        <a href="#opensource" class="w3-bar-item w3-button">OPEN SOURCE</a>
+        <a href="#join" class="w3-bar-item w3-button">MITMACHEN</a>
+        <a href="#contact" class="w3-bar-item w3-button">KONTAKT</a>
+      </div>
+    </div>
+    <!-- <div class="w3-right"><img src="/w3images/K4F.png"></div> -->
+  </div>
+</div>
+
+<!-- Navbar on small screens (remove the onclick attribute if you want the navbar to always show on top of the content when clicking on the links) -->
+<div id="navDemo" class="w3-bar-block w3-black w3-hide w3-hide-large w3-hide-medium w3-top" style="margin-top:46px">
+  
+  <a href="#ziel" class="w3-bar-item w3-button w3-padding-large" onclick="myFunction()">ZIEL</a>
+  <a href="#loesung" class="w3-bar-item w3-button w3-padding-large" onclick="myFunction()">L&OumlSUNG</a>
+  <a href="#band" class="w3-bar-item w3-button w3-padding-large" onclick="myFunction()">&UumlBER UNS</a>
+  <a href="#hackaday" class="w3-bar-item w3-button w3-padding-large" onclick="myFunction()">HACKADAY</a>
+  <a href="#tech" class="w3-bar-item w3-button w3-padding-large" onclick="myFunction()">TECHNOLOGIE</a>
+  <a href="#entwickler" class="w3-bar-item w3-button w3-padding-large" onclick="myFunction()">ENTWICKLER</a>
+  <a href="#kosten" class="w3-bar-item w3-button w3-padding-large" onclick="myFunction()">KOSTEN</a>
+  <a href="#opensource" class="w3-bar-item w3-button w3-padding-large" onclick="myFunction()">OPEN SOURCE</a>
+  <a href="#join" class="w3-bar-item w3-button w3-padding-large" onclick="myFunction()">MITMACHEN</a>
+  <a href="#contact" class="w3-bar-item w3-button w3-padding-large" onclick="myFunction()">KONTAKT</a>
+</div>
+
+<!-- Page content -->
+<div class="w3-content" style="max-width:2000px;margin-top:46px">
+
+  <!-- Automatic Slideshow Images -->
+  <div class="mySlides w3-display-container w3-center">
+    <img src="w3images/kff6_web.jpg" style="width:100%">
+    <div class="w3-display-bottommiddle w3-container w3-text-black w3-padding-32">
+      
+      <h4 style="color:yellow"><a href="https://www.youtube.com/@kitesforfuture577/videos" target="_blank">New Youtube Videos</a></h4>
+      <h4 style="color:yellow"><a href="https://www.kitesforfuture.de/simulation" target="_blank">Flight Simulator</a></h4>
+    </div>
+  </div>
+  
+  <div class="mySlides w3-display-container w3-center">
+    <img src="w3images/kff7_web.jpg" style="width:100%">
+    <div class="w3-display-bottommiddle w3-container w3-text-black w3-padding-32">
+      
+      <h4 style="color:yellow"><a href="https://www.youtube.com/@kitesforfuture577/videos" target="_blank">New Youtube Videos</a></h4>
+      <h4 style="color:yellow"><a href="https://www.kitesforfuture.de/simulation" target="_blank">Flight Simulator</a></h4>
+    </div>
+  </div>
+  
+  <!-- The OPEN SOURCE Section -->
+  <div class="w3-container w3-content w3-center w3-padding-64" style="max-width:800px" id="opensource">
+    <p class="w3-opacity"><i>"Windkraft so geil, nix ausbuddeln, nix anzünden, einfach den Wind bändigen und für dich arbeiten lassen"<br>[EL HOTZO]</i></p>
+    <h2 class="w3-wide">OPEN SOURCE</h2>
+    <p class="w3-opacity"><i>"Alle Autobauer werden uns sofort kopieren[...]aber das Kopieren und der Marktwandel passierten nicht."<br>[J.B. Straubel]</i></p>
+    
+    <p class="w3-justify">
+    <h3><a href="https://github.com/KitesForFuture/powerplant" target="_blank">Kompletter Source Code auf Github</a></h3>
+    <br>
+    Ein einziges Patent hat das Potential die technologische Entwicklung um bis zu 20 Jahre zu verzögern!
+    <br>Unser Ziel ist, die Weltwirtschaft und dann die Atmosphäre zu dekarbonisieren, eine Aufgabe so groß, dass wir uns momentan schwer vorstellen können, sie im Alleingang zu realisieren.
+    <br>
+    Darum veröffentlichen wir momentan die meißten unserer Erfindungen, dadurch können sie nicht mehr als Patent angemeldet werden.
+    <br><br>Wir möchten mit dieser Strategie auch talentierte Ingenieure gewinnen, die ihre Erfindungen angewendet sehen wollen statt sie als reine Verhandlungsmasse in tiefen Schubladen verschwinden zu sehen.
+    </p>
+    <h3><a href="https://www.kitesforfuture.de/simulation" target="_blank">Simulation</a></h3>
+    
+  </div>
+  
+   <!-- The HACKADAY Section -->
+  <div class="w3-container w3-content w3-center w3-padding-64" style="max-width:800px" id="hackaday">
+    <h2 class="w3-wide"><a href="https://hackaday.io/project/188136-kites-for-future-flying-wind-turbine" target="_blank">&rarr; HACKADAY.IO (ENGLISH)</a></h2>
+    
+  </div>
+  
+  <!-- The GOAL Section -->
+  <div class="w3-container w3-content w3-center w3-padding-64" style="max-width:800px" id="ziel">
+    <h2 class="w3-wide">UNSER ZIEL</h2>
+    <p class="w3-opacity"><i>100% erneuerbare Energie - unfassbar g&uumlnstig - so schnell wie m&oumlglich</i></p>
+    <p class="w3-justify">
+    Wir wollen erneuerbaren Strom für <b>weit unter 1 Cent pro Kilowattstunde</b> herstellen...
+    <br><br>
+    ...und dadurch die Energiewende so attraktiv wie möglich machen!
+    </p>
+    
+  </div>
+
+  <!-- The SOLUTION Section -->
+  <div class="w3-container w3-content w3-center w3-padding-64" style="max-width:800px" id="loesung">
+    <h2 class="w3-wide">DIE L&OumlSUNG</h2>
+    <p class="w3-opacity"><i>Flugwindkraft - so simpel wie m&oumlglich</i></p>
+    <br>
+    <a href="https://www.kitesforfuture.de/tailsitter.pdf" target="_blank">The Tailsitter Wind Turbine (pdf)</a>
+    <br>
+    Hier veröffentlicht: <a href="https://web.archive.org/web/20221103110817/https://twitter.com/IsomatheBenni/status/1588124052106928129" target="_blank">(Wayback Machine) Twitter</a>,
+    <a href="https://web.archive.org/web/20221109115806/https://hackaday.io/project/188136-kites-for-future-flying-wind-turbine" target="_blank">(Wayback Machine) Hackaday</a>,
+    <a href="https://web.archive.org/web/20221109120051/https://cdn.hackaday.io/files/1881368049210624/tailsitterkite.pdf" target="_blank">(Wayback Machine) Hackaday CDN</a>
+    <br>
+    <p class="w3-justify">Um Windkraft zu ernten braucht man keinen hohen Turm bauen und kein Fundament gießen, das diesen Turm aufrecht hält.
+    <br>
+    <img src="w3images/diagram.jpg" style="display: block; margin-left: auto; margin-right: auto; width:70%" class="w3-margin-top w3-margin-bottom w3-round w3-border w3-border-black" alt="Random Name" >
+    <br>
+    Es genügt ein Flügel, der die Kraft des Windes als Zugkraft auf ein Seil überträgt, sowie ein Elektromotor, der diese Zugkraft in Strom umwandelt.
+    <br>
+    <img src="w3images/diagram2.jpg" style="display: block; margin-left: auto; margin-right: auto; width:70%" class="w3-margin-top w3-margin-bottom w3-round w3-border w3-border-black" alt="Random Name" >
+    <br>
+    <br>Absolut empfehlenswert sind die Lehrvideos von Prof. Jörn Loviscach zum Thema:
+    <br>
+    <a href="https://j3l7h2.de/videos/v.php?v=ZtCNRmGiJ8Q" target="_blank">Kräfte auf ein Rotorblatt</a>,
+    <br>
+    <a href="https://j3l7h2.de/videos/v.php?v=50KhEAGDHGY" target="_blank">Weltbevölkerung mittels Windkraft versorgen</a>,
+    <br>
+    <a href="https://j3l7h2.de/videos/v.php?v=0bNJNWhLpXU" target="_blank">Flugwindkraftanlagen</a>
+    
+    <br><br>
+    Weitere interessante Videos zum Thema Drachenwindenergie:
+    <br>
+    <a href="https://www.youtube.com/watch?v=z94mLMAhl3s" target="_blank">Zusammenfassung Drachenwindenergie (Link geht zu youtube.com)</a>,
+    <br>
+    <a href="https://www.youtube.com/watch?v=qd_hEja6bzE" target="_blank">Doku: Pulling Power from the Sky: The Story of Makani (Link geht zu youtube.com)</a>,
+    <br>
+    <a href="https://www.youtube.com/watch?v=Nsht_t_ycdI" target="_blank">Kitemill Norwegen (Link geht zu youtube.com)</a>
+    
+    </p>
+    
+  </div>
+    
+  <!-- The TECHNOLOGY Section -->
+  <div class="w3-container w3-content w3-center w3-padding-64" style="max-width:800px" id="tech">
+    <h2 class="w3-wide">TECHNOLOGIE</h2>
+    <p class="w3-opacity"><i>Die Bauteile der Energiewende</i></p>
+    <img width="560" height="400" src="w3images/principle.png" alt="1"><br>
+	Grundprinzip: Generator am Boden<br><br>
+	<img width="560" height="300" src="w3images/kiteEight.png" alt="1"><br>
+	Blick von der Bodenstation auf den Achtenflug<br><br>
+	<img width="560" height="300" src="w3images/kiteFromSide.png" alt="1"><br>
+	Seitenansicht<br><br>
+    <p>Unser funktionsfähiger Prototyp. Mehr auf unserer <a href="https://www.kitesforfuture.de/dev" target="_blank">Developer Website</a>:</p>
+    <video width="250" controls preload="metadata">
+	  <source src="w3videos/clean_figure_eight.mp4" type="video/mp4">
+	  Your browser does not support HTML5 video.
+	</video>
+    
+    
+
+  </div>
+  
+  
+  
+  <!-- The Band Section -->
+  <div class="w3-container w3-content w3-center w3-padding-64" style="max-width:800px" id="band">
+    <h2 class="w3-wide">DAS TEAM</h2>
+    <div class="w3-row w3-padding-32">
+      <div class="w3-quarter">
+        <p>Benjamin</p>
+        <img src="w3images/benni.jpg" class="w3-round w3-margin-bottom" alt="what here?" style="width:60%">
+        <br>
+        Benjamin ist unser Spezialist für autonomes Fliegen in Hard- und Software, jugend forscht Sonderpreis Luft- und Raumfahrt. Hat irgendwann mal was mit Mathe rausgefunden. <a href="https://www.isomathe.de/benjamin" target="_blank">mehr...</a>
+      </div>
+      <div class="w3-quarter">
+        <p>Marc</p>
+        <img src="w3images/marc.jpg" class="w3-round" alt="Random Name" style="width:60%">
+        <br>
+        Marc ist Mitglied Akademische Fliegergruppe Berlin e.V. unter dem Motto "Forschen, bauen, fliegen", begeisterter Tüftler von allem was fährt, schwimmt und vor allem fliegt, Spezialist für innovative Flugzeugdesigns und Produktionsverfahren.
+      </div>
+      <div class="w3-quarter">
+        <p>Anton</p>
+        <img src="w3images/marius.jpg" class="w3-round" alt="Random Name" style="width:60%">
+        <br>
+        Anton ist Maschinenbauer, kennt sich mit Energietechnik aus und ist zuständig für den mechanischen Teil der Bodenstation.
+      </div>
+    <!--</div>
+    <div class="w3-row w3-padding-32">-->
+      <div class="w3-quarter">
+        <p>Niklas</p>
+        <img src="w3images/niklas.jpg" class="w3-round w3-margin-bottom" alt="what here?" style="width:60%">
+        <br>
+        Niklas ist Architekt, kann CNC-Maschinen bedienen und zeichnen, hat zwei rechte Hände, mit denen er gefühlvoll Holz, CFK und Schaumstoffe in Form bringt.
+      </div>
+    </div>
+  </div>
+  
+  <!-- The ENTWICKLER Section -->
+  <div class="w3-container w3-content w3-center w3-padding-64" style="max-width:800px" id="entwickler">
+    <h2 class="w3-wide">ENTWICKLER</h2>
+    <p class="w3-justify">Mehr auf unserer <a href="https://www.kitesforfuture.de/dev" target="_blank">Developer Website</a>.
+    </p>
+    
+  </div>
+  
+  <!-- The KOSTEN Section -->
+  <div class="w3-container w3-content w3-center w3-padding-64" style="max-width:800px" id="kosten">
+    <h2 class="w3-wide">KOSTEN</h2>
+    <p>
+    <h4>Kostenaufstellung Material 5kW-Prototyp</h4>
+    <div class="w3-quarter w3-container"></div>
+    <div>
+    <table class="w3-table w3-striped w3-bordered w3-half">
+		<thead>
+		<tr class="w3-theme">
+		  <th>Position</th>
+		  <th>Kosten (Euro)</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr>
+		  <td>Generatormotor</td>
+		  <td>300</td>
+		</tr>
+		<tr>
+		  <td>Kohlefasergewebe (optional)</td>
+		  <td>(150)</td>
+		</tr>
+		<tr>
+		  <td>Leistungselektronik</td>
+		  <td>110</td>
+		</tr>
+		<tr>
+		  <td>Vortriebsmotoren</td>
+		  <td>110</td>
+		</tr>
+		<tr>
+		  <td>Servomotoren</td>
+		  <td>20</td>
+		</tr>
+		<tr class="w3-white">
+		  <td>Akku Kite</td>
+		  <td>20</td>
+		</tr>
+		<tr>
+		  <td>Autopilot</td>
+		  <td>20</td>
+		</tr>
+		<tr>
+		  <td>...</td>
+		  <td>...</td>
+		</tr>
+		</tbody>
+	</table>
+	</div>
+  </div>
+  
+
+  
+  <!-- The MITMACHEN Section -->
+  <div class="w3-container w3-content w3-center w3-padding-64" style="max-width:800px" id="join">
+    <h2 class="w3-wide">MITMACHEN</h2>
+    <p class="w3-opacity"><i>Trink einen Tee mit uns!</i></p>
+    <p class="w3-justify">
+    <b>Tischler/Architekt/oder ähnlich</b> : Wir suchen jemanden, der unsere Prototypen flugbereit hält und Neue baut. Du kannst sägen, schrauben, bohren, kleben und das alles höchst präzise?
+    <br><br>
+    <b>Kommunikationstalent</b> : Du kommunizierst gerne, der Situation angemessen, freundlich und effizient? Du hast Lust, unser Projekt der Welt zu zeigen? Du verpasst nie eine Frist und kannst Menschen gut einschätzen?
+    <br><br>
+    <b>Elektroniker</b> : Du hast schon mal erfolgreich ein Schaltnetzteil (Boost Converter, oder ähnlich) und einen BLDC-Motorregler konstruiert? Dann mach dich auf die Socken und besuche uns in der Werkstatt!
+    <br><br>
+    <b>Angewandter Mathematiker/Physiker/oder ähnlich</b> : Du verstehst, wie unsere Simulation funktioniert, hättest das auch selber hingekriegt und hast Ideen, wie man sie mit wenig Aufwand substantiell verbessern kann? Oder du fühlst dich mit ESP32, STM32 und C vertraut? Oder sogar beides? Du baust deine Software beginnend mit einem minimalen nützlichen Code am ersten Tag und iterierst dann von dort. Du kannst je nach Bedarf sauberen Code, effizienten Code oder Code, der schnell fertig ist schreiben, je nach Bedarf.
+    </p>
+    <p class="w3-opacity"><i>jobs@kitesforfuture.de</i></p>
+    
+    </b>
+  </div>
+  
+  <!-- The Contact Section -->
+  <div class="w3-container w3-content w3-padding-64" style="max-width:800px" id="contact">
+    <h2 class="w3-wide w3-center">KONTAKT</h2>
+    <p class="w3-opacity w3-center"><i>Interesse? Schick uns eine Nachricht!</i></p>
+    <div class="w3-row w3-padding-32">
+      <div class="w3-col m3 w3-large w3-margin-bottom">
+      </div>
+      <div class="w3-col m6 w3-large w3-margin-bottom">
+        <i class="fa fa-map-marker" style="width:30px"></i> Schillerstraße 15, Schöneiche bei Grünheide (vorübergehend)<br>
+        <i class="fa fa-envelope" style="width:30px"> </i> Email: mail@kitesforfuture.de<br>
+      </div>
+    </div>
+  </div>
+  
+  
+<!-- End Page Content -->
+</div>
+
+
+<!-- Footer -->
+<footer class="w3-container w3-padding-64 w3-center w3-opacity w3-light-grey w3-xlarge">
+  <p class="w3-medium">Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
+</footer>
+
+<script>
+// Automatic Slideshow - change image every 4 seconds
+var myIndex = 0;
+carousel();
+
+function carousel() {
+  var i;
+  var x = document.getElementsByClassName("mySlides");
+  for (i = 0; i < x.length; i++) {
+    x[i].style.display = "none";  
+  }
+  myIndex++;
+  if (myIndex > x.length) {myIndex = 1}    
+  x[myIndex-1].style.display = "block";  
+  setTimeout(carousel, 4000);    
+}
+
+// Used to toggle the menu on small screens when clicking on the menu button
+function myFunction() {
+  var x = document.getElementById("navDemo");
+  if (x.className.indexOf("w3-show") == -1) {
+    x.className += " w3-show";
+  } else { 
+    x.className = x.className.replace(" w3-show", "");
+  }
+}
+
+</script>
+
+</body>
+</html>
+

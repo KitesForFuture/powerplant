@@ -36,6 +36,7 @@ class Autopilot{
 		
 		this.eight.Z.P = config_values[27];
 		this.eight.Z.D = config_values[28];
+		this.eight.Z.D2 = 1;
 		
 		this.landing.X.P = config_values[25];
 		this.landing.Y.P = config_values[23];
@@ -78,6 +79,7 @@ class Autopilot{
 		this.eight.Z = new Object();
 		this.eight.Z.P = 0.2;
 		this.eight.Z.D = 0.2;
+		this.eight.Z.D2 = 0.2;
 		this.eight.Y = new Object();
 		this.eight.Y.D = 1;
 		this.eight.elevator = 5*Math.PI/180;
@@ -112,6 +114,7 @@ class Autopilot{
 		
 		this.target_angle = 0;
 		this.desired_dive_angle = 0;
+		this.desired_dive_angle_smooth = 0;
 	}
 	
 	step(sensor_data, line_length, line_tension, timestep_in_s){
@@ -148,6 +151,7 @@ class Autopilot{
 			}
 			return this.eight_control(sensor_data, line_length, timestep_in_s);
 		}else if(this.mode == LANDING_MODE){
+			console.log(sensor_data.height);
 			if(sensor_data.height < 60){
 				this.mode = LANDING_EIGHT_TRANSITION;//EIGHT_MODE;
 			}
@@ -183,22 +187,34 @@ class Autopilot{
 	
 	landing_control(sensor_data, line_length, line_tension, transition){
 		let mat = sensor_data.rotation_matrix.elements;
-		console.log(this.landing.desired_height);
-		let line_angle = asin_clamp((sensor_data.height-this.landing.desired_height)/line_length);//correct
+		//console.log(this.landing.desired_height);
+		
+		/*let line_angle = asin_clamp((sensor_data.height-this.landing.desired_height)/line_length);//correct
 		
 		let desired_line_angle = Math.PI/4 * 0.75;//0.3;
 		
 		let line_angle_error = line_angle-desired_line_angle;// negative -> too low, positive -> too high
 		this.desired_dive_angle = -desired_line_angle - 2 * line_angle_error;
-		this.desired_dive_angle = clamp(this.desired_dive_angle, -Math.PI/12, Math.PI/2);
+		this.desired_dive_angle_smooth = clamp(this.desired_dive_angle, -Math.PI/12, Math.PI/2);
+		*/
+		
+		let height = sensor_data.height-this.landing.desired_height;
+		let height_error = clamp(height - line_length*0.2, -2, 15);
+		let desired_dive_angle = 0.15*this.landing.dive_angle_P*height_error;//-desired_line_angle - 2.0 * line_angle_error;
+		
+		this.desired_dive_angle_smooth = 0.8 * this.desired_dive_angle_smooth + 0.2 * desired_dive_angle;
+		this.desired_dive_angle_smooth = clamp( this.desired_dive_angle_smooth, -Math.PI/2, Math.PI/4 );
+		
 		if(transition){
-			this.desired_dive_angle = Math.PI/4;
+			this.desired_dive_angle_smooth = -Math.PI/6;
 		}
+		//console.log("height_error = " + height_error + ", desired_dive_angle = " + desired_dive_angle + ", smooth = " + this.desired_dive_angle_smooth);
+		//console.log("line_angle_error = " + line_angle_error + ", desired_dive_angle_smooth = " + this.desired_dive_angle_smooth);
 		//console.log(desired_dive_angle * 180 / Math.PI);
 		
-		let y_axis_offset = this.getAngleError(this.desired_dive_angle - Math.PI/2, new THREE.Vector3(mat[3], mat[4], mat[5]), new THREE.Vector3(-mat[6], -mat[7], -mat[8]));
+		let y_axis_offset = this.getAngleError(-this.desired_dive_angle_smooth - Math.PI/2, new THREE.Vector3(mat[3], mat[4], mat[5]), new THREE.Vector3(-mat[6], -mat[7], -mat[8]));
 		//TODO: bei weniger wind (geringe Seilspannung) sollte das hier mit faktor multipliziert werden, um genügend Steuerwirkung zu haben
-		let y_axis_control = /*this.hover.Y.P**/10*(- 45*this.landing.Y.P * y_axis_offset + 7 * 0.5 * 0.66 * this.landing.Y.D * sensor_data.gyro.y);
+		let y_axis_control = /*this.hover.Y.P**/(- 45*this.landing.Y.P * y_axis_offset + 7 * 0.5 * 0.66 * this.landing.Y.D * sensor_data.gyro.y);
 		//float y_axis_control = - 3*15.0 * autopilot->landing.Y.P * y_axis_offset - 7 * 0.5 * 0.66 * autopilot->landing.Y.D * sensor_data.gyro[1];
 		//console.log(line_tension);
 		y_axis_control *= line_tension < 5 ? 5 : 1;
@@ -208,10 +224,10 @@ class Autopilot{
 		let x_axis_control = -100 * mat[3] * this.landing.X.P;
 		//console.log(y_axis_control);
 		//x_axis_control *= 100;
-		x_axis_control = clamp(x_axis_control, -15, 15);
+		x_axis_control = clamp(x_axis_control, -10, 10);
 		y_axis_control = clamp(y_axis_control, -25, 25);
 		
-		return new ControlData(0, 0, y_axis_control-1*x_axis_control, y_axis_control+1*x_axis_control, x_axis_control, 2);
+		return new ControlData(0, 0, y_axis_control-1*x_axis_control, y_axis_control+1*x_axis_control, 0, 2);
 	}
 	
 	eight_control(sensor_data, line_length, timestep_in_s){
@@ -224,34 +240,35 @@ class Autopilot{
 			this.multiplier = 1;
 			this.timer.reset();
 		}
-		let z_axis_angle = acos_clamp(mat[6]); // roll angle of kite = line angle
-		this.loggingString = "Seilwinkel = " + (90 - z_axis_angle *180 / Math.PI).toFixed(0) + " deg<br>"
-		let RC_requested_line_angle = Math.PI/4 * 1.3;//1.85;// 1.5; // TODO: rename line_angle
-		this.loggingString += "Sollseilwinkel = " + (90 - RC_requested_line_angle *180 / Math.PI).toFixed(0) + " deg<br>"
-		let angle_diff = RC_requested_line_angle - z_axis_angle;
-		let target_angle_adjustment = angle_diff*3; // 3 works well for line angle control, but causes instability. between -pi/4=-0.7... and pi/4=0.7...
-		target_angle_adjustment = clamp(target_angle_adjustment, -this.eight.target_angle_beta_clamp, this.eight.target_angle_beta_clamp)
-		this.loggingString += "clamp(angle_diff * 0.5) = " + target_angle_adjustment.toFixed(3) + "<br>";
+		//let z_axis_angle = acos_clamp(mat[6]); // roll angle of kite = line angle
+		let z_axis_angle_from_zenith = acos_clamp(1.4*sensor_data.height/(line_length == 0 ? 1.0 : line_length)); //safe_acos(mat[6]); // roll angle of kite = line angle
+		// TODO: This causes less waves between curves! Maybe combine both!
+		//let z_axis_angle_from_zenith = acos_clamp(mat[6]); // roll angle of kite = line angle
+		
+		//this.loggingString = "Seilwinkel = " + (90 - z_axis_angle *180 / Math.PI).toFixed(0) + " deg<br>"
+		//let RC_requested_line_angle = Math.PI/4 * 1.3;//1.85;// 1.5; // TODO: rename line_angle
+		//this.loggingString += "Sollseilwinkel = " + (90 - RC_requested_line_angle *180 / Math.PI).toFixed(0) + " deg<br>"
+		let angle_diff = this.eight.desired_line_angle_from_zenith - z_axis_angle_from_zenith;
+		//float target_angle_adjustment = clamp(angle_diff*autopilot->eight.beta_P, -autopilot->eight.target_angle_beta_clamp, autopilot->eight.target_angle_beta_clamp);
+		let target_angle_adjustment = clamp(angle_diff*this.eight.beta_P, -this.eight.target_angle_beta_clamp, this.eight.target_angle_beta_clamp); // 3 works well for line angle control, but causes instability. between -pi/4=-0.7... and pi/4=0.7...
+		//this.loggingString += "clamp(angle_diff * 0.5) = " + target_angle_adjustment.toFixed(3) + "<br>";
 		//let sideways_flying_angle_fraction =this.eight.neutral_beta_sideways_flying_angle_fraction;//0.9;//0.75; // fraction of 90 degrees, this influences the angle to the horizon, smaller => greater angle = flying higher
 		//console.log(this.eight.neutral_beta_sideways_flying_angle_fraction);
 		this.target_angle = Math.PI*0.5*this.direction*(this.eight.neutral_beta_sideways_flying_angle_fraction + target_angle_adjustment/* 1 means 1.2*90 degrees, 0 means 0 degrees*/);
-		this.loggingString += "target_angle = " + (this.target_angle * 180 / Math.PI).toFixed(0) + " deg<br>";
+		//this.loggingString += "target_angle = " + (this.target_angle * 180 / Math.PI).toFixed(0) + " deg<br>";
 		this.slowly_changing_target_angle.setTargetValue(this.target_angle);
 		this.slowly_changing_target_angle.step(timestep_in_s);
 		let slowly_changing_target_angle = this.slowly_changing_target_angle.getValue();//(target_angle, this.turning_speed);
 		
 		var z_axis_offset = this.getAngleError(0.0, new THREE.Vector3(mat[6], mat[7], mat[8]), new THREE.Vector3(mat[3], mat[4], mat[5]));
 		z_axis_offset -= slowly_changing_target_angle;
-		
-		var z_axis_control = - this.eight.Z.P * 0.56 * z_axis_offset +  this.eight.Z.D * 0.22 * sensor_data.gyro.z;
+		var z_axis_control = - 0.56 * this.eight.Z.P * z_axis_offset + 0.22 * this.eight.Z.D * sensor_data.gyro.z - 1 * this.eight.Z.D2 * sensor_data.gyro.x;
 		z_axis_control *=100;
-		z_axis_control = clamp(z_axis_control, -20, 20);
-		console.log("this.eight.elevator = " + this.eight.elevator);
+		z_axis_control = clamp(0.5*z_axis_control, -10, 10);
+		//console.log("this.eight.elevator = " + this.eight.elevator);
 		var y_axis_control = this.eight.elevator*180/Math.PI - this.eight.Y.D * sensor_data.gyro.y;
 		//console.log("eights.elevator = " + this.eight.elevator + ", y_axis_control = " + y_axis_control);
-		return new ControlData(0, 0, y_axis_control - 0.5*z_axis_control, y_axis_control + 0.5*z_axis_control, 0 * z_axis_control, 35);
-		//return new ControlData(0, 0, y_axis_control - Math.min(0, 0.5*z_axis_control), y_axis_control + Math.max(0, 0.5*z_axis_control), 0, 35);
-		//return new ControlData(0, 0, y_axis_control - 0.5*z_axis_control, y_axis_control + 0.5*z_axis_control, z_axis_control, 35);
+		return new ControlData(0, 0, y_axis_control - z_axis_control, y_axis_control + z_axis_control, 0, 35);
 	}
 	
 	hover_control(sensor_data, line_length, line_tension){
@@ -266,10 +283,11 @@ class Autopilot{
 		var line_angle = asin_clamp(sensor_data.height/line_length);
 		
 		//TODO: cleanup all those constants!
-		var height_control_normed = clamp(0.3 - 1.15*5.8*this.hover.H.P * (line_angle-Math.PI/6) - 1.15*this.hover.H.D * clamp(d_height, -1, 1), 0.2, 2);
-		console.log("line_ange = " + (line_angle*180/Math.PI) + ", line_angle-PI/6 = " + (line_angle-Math.PI/6) + ", height: " + sensor_data.height + ", line_angle: " + line_angle*180/Math.PI + ", height_control_normed: " + height_control_normed);
+		var height_control_normed = clamp(0.55 - 1.15*5.8*this.hover.H.P * (line_angle-Math.PI/6) - 1.15*this.hover.H.D * clamp(d_height, -1, 1), 0.2, 1.5);
+		//console.log("line_ange = " + (line_angle*180/Math.PI) + ", line_angle-PI/6 = " + (line_angle-Math.PI/6) + ", height: " + sensor_data.height + ", line_angle: " + line_angle*180/Math.PI + ", height_control_normed: " + height_control_normed);
 		// this is an approximation to the airflow seen by the elevons (propeller airflow + velocity in height direction)
-		var normed_airflow = height_control_normed + sensor_data.d_height*7*1.15/8/5;
+		//float normed_airflow = height_control_normed + clamp(sensor_data.d_height*0.2, -0.8, 0.8);
+		var normed_airflow = height_control_normed + clamp(sensor_data.d_height*0.2, -0.8, 0.8);
 		var height_control = height_control_normed * 55.901;
 		//TODO: investigate this:
 		//height_control *= 0.7*mat[0] + 0.3; // decrease propeller thrust when nose not pointing straight up
@@ -278,7 +296,7 @@ class Autopilot{
 		// Y-AXIS
 		
 		var y_axis_offset = this.getAngleError(this.y_angle_offset, new THREE.Vector3(mat[3], mat[4], mat[5]), new THREE.Vector3(-mat[6], -mat[7], -mat[8]));
-		var y_axis_control = (normed_airflow)**-2 * 0.7 * (- 3.8*this.hover.Y.P * y_axis_offset + 0.7*0.4 * this.hover.Y.D * sensor_data.gyro.y);
+		var y_axis_control = (normed_airflow > 0.0001 ? 1.0/(normed_airflow*normed_airflow) : 1.0) * 0.7 * (- 3.8*this.hover.Y.P * y_axis_offset + 0.7*0.4 * this.hover.Y.D * sensor_data.gyro.y);
 		y_axis_control *= 100;
 		
 		// Z-AXIS
@@ -286,10 +304,9 @@ class Autopilot{
 		var z_axis_offset = this.getAngleError(0.0, new THREE.Vector3(mat[6], mat[7], mat[8]), new THREE.Vector3(mat[3], mat[4], mat[5]));
 		var z_axis_control = - this.hover.Z.P * z_axis_offset* 0.195935*0.44 + this.hover.Z.D * sensor_data.gyro.z*0.017341*2;
 		z_axis_control *=100;
-		
+		if(Math.abs(y_axis_offset) > 1.5) z_axis_control = 0;
 		// X-AXIS
-		
-		var x_axis_control = this.hover.X.D * sensor_data.gyro.x*0.75;
+		var x_axis_control = (normed_airflow > 0.0001 ? 1.0/(normed_airflow*normed_airflow) : 1.0) *this.hover.X.D * sensor_data.gyro.x*0.75;
 		x_axis_control *= 100;
 		
 		// MIXING
