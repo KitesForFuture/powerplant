@@ -138,7 +138,8 @@ void main_task(void* arg)
 	setAngle(5, 0);
 	setSpeed(2, 0);
 	setSpeed(4, 0);
-	
+	//setSpeed(2, 90);
+	//setSpeed(4, 90);
     initMPU6050(bus0, mpu_calibration);
 	updateRotationMatrix(&orientation_data); // to find out if nose (or wing tip) up or down on initialization
 	
@@ -165,7 +166,6 @@ void main_task(void* arg)
 		// THIS TAKES TIME...
 		float bmp_calib = readEEPROM(6);//-0.000001; // TODO: recalibrate and remove the -0.000001 hack
     	init_bmp280(bus1, bmp_calib);
-		
 		while(1){
 			vTaskDelay(1);
 			update_bmp280_if_necessary();

@@ -39,7 +39,6 @@ class RigidBody extends THREE.Object3D{
 		var acceleration = force.clone().divideScalar(this.mass);
 		this.velocity.add(acceleration.multiplyScalar(timestep));
 		this.positionR.add(this.velocity.clone().multiplyScalar(timestep));
-		
 		// Euler's equations (rigid body dynamics)
 		var angularAcceleration = new THREE.Vector3();
 		angularAcceleration.x = torque.x/this.angular_inertia.x - this.angular_velocity.y*this.angular_velocity.z*(this.angular_inertia.z - this.angular_inertia.y)/this.angular_inertia.x

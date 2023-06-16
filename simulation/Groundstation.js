@@ -34,11 +34,8 @@ class Groundstation{
 			return clamp(tension, this.min8Tension, this.max8Tension);
 			
 		}else{ // REEL IN
-		
 			let a = (this.maxLandingTension - this.minLandingTension)/((-this.minReelInSpeed) - (-this.maxReelInSpeed)); // a is positive
-			
 			let tension = this.maxLandingTension + a * (reel_out_speed - (-this.minReelInSpeed));
-			
 			return clamp(tension, this.minLandingTension, this.maxLandingTension);
 		}
 	}

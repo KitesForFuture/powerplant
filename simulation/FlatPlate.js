@@ -68,7 +68,8 @@ class FlatPlate extends KitePart{
 	
 	getForceAndCentreOfPressureInKiteCoords(wind_vector_in_global_coordinates){
 		let forceData = super.getForceAndCentreOfPressureInKiteCoords();
-		
+		//if(this.name == "elevon mesh left") console.log(forceData.pressure_centre);
+			
 		// USEFUL VARIABLES
 		//in world coordinates
 		var velocity = this.getVelocity();

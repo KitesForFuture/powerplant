@@ -267,7 +267,7 @@ class Autopilot{
 		z_axis_control = clamp(0.5*z_axis_control, -10, 10);
 		//console.log("this.eight.elevator = " + this.eight.elevator);
 		var y_axis_control = this.eight.elevator*180/Math.PI - this.eight.Y.D * sensor_data.gyro.y;
-		//console.log("eights.elevator = " + this.eight.elevator + ", y_axis_control = " + y_axis_control);
+		console.log("y_axis_control = " + y_axis_control + ", z_axis_control = " + z_axis_control);
 		return new ControlData(0, 0, y_axis_control - z_axis_control, y_axis_control + z_axis_control, 0, 35);
 	}
 	

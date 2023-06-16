@@ -72,7 +72,7 @@ class Kite extends RigidBody{
 	
 	reset(){
 		//console.log("RigidBody.reset()");
-		this.positionR.set(2, 0, 2);
+		this.positionR.set(50, 0, 50);
 		
 		this.velocity = new THREE.Vector3(0, 0, 0);
 		
@@ -227,6 +227,16 @@ class Kite extends RigidBody{
 		
 		this.add(this.kiteMeshes);
 		
+		this.simpleWing1.name = "wing1";
+		this.simpleWing2.name = "wing2";
+		this.elevonMeshLeft.name = "elevon mesh left";
+		this.elevonMeshRight.name = "elevon mesh right";
+		this.reflexMeshLeft.name = "reflex mesh left";
+		this.reflexMeshRight.name = "reflex mesh right";
+		this.stabilizerLeft.name = "stabilizer";
+		this.leftPropeller.name = "left prop";
+		this.rightPropeller.name = "right prop";
+		
 		// AERODYNAMIC PARTS
 		this.aerodynamicKiteParts = [
 			this.simpleWing1,
@@ -351,6 +361,7 @@ class Kite extends RigidBody{
 		
 		let leftForceVec = this.leftPropeller.getForceAndCentreOfPressureInKiteCoords().force;
 		let rightForceVec = this.rightPropeller.getForceAndCentreOfPressureInKiteCoords().force;
+		//console.log("Fr = " + rightForceVec.length() + ", Fl = " + leftForceVec.length());
 		if(leftForceVec.length() > 0.001 && rightForceVec.length() > 0.001){
 			this.elevonMeshLeft.setAdditionalWind(leftForceVec.multiplyScalar(-2/Math.sqrt(leftForceVec.length())));
 			this.elevonMeshRight.setAdditionalWind(rightForceVec.multiplyScalar(-2/Math.sqrt(rightForceVec.length())));
@@ -362,25 +373,14 @@ class Kite extends RigidBody{
 		let wind_vector = wind.getWindVector();
 		let force = new THREE.Vector3();
 		let torque = new THREE.Vector3(0, 0, 0);
-		
 		// adding all forces and torques
 		for (let kitePart of this.aerodynamicKiteParts){
 			let forceData = kitePart.getForceAndCentreOfPressureInKiteCoords(wind_vector);
+			//console.log(kitePart);
 			force.add(forceData.force);
 			torque.add(forceData.pressure_centre.clone().cross(this.world2kite(forceData.force.clone())));
 			if(kitePart.torqueVis) kitePart.torqueVis.set(forceData.pressure_centre, this.world2kite(forceData.force));
 		}
-		
-		/*
-		let wing1ForceData = this.simpleWing1.getForceAndCentreOfPressureInKiteCoords(wind_vector);
-		this.Wing1TorqueVis.set(wing1ForceData.pressure_centre, this.world2kite(wing1ForceData.force));
-		let wing2ForceData = this.simpleWing2.getForceAndCentreOfPressureInKiteCoords(wind_vector);
-		this.Wing2TorqueVis.set(wing2ForceData.pressure_centre, this.world2kite(wing2ForceData.force));
-		
-		let stabForceData = this.stabilizerLeft.getForceAndCentreOfPressureInKiteCoords(wind_vector);
-		this.StabilizerTorqueVis.set(stabForceData.pressure_centre, this.world2kite(stabForceData.force));
-		*/
-		
 		
 		//console.log("---");
 		//console.log(wingForceData.force);

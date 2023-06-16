@@ -386,7 +386,7 @@
 						//event.preventDefault();
 						reset();
 					}
-					console.log(event.keyCode);
+					//console.log(event.keyCode);
 					if(event.keyCode == 76){
 						//event.preventDefault();
 						land();
@@ -453,7 +453,6 @@
 						line_tensionSlider.setValue(controlData.line_tension);
 						smoothLineTension.setTargetValue(line_tensionSlider.getSliderElement().value);
 						
-						
 						let kite_line_length = kite.positionR.length();
 						time += timestep_in_s;
 						timeUIElement.setString("Time: " + time.toFixed(0) + " s (" + (time/3600).toFixed(3) + " h)");
@@ -469,8 +468,8 @@
 							let kite_line_length_difference = kite_line_length - old_kite_line_length;
 							if(line_tensionSlider.getSliderElement().value != 1){
 								//groundstation.factor = autopilot.hover.Y.P;
-								console.log("gs 8 tension min = " + groundstation.min8Tension);
-								console.log("groundstation.getLineTension(kite_line_length_difference/timestep_in_s) = " + groundstation.getLineTension(kite_line_length_difference/timestep_in_s));
+								//console.log("kite_line_length_difference = " + kite_line_length_difference);
+								//console.log("groundstation.getLineTension(kite_line_length_difference/timestep_in_s) = " + groundstation.getLineTension(kite_line_length_difference/timestep_in_s));
 								smoothLineTension.setTargetValue( groundstation.getLineTension(kite_line_length_difference/timestep_in_s) );
 								line_tensionSlider.setValue(smoothLineTension.getValue());
 							}
@@ -533,6 +532,8 @@
 								kite.rightElevon.rotation.y = rightElevonServo.getValue();
 							}
 							kite.rudder.rotation.y = rudderServo.getValue();
+							
+							//console.log("line_tensionSlider.getSliderElement().value = ", line_tensionSlider.getSliderElement().value);
 							
 							kite.update(wind, line_tensionSlider.getSliderElement().value, timestep_fraction_in_s);
 							kite.leftPropeller.update();
