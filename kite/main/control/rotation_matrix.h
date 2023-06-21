@@ -11,20 +11,21 @@ struct _Orientation_Data{
 	float rotation_matrix[9];
 	float rotation_matrix_transpose[9];
 	float gyro_in_kite_coords[3];
+	Time mpu_last_update_time;
 };
 typedef struct _Orientation_Data Orientation_Data;
 
 //float rotation_matrix[9];
 //float gyro_in_kite_coords[3];
 
-float getAccelX();
-float getAccelY();
-float getAccelZ();
+float getAccelX(Mpu_raw_data mpu_raw_data);
+float getAccelY(Mpu_raw_data mpu_raw_data);
+float getAccelZ(Mpu_raw_data mpu_raw_data);
 
 void initRotationMatrix(Orientation_Data* orientation_data);
 
 void FAKEupdateRotationMatrix(Orientation_Data* orientation_data);
-void updateRotationMatrix(Orientation_Data* orientation_data);
+void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data mpu_raw_data);
 
 
 #endif

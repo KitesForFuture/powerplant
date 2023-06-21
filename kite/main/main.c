@@ -117,16 +117,24 @@ void main_task(void* arg)
 {
 	init_uptime();
 	
-	Orientation_Data orientation_data;
-	initRotationMatrix(&orientation_data);
+	Orientation_Data kite_orientation_data;
+	initRotationMatrix(&kite_orientation_data);
+	
+	Orientation_Data line_orientation_data;
+	initRotationMatrix(&line_orientation_data);
 	
 	init_cat24(bus1);
 	
 	//testConfigWriting();//TODO: remove. DEBUGGING ONLY
 	
-	Mpu_raw_data mpu_calibration = {
+	Mpu_raw_data kite_mpu_calibration = {
 		{readEEPROM(0), readEEPROM(1), readEEPROM(2)},
 		{readEEPROM(3), readEEPROM(4), readEEPROM(5)}
+	};
+	
+	Mpu_raw_data line_mpu_calibration = {
+		{0, 0, 0},
+		{0, 0, 0}
 	};
 	
 	int output_pins[] = {27,26,12,13,5,15};
@@ -140,8 +148,28 @@ void main_task(void* arg)
 	setSpeed(4, 0);
 	//setSpeed(2, 90);
 	//setSpeed(4, 90);
-    initMPU6050(bus0, mpu_calibration);
-	updateRotationMatrix(&orientation_data); // to find out if nose (or wing tip) up or down on initialization
+	MPU kite_mpu;
+	MPU line_mpu;
+	kite_mpu.bus = bus0;
+	line_mpu.bus = bus0;
+	kite_mpu.address = 104;
+	line_mpu.address = 105;
+	kite_mpu.calibration_data = kite_mpu_calibration;
+	line_mpu.calibration_data = line_mpu_calibration;
+    initMPU6050(&kite_mpu);
+    initMPU6050(&line_mpu);
+    Mpu_raw_data kite_mpu_raw_data = {
+		{0, 0, 0},
+		{0, 0, 0}
+	};
+	Mpu_raw_data line_mpu_raw_data = {
+		{0, 0, 0},
+		{0, 0, 0}
+	};
+	readMPUData(&kite_mpu, &kite_mpu_raw_data);
+	readMPUData(&line_mpu, &line_mpu_raw_data);
+	updateRotationMatrix(&kite_orientation_data, kite_mpu_raw_data); // to find out if nose (or wing tip) up or down on initialization
+	updateRotationMatrix(&line_orientation_data, line_mpu_raw_data); // to find out if nose (or wing tip) up or down on initialization
 	
 	// ************************ KITE WING TIP POINTING UP -> ESC CALIBRATION MODE ************************
 	/*
@@ -158,10 +186,10 @@ void main_task(void* arg)
 	
 	// ************************ KITE NOSE POINTING DOWN -> CONFIG MODE ************************
 	
-	if(getAccelX() < 0){
+	if(getAccelX(kite_mpu_raw_data) < 0){
 		printf("entering config mode\n");
 		readConfigValuesFromEEPROM(config_values);
-		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &orientation_data);
+		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data);
 		
 		// THIS TAKES TIME...
 		float bmp_calib = readEEPROM(6);//-0.000001; // TODO: recalibrate and remove the -0.000001 hack
@@ -169,7 +197,10 @@ void main_task(void* arg)
 		while(1){
 			vTaskDelay(1);
 			update_bmp280_if_necessary();
-			updateRotationMatrix(&orientation_data);
+			readMPUData(&kite_mpu, &kite_mpu_raw_data);
+			readMPUData(&line_mpu, &line_mpu_raw_data);
+			updateRotationMatrix(&kite_orientation_data, kite_mpu_raw_data);
+			updateRotationMatrix(&line_orientation_data, line_mpu_raw_data);
 			if(data_needs_being_written_to_EEPROM == 1){
 				writeConfigValuesToEEPROM(config_values);
 				data_needs_being_written_to_EEPROM = 0;
@@ -218,18 +249,21 @@ void main_task(void* arg)
 		
 		update_bmp280_if_necessary();
 		
-		updateRotationMatrix(&orientation_data);
+		readMPUData(&kite_mpu, &kite_mpu_raw_data);
+		readMPUData(&line_mpu, &line_mpu_raw_data);
+		updateRotationMatrix(&kite_orientation_data, kite_mpu_raw_data);
+		updateRotationMatrix(&line_orientation_data, line_mpu_raw_data);
 		
 		//updatePWMInput();
 		//propellerFactor = getPWMInput0to1normalized(2);
-		if(propellerBootState < 0 && getAccelX() < 0){ // kite nose pointing down
+		if(propellerBootState < 0 && getAccelX(kite_mpu_raw_data) < 0){ // kite nose pointing down
 			propellerBootState++;
 		}
 		if(propellerBootState == 0){ // kite nose pointing down
 			propellerBootState = 1;
 			propellerFactor = 0.2;
 		}
-		if(propellerBootState == 1 && getAccelX() > 0){ // kite nose pointing up
+		if(propellerBootState == 1 && getAccelX(kite_mpu_raw_data) > 0){ // kite nose pointing up
 			propellerBootState = 2;
 		}
 		if(propellerBootState == 2 && propellerFactor < 1){
@@ -240,7 +274,7 @@ void main_task(void* arg)
 		autopilot.fm = flight_mode;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
 		SensorData sensorData;
-		initSensorData(&sensorData, orientation_data.rotation_matrix_transpose, orientation_data.gyro_in_kite_coords, getHeight()-groundstation_height, getHeightDerivative());
+		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.gyro_in_kite_coords, getHeight()-groundstation_height, getHeightDerivative());
 		
 		//TODO: decide size of timestep_in_s in main.c and pass to stepAutopilot(), or use same method as used in updateRotationMatrix
 		ControlData control_data;

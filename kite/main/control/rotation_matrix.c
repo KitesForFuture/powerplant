@@ -74,24 +74,25 @@
 
 //void sendData(float data0, float data1, float data2, float data3, float data4, float data5, float data6, float data7, float data8, float data9, float data10, float data11, float data12, float data13, float data14, float data15, float data16, float data17, float data18, float data19, float data20, float data21, float data22);
 
-Mpu_raw_data mpu_raw_data = {
+/*Mpu_raw_data mpu_raw_data = {
 	{0, 0, 0},
 	{0, 0, 0}
-};
+};*/
 
-Time mpu_last_update_time = 0;
+//Time mpu_last_update_time = 0;
 
-float getAccelX(){
+float getAccelX(Mpu_raw_data mpu_raw_data){
 	return accel_x;
 }
-float getAccelY(){
+float getAccelY(Mpu_raw_data mpu_raw_data){
 	return accel_y;
 }
-float getAccelZ(){
+float getAccelZ(Mpu_raw_data mpu_raw_data){
 	return accel_z;
 }
 
 void initRotationMatrix(Orientation_Data* orientation_data){
+	orientation_data->mpu_last_update_time = 0;
 	float tmp[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
 	memcpy(orientation_data->rotation_matrix, tmp, 9*sizeof(float));
 	float tmp_gyro[3] = {0,0,0};
@@ -100,12 +101,12 @@ void initRotationMatrix(Orientation_Data* orientation_data){
 
 void FAKEupdateRotationMatrix(Orientation_Data* orientation_data){
 	
-	if(mpu_last_update_time == 0){
-		mpu_last_update_time = start_timer();
+	if(orientation_data->mpu_last_update_time == 0){
+		orientation_data->mpu_last_update_time = start_timer();
 		return;
 	}
-	float time_difference = query_timer_seconds(mpu_last_update_time);
-	mpu_last_update_time = start_timer();
+	float time_difference = query_timer_seconds(orientation_data->mpu_last_update_time);
+	orientation_data->mpu_last_update_time = start_timer();
 	
 	// ROTATE 20 deg/s AROUND EVERY AXIS
 	orientation_data->gyro_in_kite_coords[0] = 20 * PI / 180;
@@ -146,14 +147,14 @@ void FAKEupdateRotationMatrix(Orientation_Data* orientation_data){
 	orientation_data->rotation_matrix_transpose[8] = orientation_data->rotation_matrix[8];
 }
 
-void updateRotationMatrix(Orientation_Data* orientation_data){
-	readMPUData(&mpu_raw_data);
-	if(mpu_last_update_time == 0){
-		mpu_last_update_time = start_timer();
+void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data mpu_raw_data){
+	
+	if(orientation_data->mpu_last_update_time == 0){
+		orientation_data->mpu_last_update_time = start_timer();
 		return;
 	}
-	float time_difference = query_timer_seconds(mpu_last_update_time);
-	mpu_last_update_time = start_timer();
+	float time_difference = query_timer_seconds(orientation_data->mpu_last_update_time);
+	orientation_data->mpu_last_update_time = start_timer();
 	
 	// matrix based:
 	// rotation-matrix:

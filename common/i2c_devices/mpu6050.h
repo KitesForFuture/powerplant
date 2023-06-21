@@ -13,11 +13,14 @@ typedef struct _Mpu_raw_data Mpu_raw_data;
 struct _MPU {
 	Mpu_raw_data calibration_data;
 	struct i2c_bus bus;
+	int address;
+	float gyro_precision_factor;	//factor needed to get to deg/sec
+	float accel_precision_factor;	//factor needed to get to m/s
 };
 typedef struct _MPU MPU;
 
-void initMPU6050(struct i2c_bus bus_arg, Mpu_raw_data calibration_data);
+void initMPU6050(MPU *mpu);
 
-void readMPUData(Mpu_raw_data *out);
+void readMPUData(MPU *mpu, Mpu_raw_data *out);
 
 #endif
