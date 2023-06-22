@@ -1,6 +1,8 @@
 calibration_robot/build
 calibration_robot/sdkconfig
 
+simulation/oldV002Files
+
 kite/build
 kite/sdkconfig
 
