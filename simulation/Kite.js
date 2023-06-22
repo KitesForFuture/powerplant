@@ -72,7 +72,7 @@ class Kite extends RigidBody{
 	
 	reset(){
 		//console.log("RigidBody.reset()");
-		this.positionR.set(50, 0, 50);
+		this.positionR.set(2, 0, 2);
 		
 		this.velocity = new THREE.Vector3(0, 0, 0);
 		
