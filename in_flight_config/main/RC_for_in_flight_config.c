@@ -578,6 +578,8 @@ static const httpd_uri_t kite_config_get_html = {
 						addHeight(\"Turning Speed (deg/s)\", 13, 0.5)\n\
 						addPIDConstant(\"Eights Yaw(Z) Compensation(P)\", 27);\n\
 						addPIDConstant(\"Eights Yaw(Z) Damping(D)\", 28);\n\
+						addPIDConstant(\"Eights Roll Compensation(P)\", 42);\n\
+						addPIDConstant(\"Eights Roll Damping(D)\", 43);\n\
 						addPIDConstant(\"Eights Pitch(Y) Damping\", 29);\n\
 						addDegrees(\"Eights Elevator Offset (deg)\", 30);\n\
 						addDegrees(\"Transition Pitch(Y) Angle (deg)\", 31);\n\
@@ -606,7 +608,10 @@ static const httpd_uri_t kite_config_get_html = {
 						addDegrees(\"Brake Angle (deg)\", 22)\n\
 						addPIDConstant(\"Landing Pitch(Y) Compensation\", 23);\n\
 						addPIDConstant(\"Landing Pitch(Y) Damping\", 24);\n\
-						addPIDConstant(\"Landing Roll(X) Compensation\", 25);\n\
+						addPIDConstant(\"Landing Aileron Compensation\", 25);\n\
+						addPIDConstant(\"Landing Aileron Damping\", 44);\n\
+						addPIDConstant(\"Landing Roll Compensation\", 45);\n\
+						addPIDConstant(\"Landing Roll Damping\", 46);\n\
 						addPIDConstant(\"Dive Angle Compensation\", 36);\n\
 						addHeight(\"Landing Approach Height (m)\", 26, -100)\n\
 						\n\
@@ -712,7 +717,7 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     (*init_callback)(float_values);
     
 	char response2[(NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS)*20];
-    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", 
+    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", 
     	float_values[0],
     	float_values[1],
     	float_values[2],
@@ -755,7 +760,15 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     	float_values[39],
     	float_values[40],
     	float_values[41],
-    	float_values[42]*1000000
+    	float_values[42],//new...
+    	float_values[43],
+    	float_values[44],
+    	float_values[45],
+    	float_values[46],
+    	float_values[47],
+    	float_values[48],
+    	float_values[49],//...new
+    	float_values[50]*1000000
     );
     
     error = httpd_resp_send(req, response2, strlen(response2));

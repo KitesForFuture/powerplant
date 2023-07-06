@@ -121,7 +121,7 @@ void main_task(void* arg)
 	initRotationMatrix(&kite_orientation_data);
 	
 	Orientation_Data line_orientation_data;
-	initRotationMatrix(&line_orientation_data);
+	initLineMatrix(&line_orientation_data);
 	
 	init_cat24(bus1);
 	
@@ -133,8 +133,8 @@ void main_task(void* arg)
 	};
 	
 	Mpu_raw_data line_mpu_calibration = {
-		{0, 0, 0},
-		{0, 0, 0}
+		{readEEPROM(1024+0), readEEPROM(1024+1), readEEPROM(1024+2)},
+		{readEEPROM(1024+3), readEEPROM(1024+4), readEEPROM(1024+5)}
 	};
 	
 	int output_pins[] = {27,26,12,13,5,15};
@@ -189,7 +189,7 @@ void main_task(void* arg)
 	if(getAccelX(kite_mpu_raw_data) < 0){
 		printf("entering config mode\n");
 		readConfigValuesFromEEPROM(config_values);
-		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data);
+		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data, &line_orientation_data);
 		
 		// THIS TAKES TIME...
 		float bmp_calib = readEEPROM(6);//-0.000001; // TODO: recalibrate and remove the -0.000001 hack
@@ -200,7 +200,9 @@ void main_task(void* arg)
 			readMPUData(&kite_mpu, &kite_mpu_raw_data);
 			readMPUData(&line_mpu, &line_mpu_raw_data);
 			updateRotationMatrix(&kite_orientation_data, kite_mpu_raw_data);
+			turnYAxisTowards(&line_orientation_data, kite_orientation_data.rotation_matrix[5], kite_orientation_data.rotation_matrix[8]);
 			updateRotationMatrix(&line_orientation_data, line_mpu_raw_data);
+			printf("z-axis up? = %f\n", -line_orientation_data.rotation_matrix_transpose[3]);
 			if(data_needs_being_written_to_EEPROM == 1){
 				writeConfigValuesToEEPROM(config_values);
 				data_needs_being_written_to_EEPROM = 0;
@@ -234,7 +236,7 @@ void main_task(void* arg)
 	
 	initAutopilot(&autopilot, config_values);
 	
-	//autopilot.mode = EIGHT_MODE;//FINAL_LANDING_MODE;//EIGHT_MODE;//FINAL_LANDING_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
+	//autopilot.mode = TEST_MODE;//autopilot.mode = EIGHT_MODE;//FINAL_LANDING_MODE;//EIGHT_MODE;//FINAL_LANDING_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
 	
 	int propellerBootState = -200;
 	float propellerFactor = 0;
@@ -252,6 +254,13 @@ void main_task(void* arg)
 		readMPUData(&kite_mpu, &kite_mpu_raw_data);
 		readMPUData(&line_mpu, &line_mpu_raw_data);
 		updateRotationMatrix(&kite_orientation_data, kite_mpu_raw_data);
+		//if(abs(getAccelX(kite_mpu_raw_data)) < 0.7){
+		if(autopilot.mode == LANDING_MODE){
+			turnYAxisTowards(&line_orientation_data, -kite_orientation_data.rotation_matrix[3], -kite_orientation_data.rotation_matrix[6]);
+		}else{
+			turnYAxisTowards(&line_orientation_data, kite_orientation_data.rotation_matrix[5], kite_orientation_data.rotation_matrix[8]);
+		}
+		//}
 		updateRotationMatrix(&line_orientation_data, line_mpu_raw_data);
 		
 		//updatePWMInput();
@@ -274,7 +283,7 @@ void main_task(void* arg)
 		autopilot.fm = flight_mode;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
 		SensorData sensorData;
-		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.gyro_in_kite_coords, getHeight()-groundstation_height, getHeightDerivative());
+		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, line_orientation_data.rotation_matrix_transpose, kite_orientation_data.gyro_in_kite_coords, getHeight()-groundstation_height, getHeightDerivative());
 		
 		//TODO: decide size of timestep_in_s in main.c and pass to stepAutopilot(), or use same method as used in updateRotationMatrix
 		ControlData control_data;

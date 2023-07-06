@@ -5,13 +5,13 @@
 float safe_acos(float number_more_or_less_between_one_and_minus_one){
 	if(number_more_or_less_between_one_and_minus_one <= -1) return 3.14159265;
 	if(number_more_or_less_between_one_and_minus_one >= 1) return 0;
-	return acos(number_more_or_less_between_one_and_minus_one);
+	return acosf(number_more_or_less_between_one_and_minus_one);
 }
 
 float safe_asin(float number_more_or_less_between_one_and_minus_one){
 	if(number_more_or_less_between_one_and_minus_one <= -1) return -1.5708;
 	if(number_more_or_less_between_one_and_minus_one >= 1) return 1.5708;
-	return asin(number_more_or_less_between_one_and_minus_one);
+	return asinf(number_more_or_less_between_one_and_minus_one);
 }
 
 int smallpow(int x, int p){
@@ -22,10 +22,29 @@ int smallpow(int x, int p){
 	return ret;
 }
 
+// scalar product of two vectors
+float scalarProductOfMatrices(float A[], float B[], int length){
+	float ret = 0;
+	for(int i = 0; i < length; i++){
+		ret += A[i]*B[i];
+	}
+	return ret;
+}
+
+float norm(float a[], int length){
+	return sqrt(scalarProductOfMatrices(a, a, length));
+}
+
 void crossProduct(float a, float b, float c, float x, float y, float z, float result[]){
 	result[0] = b*z-c*y;
 	result[1] = c*x-a*z;
 	result[2] = a*y-b*x;
+}
+
+void cross(float vec1[3], float vec2[3], float result[3]){
+	result[0] = vec1[1]*vec2[2]-vec1[2]*vec2[1];
+	result[1] = vec1[2]*vec2[0]-vec1[0]*vec2[2];
+	result[2] = vec1[0]*vec2[1]-vec1[1]*vec2[0];
 }
 
 float sign(float x){
@@ -123,10 +142,10 @@ void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, flo
 	float axis_1 = tmp_vec[1]*c-tmp_vec[2]*b;
 	float axis_2 = tmp_vec[2]*a-tmp_vec[0]*c;
 	float axis_3 = tmp_vec[0]*b-tmp_vec[1]*a;
-	float norm = sqrt(axis_1*axis_1 + axis_2*axis_2 + axis_3*axis_3);
-	axis_1 /= norm;
-	axis_2 /= norm;
-	axis_3 /= norm;
+	float InvNorm = 1/sqrt(axis_1*axis_1 + axis_2*axis_2 + axis_3*axis_3);
+	axis_1 *= InvNorm;
+	axis_2 *= InvNorm;
+	axis_3 *= InvNorm;
 	
 	// determine the approximate angle between mat'*(a_init, b_init, c_init)' and (a,b,c)'
 	float differenceNorm = sqrt((mat[2]-a)*(mat[2]-a) + (mat[5]-b)*(mat[5]-b) + (mat[8]-c)*(mat[8]-c));
@@ -137,7 +156,7 @@ void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, flo
 	// 0.004 works, error 0.01
 	// 0.04, error 0.07
 	// it appears that the gyro drifts a lot more when powered on battery instead of USB.
-	// ToDoLeo constants / knowledge inside calcualtion.
+	// ToDoLeo constants / knowledge inside calculation.
 	
 	// rotation matrix
 	float tmp_rot_matrix[9];
@@ -154,16 +173,14 @@ void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, flo
 	mat_mult_mat_transp(mat, tmp_rot_matrix, out);
 }
 
+float signed_angle2(float vec1[2], float vec2[2]){
+	return atan2f(vec1[0]*vec2[1] - vec1[1]*vec2[0], vec1[0]*vec2[0] + vec1[1]*vec2[1]);
+}
 
-// FUNCTIONS NECESSARY FOR REINFORCEMENT LEARNING
-
-// scalar product of two vectors
-float scalarProductOfMatrices(float A[], float B[], int length){
-	float ret = 0;
-	for(int i = 0; i < length; i++){
-		ret += A[i]*B[i];
-	}
-	return ret;
+float signed_angle3(float vec1[3], float vec2[3]){
+	float crossp[3];
+	cross(vec1, vec2, crossp);
+	return atan2f(norm(crossp, 3), scalarProductOfMatrices(vec1, vec2, 3));
 }
 
 float normalize(float a[], int length) {

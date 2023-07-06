@@ -23,9 +23,12 @@ float getAccelY(Mpu_raw_data mpu_raw_data);
 float getAccelZ(Mpu_raw_data mpu_raw_data);
 
 void initRotationMatrix(Orientation_Data* orientation_data);
+void initLineMatrix(Orientation_Data* orientation_data);
 
 void FAKEupdateRotationMatrix(Orientation_Data* orientation_data);
 void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data mpu_raw_data);
+
+void turnYAxisTowards(Orientation_Data* orientation_data, float x, float y);
 
 
 #endif

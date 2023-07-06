@@ -10,6 +10,10 @@
 float safe_acos(float number_more_or_less_between_one_and_minus_one);
 float safe_asin(float number_more_or_less_between_one_and_minus_one);
 float angle(float vec1[3], float vec2[3]);
+float norm(float a[], int length);
+float signed_angle2(float vec1[2], float vec2[2]);
+float signed_angle3(float vec1[3], float vec2[3]);
+void cross(float vec1[3], float vec2[3], float result[3]);
 
 int smallpow(int x, int p);
 

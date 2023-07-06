@@ -99,6 +99,14 @@ void initRotationMatrix(Orientation_Data* orientation_data){
 	memcpy(orientation_data->gyro_in_kite_coords, tmp_gyro, 3*sizeof(float));
 }
 
+void initLineMatrix(Orientation_Data* orientation_data){
+	orientation_data->mpu_last_update_time = 0;
+	float tmp[9] = {1, 0, 0, 0, 0, 1, 0, -1, 0};
+	memcpy(orientation_data->rotation_matrix, tmp, 9*sizeof(float));
+	float tmp_gyro[3] = {0,0,0};
+	memcpy(orientation_data->gyro_in_kite_coords, tmp_gyro, 3*sizeof(float));
+}
+
 void FAKEupdateRotationMatrix(Orientation_Data* orientation_data){
 	
 	if(orientation_data->mpu_last_update_time == 0){
@@ -204,4 +212,42 @@ void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data mpu_r
 	orientation_data->rotation_matrix_transpose[8] = orientation_data->rotation_matrix[8];
 }
 
+void turnYAxisTowards(Orientation_Data* orientation_data, float y, float z){
+	float current_y_y = orientation_data->rotation_matrix[4];
+	float current_y_z = orientation_data->rotation_matrix[7];
+	
+	//printf("turn %f, %f, %f, towards %f, %f, ", orientation_data->rotation_matrix[1], current_y_y, current_y_z, y, z);
+	
+	float invNorm = 1/sqrt(y*y+z*z);
+	float InvNorm = 1/sqrt(current_y_y*current_y_y+current_y_z*current_y_z);
+	
+	y *= invNorm;
+	z *= invNorm;
+	current_y_y *= InvNorm;
+	current_y_z *= InvNorm;
+	
+	// multiply by small number, so we move only tiny bit in right direction at every step -> averaging measured acceleration from vibration
+	// constant sufficient, because rotation axis already contains approximate angle size
+	float angleFactor = -0.004;
+	
+	float axis = y*current_y_z - z*current_y_y; // rotation Axis either (1,0,0) or (-1,0,0)
+	//printf("axis = %f, ", axis);
+	
+	float tmp_rot_matrix[9];
+	tmp_rot_matrix[0] = 1;
+	tmp_rot_matrix[1] = 0;
+	tmp_rot_matrix[2] = 0;
+	tmp_rot_matrix[3] = 0;
+	tmp_rot_matrix[4] = 1;
+	tmp_rot_matrix[5] = -axis*angleFactor;
+	tmp_rot_matrix[6] = 0;
+	tmp_rot_matrix[7] = axis*angleFactor;
+	tmp_rot_matrix[8] = 1;
+	
+	float out[9];
+	mat_mult(tmp_rot_matrix, orientation_data->rotation_matrix, out);
+	
+	memcpy(orientation_data->rotation_matrix, out, 9*4);
+	//printf("new = %f, %f\n", orientation_data->rotation_matrix[4], orientation_data->rotation_matrix[7]);
+}
 

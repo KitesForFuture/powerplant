@@ -14,8 +14,8 @@
 #define LANDING_EIGHT_TRANSITION 6
 #define FINAL_LANDING_MODE 7
 #define FINAL_LANDING_MODE_HOVER 8
-
 #define AIRPLANE_MODE 9
+#define TEST_MODE 10
 
 #define FIRST_TURN_MULTIPLIER 0.5
 
@@ -58,6 +58,10 @@ struct _Autopilot {
 		struct {
 			float P;
 			float D;
+		} roll;
+		struct {
+			float P;
+			float D;
 		} Y;
 		float elevator;
 		float desired_line_angle_from_zenith;
@@ -71,6 +75,10 @@ struct _Autopilot {
 			float P;
 			float D;
 		} X;
+		struct {
+			float P;
+			float D;
+		} roll;
 		struct {
 			float P;
 			float D;
@@ -114,6 +122,7 @@ void initAutopilot(Autopilot* autopilot, float* config_values);
 
 void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension);
 
+void test_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension);
 void landing_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension, int transition);
 void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float timestep_in_s);
 void straight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length);

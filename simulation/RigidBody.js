@@ -82,7 +82,17 @@ class RigidBody extends THREE.Object3D{
 	}
 	
 	getSensorData(){
-		return new SensorData(this.rotation_matrix.clone(), this.angular_velocity.clone(), this.positionR.x, this.velocity.x);
+		var lineKnot = this.getPositionOfLineKnot();
+		lineKnot.normalize();
+		let x_vector = lineKnot.clone().cross(new THREE.Vector3(1, 0, 0));
+		let y_vector = lineKnot.clone().cross(x_vector);
+		let line_matrix = new THREE.Matrix3();
+		line_matrix.set(
+			x_vector.x, y_vector.y, lineKnot.x,
+			x_vector.y, y_vector.y, lineKnot.y,
+			x_vector.z, y_vector.z, lineKnot.z
+		);
+		return new SensorData(this.rotation_matrix.clone(), line_matrix, this.angular_velocity.clone(), this.positionR.x, this.velocity.x);
 	}
 }
 
