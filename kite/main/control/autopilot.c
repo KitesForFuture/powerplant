@@ -73,7 +73,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	if(autopilot->fm == 3.0){ // 3.0 is VESC final landing mode
 		autopilot->mode = LANDING_MODE;
 	}
-	autopilot->mode = LANDING_MODE;
+	//autopilot->mode = LANDING_MODE;
 	float timestep_in_s = 0.02; // 50 Hz, but TODO: MUST measure more precisely!
 	if(autopilot->mode == AIRPLANE_MODE){
 		landing_control(autopilot, control_data_out, sensor_data, line_length, line_tension, false); return;
