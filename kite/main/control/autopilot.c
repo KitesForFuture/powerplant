@@ -314,8 +314,8 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	height_control = clamp(height_control, 0, 50);
 	
-	float left_elevon = clamp(y_axis_control + x_axis_control, -35, 35);
-	float right_elevon = clamp(y_axis_control - x_axis_control, -35, 35);
+	float left_elevon = clamp(y_axis_control + x_axis_control, -50, 50);
+	float right_elevon = clamp(y_axis_control - x_axis_control, -50, 50);
 	float left_prop = height_control + z_axis_control;
 	float right_prop = height_control - z_axis_control;
 	
