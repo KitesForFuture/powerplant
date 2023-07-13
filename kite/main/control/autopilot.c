@@ -205,7 +205,7 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	float x_axis_control = - 0.56 * autopilot->landing.X.P * (desired_roll_angle-roll_angle) - 0.22 * autopilot->landing.X.D * sensor_data.gyro[0];//-100 * mat[3] * autopilot->landing.X.P;// - 0*50*autopilot->landing.X.D * sensor_data.gyro[0];
 	x_axis_control *= 50;
 	x_axis_control = clamp(x_axis_control, -30, 30);
-	y_axis_control = clamp(y_axis_control, -25, 25);
+	y_axis_control = clamp(y_axis_control, -40, 40);
 	sendDebuggingData(angle_error, roll_angle, desired_roll_angle, x_axis_control, -mat[3], mat[1]);
 	initControlData(control_data_out, 0, 0, 0*autopilot->brake - y_axis_control-1*x_axis_control + abs(x_axis_control)*0.5, 0*autopilot->brake - y_axis_control+1*x_axis_control + abs(x_axis_control)*0.5, -autopilot->brake-5, 0, LINE_TENSION_LANDING); return;
 }
