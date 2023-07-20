@@ -1,5 +1,10 @@
+mpu-testing
+
 calibration_robot/build
 calibration_robot/sdkconfig
+
+calibration_robot_manual_line_mpu/build
+calibration_robot_manual_line_mpu/sdkconfig
 
 simulation/oldV002Files
 
