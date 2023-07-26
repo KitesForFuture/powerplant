@@ -1,7 +1,6 @@
 #include <math.h>
 #include "math.h"
 // acos function continuously extended beyond -1 and 1.
-
 float safe_acos(float number_more_or_less_between_one_and_minus_one){
 	if(number_more_or_less_between_one_and_minus_one <= -1) return 3.14159265;
 	if(number_more_or_less_between_one_and_minus_one >= 1) return 0;
@@ -136,9 +135,9 @@ void normalize_matrix(float a[]){
 void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, float a, float b, float c, float out[]){
 	// mat'*(a_init, b_init, c_init)'
 	float tmp_vec[3];
-	mat_transp_mult_vec(mat, a_init, b_init, c_init, tmp_vec);
+	mat_transp_mult_vec(mat, a_init, b_init, c_init, tmp_vec); // tmp_vec is how the three sensors should feel gravitational acceleration. The three x-components of the three rotation matrix vectors.
 	
-	// determine the normalized rotation axis mat'*(a_init, b_init, c_init)' x (a,b,c)'
+	// determine the normalized rotation axis (mat'*(a_init, b_init, c_init)') x (a,b,c)' in sensor coordinate system
 	float axis_1 = tmp_vec[1]*c-tmp_vec[2]*b;
 	float axis_2 = tmp_vec[2]*a-tmp_vec[0]*c;
 	float axis_3 = tmp_vec[0]*b-tmp_vec[1]*a;
@@ -148,7 +147,7 @@ void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, flo
 	axis_3 *= InvNorm;
 	
 	// determine the approximate angle between mat'*(a_init, b_init, c_init)' and (a,b,c)'
-	float differenceNorm = sqrt((mat[2]-a)*(mat[2]-a) + (mat[5]-b)*(mat[5]-b) + (mat[8]-c)*(mat[8]-c));
+	float differenceNorm = sqrt((mat[2]-a)*(mat[2]-a) + (mat[5]-b)*(mat[5]-b) + (mat[8]-c)*(mat[8]-c)); // TODO: there is a BUG here. mat[2] should be either mat[0] or tmp_vec[0], etc.
 	// multiply by small number, so we move only tiny bit in right direction at every step -> averaging measured acceleration from vibration
 	float angle = differenceNorm*0.001;//When connected to USB, then 0.00004 suffices. When autonomous on battery 0.0004 (10 times larger) does just fine.
 	// 0.00004 works, error 0.0004
@@ -171,6 +170,105 @@ void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, flo
 	tmp_rot_matrix[8] = 1;
 	
 	mat_mult_mat_transp(mat, tmp_rot_matrix, out);
+}
+
+void rotate_towards_gravity_and_north(float mat[], float mag_a_init, float mag_b_init, float mag_c_init, float mag_a, float mag_b, float mag_c, float a_init, float b_init, float c_init, float a, float b, float c, float out[]){
+	
+	//ACCELEROMETER
+	
+	// mat'*(a_init, b_init, c_init)'
+	float tmp_vec[3];
+	mat_transp_mult_vec(mat, a_init, b_init, c_init, tmp_vec); // tmp_vec is how the three sensors should feel gravitational acceleration. The three x-components of the three rotation matrix vectors.
+	
+	// determine the normalized rotation axis (mat'*(a_init, b_init, c_init)') x (a,b,c)' in sensor coordinate system
+	float axis_1 = tmp_vec[1]*c-tmp_vec[2]*b;
+	float axis_2 = tmp_vec[2]*a-tmp_vec[0]*c;
+	float axis_3 = tmp_vec[0]*b-tmp_vec[1]*a;
+	float InvNorm = 1/sqrt(axis_1*axis_1 + axis_2*axis_2 + axis_3*axis_3);
+	axis_1 *= InvNorm;
+	axis_2 *= InvNorm;
+	axis_3 *= InvNorm;
+	
+	// determine the approximate angle between mat'*(a_init, b_init, c_init)' and (a,b,c)'
+	//float differenceNorm = sqrt((mat[2]-a)*(mat[2]-a) + (mat[5]-b)*(mat[5]-b) + (mat[8]-c)*(mat[8]-c)); // TODO: there is a BUG here. mat[2] should be either mat[0] or tmp_vec[0], etc.
+	float differenceNorm = sqrt((tmp_vec[0]-a*0.1)*(tmp_vec[0]-a*0.1) + (tmp_vec[1]-b*0.1)*(tmp_vec[1]-b*0.1) + (tmp_vec[2]-c*0.1)*(tmp_vec[2]-c*0.1));
+	//printf("diff gravity = %f,", differenceNorm);
+	// multiply by small number, so we move only tiny bit in right direction at every step -> averaging measured acceleration from vibration
+	float angle = differenceNorm*0.005;//When connected to USB, then 0.00004 suffices. When autonomous on battery 0.0004 (10 times larger) does just fine.
+	// 0.00004 works, error 0.0004
+	// 0.0004 works, error 0.002 except in battery mode
+	// 0.004 works, error 0.01
+	// 0.04, error 0.07
+	// it appears that the gyro drifts a lot more when powered on battery instead of USB.
+	// ToDoLeo constants / knowledge inside calculation.
+	
+	// rotation matrix
+	float tmp_rot_matrix[9];
+	tmp_rot_matrix[0] = 1;
+	tmp_rot_matrix[1] = -axis_3*sin(angle);
+	tmp_rot_matrix[2] = axis_2*sin(angle);
+	tmp_rot_matrix[3] = axis_3*sin(angle);
+	tmp_rot_matrix[4] = 1;
+	tmp_rot_matrix[5] = -axis_1*sin(angle);
+	tmp_rot_matrix[6] = -axis_2*sin(angle);
+	tmp_rot_matrix[7] = axis_1*sin(angle);
+	tmp_rot_matrix[8] = 1;
+	
+	float tmp_result_matrix[9];
+	mat_mult_mat_transp(mat, tmp_rot_matrix, tmp_result_matrix);
+	
+	
+	
+	// MAGNETOMETER
+	
+	float tmp_vec2[3];
+	mat_transp_mult_vec(mat, mag_a_init, mag_b_init, mag_c_init, tmp_vec2); // where north is in kite coordinates
+	
+	//project mag_* to complement of tmp_vec
+	
+	float mag[3];
+	mag[0] = mag_a;
+	mag[1] = mag_b;
+	mag[2] = mag_c;
+	
+	float projection_length = scalarProductOfMatrices(mag, tmp_vec, 3);
+	mag[0] -= tmp_vec[0]*projection_length;
+	mag[1] -= tmp_vec[1]*projection_length;
+	mag[2] -= tmp_vec[2]*projection_length;
+	
+	/*
+	// determine the normalized rotation axis (mat'*Proj(mag_a_init, mag_b_init, mag_c_init)') x (a,b,c)' in sensor coordinate system
+	axis_1 = tmp_vec2[1]*mag_c-tmp_vec2[2]*mag_b;
+	axis_2 = tmp_vec2[2]*mag_a-tmp_vec2[0]*mag_c;
+	axis_3 = tmp_vec2[0]*mag_b-tmp_vec2[1]*mag_a;
+	*/
+	
+	// determine the normalized rotation axis (mat'*(mag_a_init, mag_b_init, mag_c_init)') x Proj(a,b,c)' in sensor coordinate system
+	axis_1 = tmp_vec2[1]*mag[2]-tmp_vec2[2]*mag[1];
+	axis_2 = tmp_vec2[2]*mag[0]-tmp_vec2[0]*mag[2];
+	axis_3 = tmp_vec2[0]*mag[1]-tmp_vec2[1]*mag[0];
+	
+	InvNorm = 1/sqrt(axis_1*axis_1 + axis_2*axis_2 + axis_3*axis_3);
+	axis_1 *= InvNorm;
+	axis_2 *= InvNorm;
+	axis_3 *= InvNorm;
+	
+	differenceNorm = sqrt((tmp_vec2[0]-mag[0]*0.016)*(tmp_vec2[0]-mag[0]*0.016) + (tmp_vec2[1]-mag[1]*0.016)*(tmp_vec2[1]-mag[1]*0.016) + (tmp_vec2[2]-mag[2]*0.016)*(tmp_vec2[2]-mag[2]*0.016)); // TODO: there is a BUG here. mat[2] should be either mat[0] or tmp_vec[0], etc.
+	// multiply by small number, so we move only tiny bit in right direction at every step -> averaging measured acceleration from vibration
+	angle = differenceNorm*0.005;//When connected to USB, then 0.00004 suffices. When autonomous on battery 0.0004 (10 times larger) does just fine.
+	//printf("diff magnet = %f\n", differenceNorm);
+	// rotation matrix
+	tmp_rot_matrix[0] = 1;
+	tmp_rot_matrix[1] = -axis_3*sin(angle);
+	tmp_rot_matrix[2] = axis_2*sin(angle);
+	tmp_rot_matrix[3] = axis_3*sin(angle);
+	tmp_rot_matrix[4] = 1;
+	tmp_rot_matrix[5] = -axis_1*sin(angle);
+	tmp_rot_matrix[6] = -axis_2*sin(angle);
+	tmp_rot_matrix[7] = axis_1*sin(angle);
+	tmp_rot_matrix[8] = 1;
+	
+	mat_mult_mat_transp(tmp_result_matrix, tmp_rot_matrix, out);
 }
 
 float signed_angle2(float vec1[2], float vec2[2]){

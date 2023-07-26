@@ -19,6 +19,8 @@ struct i2c_bus {
 
 esp_err_t _initInterchip(struct i2c_bus bus); //ToDoLeo this should not be exposed but is currently used in cat24c256
 
+void i2c_receiveByteArray(struct i2c_bus bus, int chip_addr, int data_addr, int len, uint8_t* data);
+
 int i2c_receive(struct i2c_bus bus, int chip_addr, int data_addr, int len);
 
 int i2c_send(struct i2c_bus bus, int chip_addr, int data_addr, int data, int len);

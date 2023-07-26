@@ -48,78 +48,41 @@ void enableMagnetometer(MPU9250 *mpu){
 }
 
 void readMPURawData9250(MPU9250 *mpu, Mpu_raw_data_9250 *out){
-	uint8_t highByte;
-	uint8_t lowByte;
 	
 	//read acc/gyro data at register 59..., 67...
-	//GYRO X
-	highByte = i2c_receive(mpu->bus, mpu->address, 67, 1);
-	lowByte = i2c_receive(mpu->bus, mpu->address, 68, 1);
-	out->gyro[0] = mpu->gyro_precision_factor*(int16_t)((highByte << 8) | lowByte);
-	//GYRO Y
-	highByte = i2c_receive(mpu->bus, mpu->address, 69, 1);
-	lowByte = i2c_receive(mpu->bus, mpu->address, 70, 1);
-	out->gyro[1] = mpu->gyro_precision_factor*(int16_t)((highByte << 8) | lowByte);
-	//GYRO Z
-	highByte = i2c_receive(mpu->bus, mpu->address, 71, 1);
-	lowByte = i2c_receive(mpu->bus, mpu->address, 72, 1);
-	out->gyro[2] = mpu->gyro_precision_factor*(int16_t)((highByte << 8) | lowByte);
+	uint8_t data[14];
+	i2c_receiveByteArray(mpu->bus, mpu->address, 59, 14, data);
 	
-  
 	//ACCEL X
-	highByte = i2c_receive(mpu->bus, mpu->address, 59, 1);
-	lowByte = i2c_receive(mpu->bus, mpu->address, 60, 1);
-	out->accel[0] = mpu->accel_precision_factor*(int16_t)((highByte << 8) | lowByte);
+	out->accel[0] = mpu->accel_precision_factor*(int16_t)((data[0] << 8) | data[1]);
 	//ACCEL Y
-	highByte = i2c_receive(mpu->bus, mpu->address, 61, 1);
-	lowByte = i2c_receive(mpu->bus, mpu->address, 62, 1);
-	out->accel[1] = mpu->accel_precision_factor*(int16_t)((highByte << 8) | lowByte);
+	out->accel[1] = mpu->accel_precision_factor*(int16_t)((data[2] << 8) | data[3]);
 	//ACCEL Z
-	highByte = i2c_receive(mpu->bus, mpu->address, 63, 1);
-	lowByte = i2c_receive(mpu->bus, mpu->address, 64, 1);
-	out->accel[2] = mpu->accel_precision_factor*(int16_t)((highByte << 8) | lowByte);
+	out->accel[2] = mpu->accel_precision_factor*(int16_t)((data[4] << 8) | data[5]);
+	
+	//GYRO X
+	out->gyro[0] = mpu->gyro_precision_factor*(int16_t)((data[8] << 8) | data[9]);
+	//GYRO Y
+	out->gyro[1] = mpu->gyro_precision_factor*(int16_t)((data[10] << 8) | data[11]);
+	//GYRO Z
+	out->gyro[2] = mpu->gyro_precision_factor*(int16_t)((data[12] << 8) | data[13]);
 	
 	
 	//MAGNET
-	
 	uint8_t ST1;
-	i2c_send(mpu->bus, mpu->magnetometer_address, 10, 1, 1);//go into single measurement mode 
-	do
-	{
-		ST1 = i2c_receive(mpu->bus, mpu->magnetometer_address, 2, 1);
-		//printf("waiting, ST1 = %d\n", ST1);
-	} while (!(ST1 & 0x01));
 	
-	lowByte = i2c_receive(mpu->bus, mpu->magnetometer_address, 0x03, 1);
-	highByte = i2c_receive(mpu->bus, mpu->magnetometer_address, 0x04, 1);
-	out->magnet[1] = 1.0f*(int16_t)((highByte << 8) | lowByte);
-	
-	lowByte = i2c_receive(mpu->bus, mpu->magnetometer_address, 0x05, 1);
-	highByte = i2c_receive(mpu->bus, mpu->magnetometer_address, 0x06, 1);
-	out->magnet[0] = 1.0f*(int16_t)((highByte << 8) | lowByte);
-	
-	lowByte = i2c_receive(mpu->bus, mpu->magnetometer_address, 0x07, 1);
-	highByte = i2c_receive(mpu->bus, mpu->magnetometer_address, 0x08, 1);
-	out->magnet[2] = -1.0f*(int16_t)((highByte << 8) | lowByte);
-	
-	//printf("%f, %f, %f\n", out->magnet[0], out->magnet[1], out->magnet[2]);
-	
-	/*
-	uint8_t ST1;
-	I2CwriteByte(MAG_ADDRESS,0x0A,0x01);
-	do
-	{
-	I2Cread(MAG_ADDRESS, 0x02, 1, &ST1);
-	} while (!(ST1 & 0x01));
-
-	uint8_t Mag[7];
-	I2Cread(MAG_ADDRESS, 0x03, 7, Mag);
-
-	// Convertir registros magnetometro
-	int16_t mx = -(Mag[3] << 8 | Mag[2]);
-	int16_t my = -(Mag[1] << 8 | Mag[0]);
-	int16_t mz = -(Mag[5] << 8 | Mag[4]);
-	*/
+	ST1 = i2c_receive(mpu->bus, mpu->magnetometer_address, 2, 1);
+	if(ST1 & 0x01){
+		
+		i2c_receiveByteArray(mpu->bus, mpu->magnetometer_address, 0x03, 6, data);
+		out->magnet[1] = 1.0f*(int16_t)((data[1] << 8) | data[0]);
+		
+		out->magnet[0] = 1.0f*(int16_t)((data[3] << 8) | data[2]);
+		
+		out->magnet[2] = -1.0f*(int16_t)((data[5] << 8) | data[4]);
+		
+		i2c_send(mpu->bus, mpu->magnetometer_address, 10, 1, 1);//go into single measurement mode 
+	}
 	
 }
 
@@ -149,4 +112,5 @@ void initMPU9250(MPU9250 *mpu){//struct i2c_bus bus_arg, Mpu_raw_data calibratio
 	init_accel_sensitivity9250(mpu, 2);
 	enableDLPF9250(mpu);
 	enableMagnetometer(mpu);
+	i2c_send(mpu->bus, mpu->magnetometer_address, 10, 1, 1);//go into single measurement mode
 }

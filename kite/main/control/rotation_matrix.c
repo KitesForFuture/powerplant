@@ -63,10 +63,18 @@
 #define gyro_y mpu_raw_data.gyro[1]
 #define gyro_z mpu_raw_data.gyro[2]
 
+#define mag_x mpu_raw_data.magnet[0]
+#define mag_y mpu_raw_data.magnet[1]
+#define mag_z mpu_raw_data.magnet[2]
+
 // The Gravity vector is the direction the gravitational force is supposed to point in KITE COORDINATES with the nose pointing to the sky
 #define gravity_x 1
 #define gravity_y 0
 #define gravity_z 0
+
+#define north_x 0
+#define north_y 0
+#define north_z 1
 
 // rotation of the drone in world coordinates
 //float rotation_matrix[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
