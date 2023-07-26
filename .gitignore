@@ -1,4 +1,8 @@
+mpu-testing/build
+mpu-testing/sdkconfig
 
+dps-testing/sdkconfig
+dps-testing/build
 
 calibration_robot/build
 calibration_robot/sdkconfig
