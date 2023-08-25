@@ -165,14 +165,14 @@ void FAKEupdateRotationMatrix(Orientation_Data* orientation_data){
 
 void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data_9250 mpu_raw_data){
 	
-	printf("gyro (calibrated) = %f, %f, %f, accel (cal.) = %f, %f, %f, mag(cal.) = %f, %f, %f\n", gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z, mag_x, mag_y, mag_z);
-	
+	//printf("gyro (calibrated) = %f, %f, %f, accel (cal.) = %f, %f, %f, mag(cal.) = %f, %f, %f\n", gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z, mag_x, mag_y, mag_z);
+	printf("accel norm = %f, magnet norm = %f, gyro norm = %f\n", sqrt(accel_x*accel_x + accel_y*accel_y + accel_z*accel_z), sqrt(mag_x*mag_x + mag_y*mag_y + mag_z*mag_z), sqrt(gyro_x*gyro_x + gyro_y*gyro_y + gyro_z * gyro_z));
 	if(orientation_data->mpu_last_update_time == 0){
 		orientation_data->mpu_last_update_time = start_timer();
 		return;
 	}
 	float time_difference = query_timer_seconds(orientation_data->mpu_last_update_time);
-	printf("time between updates = %f seconds (%f Hz)\n", time_difference, 1/time_difference);
+	//printf("time between updates = %f seconds (%f Hz)\n", time_difference, 1/time_difference);
 	orientation_data->mpu_last_update_time = start_timer();
 	
 	// matrix based:
@@ -193,15 +193,15 @@ void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data_9250 
 	// infinitesimal rotation matrix:
 	float diff[9];
 	diff[0] = 1; //maybe can replace by 1 here
-	diff[1] = -sin(gamma);
-	diff[2] = sin(beta);
+	diff[1] = -gamma;//-sin(gamma);
+	diff[2] = beta;//sin(beta);
 	
-	diff[3] = sin(gamma);
+	diff[3] = gamma;//sin(gamma);
 	diff[4] = 1;
-	diff[5] = -sin(alpha);
+	diff[5] = -alpha;//-sin(alpha);
 	
-	diff[6] = -sin(beta);
-	diff[7] = sin(alpha);
+	diff[6] = -beta;//-sin(beta);
+	diff[7] = alpha;//sin(alpha);
 	diff[8] = 1;
 	
 	float temp_rotation_matrix[9];

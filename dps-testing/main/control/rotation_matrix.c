@@ -170,6 +170,7 @@ void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data_9250 
 		return;
 	}
 	float time_difference = query_timer_seconds(orientation_data->mpu_last_update_time);
+	printf("time between updates = %f seconds (%f Hz)\n", time_difference, 1/time_difference);
 	orientation_data->mpu_last_update_time = start_timer();
 	
 	// matrix based:

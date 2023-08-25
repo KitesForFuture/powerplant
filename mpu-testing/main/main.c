@@ -5,7 +5,7 @@
 
 
 #include "../../common/i2c_devices/cat24c256.h"
-#include "../../common/i2c_devices/mpu6050.h"
+//#include "../../common/i2c_devices/mpu6050.h"
 #include "../../common/i2c_devices/mpu9250.h"
 
 #include "control/rotation_matrix.h"
@@ -119,6 +119,7 @@ void main_task(void* arg)
 	
 	Orientation_Data kite_orientation_data;
 	initRotationMatrix(&kite_orientation_data);
+	
 	Orientation_Data line_orientation_data;
 	initRotationMatrix(&line_orientation_data);
 	
@@ -127,15 +128,15 @@ void main_task(void* arg)
 	
 	//testConfigWriting();//TODO: remove. DEBUGGING ONLY
 	
-	Mpu_raw_data kite_mpu_calibration = {
+	/*Mpu_raw_data kite_mpu_calibration = {
 		{readEEPROM(0), readEEPROM(1), readEEPROM(2)},
 		{readEEPROM(3), readEEPROM(4), readEEPROM(5)}
-	};
+	};*/
 	
 	Mpu_raw_data_9250 line_mpu_calibration = {
-		{0.1, 0.2, 0},
-		{1.66, 0.81, 0.05},
-		{62.9+7, 6.9+4, 18.9+5}
+		{0.132, 0.14, 0.135},
+		{1.74, 0.93, 0.08},
+		{65.6, 6.8, 22.5}
 	};
 	
 	int output_pins[] = {27,26,12,13,5,15};
@@ -149,21 +150,21 @@ void main_task(void* arg)
 	setSpeed(4, 0);
 	//setSpeed(2, 90);
 	//setSpeed(4, 90);
-	MPU kite_mpu;
+	//MPU kite_mpu;
 	MPU9250 line_mpu;
-	kite_mpu.bus = bus0;
+	//kite_mpu.bus = bus0;
 	line_mpu.bus = bus0;
-	kite_mpu.address = 104;
+	//kite_mpu.address = 104;
 	line_mpu.address = 105;
 	line_mpu.magnetometer_address = 12;
-	kite_mpu.calibration_data = kite_mpu_calibration;
+	//kite_mpu.calibration_data = kite_mpu_calibration;
 	line_mpu.calibration_data = line_mpu_calibration;
-    initMPU6050(&kite_mpu);
+    //initMPU6050(&kite_mpu);
     initMPU9250(&line_mpu);
-    Mpu_raw_data kite_mpu_raw_data = {
+    /*Mpu_raw_data kite_mpu_raw_data = {
 		{0, 0, 0},
 		{0, 0, 0}
-	};
+	};*/
 	Mpu_raw_data_9250 line_mpu_raw_data = {
 		{0, 0, 0},
 		{0, 0, 0},
@@ -173,13 +174,55 @@ void main_task(void* arg)
 	readConfigValuesFromEEPROM(config_values);
 	network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data, &line_orientation_data);
 	
-	float mag_x[128];
-	float mag_y[128];
-	float mag_z[128];
-	int magnet_calibration_data_counter = 0;
+	//float mag_x[128];
+	//float mag_y[128];
+	//float mag_z[128];
+	//int magnet_calibration_data_counter = 0;
 	
+	int counter = 0;
+	int avg = 256;
+	int calibration = false;
+	float gyro_x = 0;
+	float gyro_y = 0;
+	float gyro_z = 0;
+	float accel_x = 0;
+	float accel_y = 0;
+	float accel_z = 0;
+	float mag_x = 0;
+	float mag_y = 0;
+	float mag_z = 0;
 	while(1) {
 		vTaskDelay(1);
+		
+		if(calibration){
+			
+			readMPURawData9250(&line_mpu, &line_mpu_raw_data);
+			if(counter == avg){
+				printf("gyro = %f, %f, %f, accel = %f, %f, %f, mag = %f, %f, %f\n", gyro_x/avg, gyro_y/avg, gyro_z/avg, accel_x/avg, accel_y/avg, accel_z/avg, mag_x/avg, mag_y/avg, mag_z/avg);
+				counter = 0;
+				gyro_x = 0;
+				gyro_y = 0;
+				gyro_z = 0;
+				accel_x = 0;
+				accel_y = 0;
+				accel_z = 0;
+				mag_x = 0;
+				mag_y = 0;
+				mag_z = 0;
+			}else{
+				gyro_x += line_mpu_raw_data.gyro[0];
+				gyro_y += line_mpu_raw_data.gyro[1];
+				gyro_z += line_mpu_raw_data.gyro[2];
+				accel_x += line_mpu_raw_data.accel[0];
+				accel_y += line_mpu_raw_data.accel[1];
+				accel_z += line_mpu_raw_data.accel[2];
+				mag_x += line_mpu_raw_data.magnet[0];
+				mag_y += line_mpu_raw_data.magnet[1];
+				mag_z += line_mpu_raw_data.magnet[2];
+				counter ++;
+			}
+			continue;
+		}
 		
 		//readMPUData(&kite_mpu, &kite_mpu_raw_data);
 		readMPUData9250(&line_mpu, &line_mpu_raw_data);

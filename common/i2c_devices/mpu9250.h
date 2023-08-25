@@ -24,6 +24,7 @@ typedef struct _MPU9250 MPU9250;
 
 void initMPU9250(MPU9250 *mpu);
 
+void readMPURawData9250(MPU9250 *mpu, Mpu_raw_data_9250 *out);
 void readMPUData9250(MPU9250 *mpu, Mpu_raw_data_9250 *out);
 
 #endif

@@ -129,6 +129,18 @@ void normalize_matrix(float a[]){
 	}
 }
 
+void transpose_matrix(float source[], float destination[]){
+	destination[0] = source[0];
+	destination[1] = source[3];
+	destination[2] = source[6];
+	destination[3] = source[1];
+	destination[4] = source[4];
+	destination[5] = source[7];
+	destination[6] = source[2];
+	destination[7] = source[5];
+	destination[8] = source[8];
+}
+
 // rotates matrix mat such that mat'*(a_init, b_init, c_init)' aligns more with (a,b,c)'
 // (a_init, b_init, c_init) can be initially measured acceleration vector, usually something close to (0,0,1)
 // (a,b,c) can be the currently measured acceleration vector
@@ -194,7 +206,7 @@ void rotate_towards_gravity_and_north(float mat[], float mag_a_init, float mag_b
 	float differenceNorm = sqrt((tmp_vec[0]-a*0.1)*(tmp_vec[0]-a*0.1) + (tmp_vec[1]-b*0.1)*(tmp_vec[1]-b*0.1) + (tmp_vec[2]-c*0.1)*(tmp_vec[2]-c*0.1));
 	//printf("diff gravity = %f,", differenceNorm);
 	// multiply by small number, so we move only tiny bit in right direction at every step -> averaging measured acceleration from vibration
-	float angle = differenceNorm*0.005;//When connected to USB, then 0.00004 suffices. When autonomous on battery 0.0004 (10 times larger) does just fine.
+	float angle = differenceNorm*0.001;//When connected to USB, then 0.00004 suffices. When autonomous on battery 0.0004 (10 times larger) does just fine.
 	// 0.00004 works, error 0.0004
 	// 0.0004 works, error 0.002 except in battery mode
 	// 0.004 works, error 0.01
@@ -235,7 +247,7 @@ void rotate_towards_gravity_and_north(float mat[], float mag_a_init, float mag_b
 	mag[0] -= tmp_vec[0]*projection_length;
 	mag[1] -= tmp_vec[1]*projection_length;
 	mag[2] -= tmp_vec[2]*projection_length;
-	
+	float InvNorm_mag = 1/sqrt(mag[0]*mag[0] + mag[1]*mag[1] + mag[2]*mag[2]);
 	/*
 	// determine the normalized rotation axis (mat'*Proj(mag_a_init, mag_b_init, mag_c_init)') x (a,b,c)' in sensor coordinate system
 	axis_1 = tmp_vec2[1]*mag_c-tmp_vec2[2]*mag_b;
@@ -252,10 +264,10 @@ void rotate_towards_gravity_and_north(float mat[], float mag_a_init, float mag_b
 	axis_1 *= InvNorm;
 	axis_2 *= InvNorm;
 	axis_3 *= InvNorm;
-	
-	differenceNorm = sqrt((tmp_vec2[0]-mag[0]*0.016)*(tmp_vec2[0]-mag[0]*0.016) + (tmp_vec2[1]-mag[1]*0.016)*(tmp_vec2[1]-mag[1]*0.016) + (tmp_vec2[2]-mag[2]*0.016)*(tmp_vec2[2]-mag[2]*0.016)); // TODO: there is a BUG here. mat[2] should be either mat[0] or tmp_vec[0], etc.
+	printf("mag norm = %f\n", InvNorm_mag);
+	differenceNorm = sqrt((tmp_vec2[0]-mag[0]*InvNorm_mag)*(tmp_vec2[0]-mag[0]*InvNorm_mag) + (tmp_vec2[1]-mag[1]*InvNorm_mag)*(tmp_vec2[1]-mag[1]*InvNorm_mag) + (tmp_vec2[2]-mag[2]*InvNorm_mag)*(tmp_vec2[2]-mag[2]*InvNorm_mag)); // TODO: there is a BUG here. mat[2] should be either mat[0] or tmp_vec[0], etc.
 	// multiply by small number, so we move only tiny bit in right direction at every step -> averaging measured acceleration from vibration
-	angle = differenceNorm*0.005;//When connected to USB, then 0.00004 suffices. When autonomous on battery 0.0004 (10 times larger) does just fine.
+	angle = differenceNorm*0.001;//When connected to USB, then 0.00004 suffices. When autonomous on battery 0.0004 (10 times larger) does just fine.
 	//printf("diff magnet = %f\n", differenceNorm);
 	// rotation matrix
 	tmp_rot_matrix[0] = 1;

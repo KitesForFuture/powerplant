@@ -5,7 +5,7 @@
 
 
 #include "../../common/i2c_devices/cat24c256.h"
-#include "../../common/i2c_devices/mpu6050.h"
+//#include "../../common/i2c_devices/mpu6050.h"
 #include "../../common/i2c_devices/mpu9250.h"
 #include "../../common/i2c_devices/dps310.h"
 
@@ -120,6 +120,7 @@ void main_task(void* arg)
 	
 	Orientation_Data kite_orientation_data;
 	initRotationMatrix(&kite_orientation_data);
+	
 	Orientation_Data line_orientation_data;
 	initRotationMatrix(&line_orientation_data);
 	
@@ -129,10 +130,10 @@ void main_task(void* arg)
 	
 	//testConfigWriting();//TODO: remove. DEBUGGING ONLY
 	
-	Mpu_raw_data kite_mpu_calibration = {
+	/*Mpu_raw_data kite_mpu_calibration = {
 		{readEEPROM(0), readEEPROM(1), readEEPROM(2)},
 		{readEEPROM(3), readEEPROM(4), readEEPROM(5)}
-	};
+	};*/
 	
 	Mpu_raw_data_9250 line_mpu_calibration = {
 		{0, 0, 0},
@@ -151,21 +152,21 @@ void main_task(void* arg)
 	setSpeed(4, 0);
 	//setSpeed(2, 90);
 	//setSpeed(4, 90);
-	MPU kite_mpu;
+	//MPU kite_mpu;
 	MPU9250 line_mpu;
-	kite_mpu.bus = bus0;
+	//kite_mpu.bus = bus0;
 	line_mpu.bus = bus0;
-	kite_mpu.address = 104;
+	//kite_mpu.address = 104;
 	line_mpu.address = 105;
 	line_mpu.magnetometer_address = 12;
-	kite_mpu.calibration_data = kite_mpu_calibration;
+	//kite_mpu.calibration_data = kite_mpu_calibration;
 	line_mpu.calibration_data = line_mpu_calibration;
-    initMPU6050(&kite_mpu);
+    //initMPU6050(&kite_mpu);
     initMPU9250(&line_mpu);
-    Mpu_raw_data kite_mpu_raw_data = {
+    /*Mpu_raw_data kite_mpu_raw_data = {
 		{0, 0, 0},
 		{0, 0, 0}
-	};
+	};*/
 	Mpu_raw_data_9250 line_mpu_raw_data = {
 		{0, 0, 0},
 		{0, 0, 0},

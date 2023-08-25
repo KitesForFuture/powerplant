@@ -32,6 +32,7 @@ void mat_transp_mult_vec(float mat[], float a, float b, float c, float out[]);
 void mat_mult_vec(float mat[], float a, float b, float c, float out[]);
 
 void normalize_matrix(float a[]);
+void transpose_matrix(float source[], float destination[]);
 
 void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, float a, float b, float c, float out[]);
 void rotate_towards_gravity_and_north(float mat[], float mag_a_init, float mag_b_init, float mag_c_init, float mag_a, float mag_b, float mag_c, float a_init, float b_init, float c_init, float a, float b, float c, float out[]);

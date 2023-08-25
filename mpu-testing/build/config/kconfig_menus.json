@@ -602,6 +602,16 @@
                 "type": "int"
             },
             {
+                "children": [],
+                "depends_on": null,
+                "help": "Protects the unmapped memory regions of the entire address space from unintended accesses.\nThis will ensure that an exception will be triggered whenever the CPU performs a memory\noperation on unmapped regions of the address space.",
+                "id": "BOOTLOADER_REGION_PROTECTION_ENABLE",
+                "name": "BOOTLOADER_REGION_PROTECTION_ENABLE",
+                "range": null,
+                "title": "Enable protection for unmapped memory regions",
+                "type": "bool"
+            },
+            {
                 "children": [
                     {
                         "children": [],
@@ -798,7 +808,17 @@
             },
             {
                 "children": [],
-                "depends_on": "ESP32_REV_MIN_3 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32S3",
+                "depends_on": "IDF_TARGET_ESP32",
+                "help": null,
+                "id": "SECURE_ESP32_SUPPORTS_RSA",
+                "name": "SECURE_ESP32_SUPPORTS_RSA",
+                "range": null,
+                "title": null,
+                "type": "bool"
+            },
+            {
+                "children": [],
+                "depends_on": "SECURE_ESP32_SUPPORTS_RSA || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32S3",
                 "help": null,
                 "id": "SECURE_BOOT_SUPPORTS_RSA",
                 "name": "SECURE_BOOT_SUPPORTS_RSA",
@@ -909,7 +929,7 @@
                         "type": "choice"
                     }
                 ],
-                "depends_on": "IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || ESP32C3_REV_MIN_3 || IDF_TARGET_ESP32S3",
+                "depends_on": "IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || (IDF_TARGET_ESP32C3 && ESP32C3_REV_MIN_FULL >= 3) || IDF_TARGET_ESP32S3",
                 "help": "Build a bootloader which enables Secure Boot on first boot.\n\nOnce enabled, Secure Boot will not boot a modified bootloader. The bootloader will only load a partition\ntable or boot an app if the data has a verified digital signature. There are implications for reflashing\nupdated apps once secure boot is enabled.\n\nWhen enabling secure boot, JTAG and ROM BASIC Interpreter are permanently disabled by default.",
                 "id": "SECURE_BOOT",
                 "name": "SECURE_BOOT",
@@ -1222,7 +1242,7 @@
                     {
                         "children": [],
                         "depends_on": "SECURE_TARGET_HAS_SECURE_ROM_DL_MODE && <choice SECURE_UART_ROM_DL_MODE>",
-                        "help": "If set, during startup the app will burn an eFuse bit to permanently switch the UART ROM\nDownload Mode into a separate Secure Download mode. This option can only work if\nDownload Mode is not already disabled by eFuse.\n\nSecure Download mode limits the use of Download Mode functions to simple flash read,\nwrite and erase operations, plus a command to return a summary of currently enabled\nsecurity features.\n\nSecure Download mode is not compatible with the esptool.py flasher stub feature,\nespefuse.py, read/writing memory or registers, encrypted download, or any other\nfeatures that interact with unsupported Download Mode commands.\n\nSecure Download mode should be enabled in any application where Flash Encryption\nand/or Secure Boot is enabled. Disabling this option does not immediately cancel\nthe benefits of the security features, but it increases the potential \"attack\nsurface\" for an attacker to try and bypass them with a successful physical attack.\n\nIt is also possible to enable secure download mode at runtime by calling\nesp_efuse_enable_rom_secure_download_mode()\n\nNote: Secure Download mode is not available for ESP32 (includes revisions till ECO3).",
+                        "help": "If set, during startup the app will burn an eFuse bit to permanently switch the UART ROM\nDownload Mode into a separate Secure Download mode. This option can only work if\nDownload Mode is not already disabled by eFuse.\n\nSecure Download mode limits the use of Download Mode functions to update SPI config,\nchanging baud rate, basic flash write and a command to return a summary of currently\nenabled security features (`get_security_info`).\n\nSecure Download mode is not compatible with the esptool.py flasher stub feature,\nespefuse.py, read/writing memory or registers, encrypted download, or any other\nfeatures that interact with unsupported Download Mode commands.\n\nSecure Download mode should be enabled in any application where Flash Encryption\nand/or Secure Boot is enabled. Disabling this option does not immediately cancel\nthe benefits of the security features, but it increases the potential \"attack\nsurface\" for an attacker to try and bypass them with a successful physical attack.\n\nIt is also possible to enable secure download mode at runtime by calling\nesp_efuse_enable_rom_secure_download_mode()\n\nNote: Secure Download mode is not available for ESP32 (includes revisions till ECO3).",
                         "id": "SECURE_ENABLE_SECURE_ROM_DL_MODE",
                         "name": "SECURE_ENABLE_SECURE_ROM_DL_MODE",
                         "range": null,
@@ -1240,7 +1260,7 @@
                         "type": "bool"
                     }
                 ],
-                "depends_on": "(SECURE_BOOT_V2_ENABLED || SECURE_FLASH_ENC_ENABLED) && (!IDF_TARGET_ESP32 || ESP32_REV_MIN_3)",
+                "depends_on": "(SECURE_BOOT_V2_ENABLED || SECURE_FLASH_ENC_ENABLED) && !(IDF_TARGET_ESP32 && ESP32_REV_MIN_FULL < 300)",
                 "help": null,
                 "id": "security-features-uart-rom-download-mode",
                 "name": "SECURE_UART_ROM_DL_MODE",
@@ -1653,6 +1673,36 @@
                         "name": "ESPTOOLPY_FLASHSIZE_16MB",
                         "range": null,
                         "title": "16 MB",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "<choice ESPTOOLPY_FLASHSIZE>",
+                        "help": null,
+                        "id": "ESPTOOLPY_FLASHSIZE_32MB",
+                        "name": "ESPTOOLPY_FLASHSIZE_32MB",
+                        "range": null,
+                        "title": "32 MB",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "<choice ESPTOOLPY_FLASHSIZE>",
+                        "help": null,
+                        "id": "ESPTOOLPY_FLASHSIZE_64MB",
+                        "name": "ESPTOOLPY_FLASHSIZE_64MB",
+                        "range": null,
+                        "title": "64 MB",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "<choice ESPTOOLPY_FLASHSIZE>",
+                        "help": null,
+                        "id": "ESPTOOLPY_FLASHSIZE_128MB",
+                        "name": "ESPTOOLPY_FLASHSIZE_128MB",
+                        "range": null,
+                        "title": "128 MB",
                         "type": "bool"
                     }
                 ],
@@ -3254,6 +3304,16 @@
                                                 "type": "int"
                                             },
                                             {
+                                                "children": [],
+                                                "depends_on": "BTDM_BLE_SCAN_DUPL && BT_ENABLED",
+                                                "help": "If the period value is non-zero, the controller will periodically clear the device information\nstored in the scan duuplicate filter. If it is 0, the scan duuplicate filter will not be cleared\nuntil the scanning is disabled. Duplicate advertisements for this period should not be sent to the\nHost in advertising report events.\nThere are two scenarios where the ADV packet will be repeatedly reported:\n1. The duplicate scan cache is full, the controller will delete the oldest device information and\nadd new device information.\n2. When the refresh period is up, the controller will clear all device information and start filtering\nagain.",
+                                                "id": "BTDM_SCAN_DUPL_CACHE_REFRESH_PERIOD",
+                                                "name": "BTDM_SCAN_DUPL_CACHE_REFRESH_PERIOD",
+                                                "range": null,
+                                                "title": "Duplicate scan list refresh period (seconds)",
+                                                "type": "int"
+                                            },
+                                            {
                                                 "children": [
                                                     {
                                                         "children": [],
@@ -3669,6 +3729,16 @@
                                                 "type": "int"
                                             },
                                             {
+                                                "children": [],
+                                                "depends_on": "BT_GATTS_ENABLE && BT_BLUEDROID_ENABLED && BT_BLUEDROID_ENABLED",
+                                                "help": "Maximum GATT Service Attributes Count",
+                                                "id": "BT_GATT_MAX_SR_ATTRIBUTES",
+                                                "name": "BT_GATT_MAX_SR_ATTRIBUTES",
+                                                "range": null,
+                                                "title": "Max GATT Service Attributes",
+                                                "type": "int"
+                                            },
+                                            {
                                                 "children": [
                                                     {
                                                         "children": [],
@@ -3719,6 +3789,16 @@
                                     },
                                     {
                                         "children": [
+                                            {
+                                                "children": [],
+                                                "depends_on": "BT_GATTC_ENABLE && BT_BLUEDROID_ENABLED",
+                                                "help": "Maximum GATTC cache characteristic count",
+                                                "id": "BT_GATTC_MAX_CACHE_CHAR",
+                                                "name": "BT_GATTC_MAX_CACHE_CHAR",
+                                                "range": null,
+                                                "title": "Max gattc cache characteristic for discover",
+                                                "type": "int"
+                                            },
                                             {
                                                 "children": [],
                                                 "depends_on": "BT_GATTC_ENABLE && BT_BLUEDROID_ENABLED",
@@ -5689,11 +5769,11 @@
                             {
                                 "children": [],
                                 "depends_on": "BT_BLUEDROID_ENABLED && BT_BLUEDROID_ENABLED",
-                                "help": "Maximum BT/BLE connection count",
+                                "help": "Maximum BT/BLE connection count. The ESP32-C3/S3 chip supports a maximum of 10 instances,\nincluding ADV, SCAN and connections. The ESP32-C3/S3 chip can connect up to 9 devices if\nADV or SCAN uses only one. If ADV and SCAN are both used, The ESP32-C3/S3 chip is connected\nto a maximum of 8 devices. Because Bluetooth cannot reclaim used instances once ADV or SCAN\nis used.",
                                 "id": "BT_ACL_CONNECTIONS",
                                 "name": "BT_ACL_CONNECTIONS",
                                 "range": null,
-                                "title": "BT/BLE MAX ACL CONNECTIONS(1~7)",
+                                "title": "BT/BLE MAX ACL CONNECTIONS(1~9)",
                                 "type": "int"
                             },
                             {
@@ -5748,7 +5828,7 @@
                             },
                             {
                                 "children": [],
-                                "depends_on": "BT_BLUEDROID_ENABLED && (BTDM_CTRL_MODE_BTDM || BTDM_CTRL_MODE_BLE_ONLY) && BT_BLUEDROID_ENABLED",
+                                "depends_on": "BT_BLUEDROID_ENABLED && BT_BLE_ENABLED && BT_BLUEDROID_ENABLED",
                                 "help": "Originally, when doing BLE active scan, Bluedroid will not report adv to application layer\nuntil receive scan response. This option is used to disable the behavior. When enable this option,\nBluedroid will report adv data or scan response to application layer immediately.\n\n# Memory reserved at start of DRAM for Bluetooth stack",
                                 "id": "BT_BLE_ACT_SCAN_REP_ADV_SCAN",
                                 "name": "BT_BLE_ACT_SCAN_REP_ADV_SCAN",
@@ -5769,7 +5849,17 @@
                             {
                                 "children": [],
                                 "depends_on": "BT_BLUEDROID_ENABLED && BT_BLUEDROID_ENABLED",
-                                "help": "This enables controller RPA list function.\nFor ESP32, ESP32 only support network privacy mode. If this option is enabled, ESP32 will only accept\nadvertising packets from peer devices that contain private address, HW will not receive the advertising\npackets contain identity address after IRK changed. If this option is disabled, address resolution will\nbe performed in the host, so the functions that require controller to resolve address in the white list\ncannot be used. This option is disabled by default on ESP32, please enable or disable this option according\nto your own needs.\n\nFor ESP32C3 and esp32s3, devices support network privacy mode and device privacy mode, users can switch the\ntwo modes according to their own needs. So this option is enabled by default.",
+                                "help": "Bluetooth Device name length shall be no larger than 248 octets, If the broadcast data cannot contain\nthe complete device name, then only the shortname will be displayed, the rest parts that can't fit in\nwill be truncated.",
+                                "id": "BT_MAX_DEVICE_NAME_LEN",
+                                "name": "BT_MAX_DEVICE_NAME_LEN",
+                                "range": null,
+                                "title": "length of bluetooth device name",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "BT_BLUEDROID_ENABLED && IDF_TARGET_ESP32 && BT_BLUEDROID_ENABLED",
+                                "help": "This enables controller RPA list function.\nFor ESP32, ESP32 only support network privacy mode. If this option is enabled, ESP32 will only accept\nadvertising packets from peer devices that contain private address, HW will not receive the advertising\npackets contain identity address after IRK changed. If this option is disabled, address resolution will\nbe performed in the host, so the functions that require controller to resolve address in the white list\ncannot be used. This option is disabled by default on ESP32, please enable or disable this option according\nto your own needs.\n\nFor BLE other chips, devices support network privacy mode and device privacy mode, users can switch the\ntwo modes according to their own needs. So this option is enabled by default.",
                                 "id": "BT_BLE_RPA_SUPPORTED",
                                 "name": "BT_BLE_RPA_SUPPORTED",
                                 "range": null,
@@ -6370,7 +6460,7 @@
                                     }
                                 ],
                                 "depends_on": "BT_NIMBLE_ENABLED && BT_NIMBLE_ENABLED",
-                                "help": "Enable BLE Mesh functionality",
+                                "help": "Enable BLE Mesh example present in upstream mynewt-nimble and not maintained by Espressif.\n\nIDF maintains ESP-BLE-MESH as the official Mesh solution. Please refer to ESP-BLE-MESH guide at:\n`https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/esp-ble-mesh/ble-mesh-index.html`",
                                 "id": "BT_NIMBLE_MESH",
                                 "is_menuconfig": true,
                                 "name": "BT_NIMBLE_MESH",
@@ -7075,6 +7165,16 @@
                     {
                         "children": [],
                         "depends_on": "BLE_MESH",
+                        "help": "According to Section 3.10.5 of Mesh Specification v1.0.1.\nIf a node in Normal Operation receives a Secure Network beacon with an IV index\nequal to the last known IV index+1 and the IV Update Flag set to 0, the node may\nupdate its IV without going to the IV Update in Progress state, or it may initiate\nan IV Index Recovery procedure (Section 3.10.6), or it may ignore the Secure\nNetwork beacon. The node makes the choice depending on the time since last IV\nupdate and the likelihood that the node has missed the Secure Network beacons\nwith the IV update Flag.\nWhen the above situation is encountered, this option can be used to decide whether\nto perform the IV index recovery procedure.",
+                        "id": "BLE_MESH_IVU_RECOVERY_IVI",
+                        "name": "BLE_MESH_IVU_RECOVERY_IVI",
+                        "range": null,
+                        "title": "Recovery the IV index when the latest whole IV update procedure is missed",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "BLE_MESH",
                         "help": "Maximum number of simultaneous outgoing multi-segment and/or reliable messages.\nThe default value is 1, which means the device can only send one segmented\nmessage at a time. And if another segmented message is going to be sent, it\nshould wait for the completion of the previous one.\nIf users are going to send multiple segmented messages at the same time, this\nvalue should be configured properly.",
                         "id": "BLE_MESH_TX_SEG_MSG_COUNT",
                         "name": "BLE_MESH_TX_SEG_MSG_COUNT",
@@ -7266,6 +7366,16 @@
                                 "range": null,
                                 "title": "Number of groups the LPN can subscribe to",
                                 "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "BLE_MESH_LOW_POWER && BLE_MESH",
+                                "help": "Automatically subscribe all nodes address when friendship\nestablished.",
+                                "id": "BLE_MESH_LPN_SUB_ALL_NODES_ADDR",
+                                "name": "BLE_MESH_LPN_SUB_ALL_NODES_ADDR",
+                                "range": null,
+                                "title": "Automatically subscribe all nodes address",
+                                "type": "bool"
                             }
                         ],
                         "depends_on": "BLE_MESH_NODE && BLE_MESH",
@@ -7800,36 +7910,66 @@
                         "type": "bool"
                     },
                     {
+                        "children": [],
+                        "depends_on": "BLE_MESH",
+                        "help": "This option is used to decide whether discarding the old SeqAuth when\nreceiving a segmented message.",
+                        "id": "BLE_MESH_DISCARD_OLD_SEQ_AUTH",
+                        "name": "BLE_MESH_DISCARD_OLD_SEQ_AUTH",
+                        "range": null,
+                        "title": null,
+                        "type": "bool"
+                    },
+                    {
                         "children": [
                             {
-                                "children": [
-                                    {
-                                        "children": [],
-                                        "depends_on": "BLE_MESH_SELF_TEST && BLE_MESH",
-                                        "help": "With this option enabled, an unprovisioned device can automatically\nenters mesh network using a specific test function without the pro-\nvisioning procedure. And on the Provisioner side, a test function\nneeds to be invoked to add the node information into the mesh stack.",
-                                        "id": "BLE_MESH_TEST_AUTO_ENTER_NETWORK",
-                                        "name": "BLE_MESH_TEST_AUTO_ENTER_NETWORK",
-                                        "range": null,
-                                        "title": "Unprovisioned device enters mesh network automatically",
-                                        "type": "bool"
-                                    },
-                                    {
-                                        "children": [],
-                                        "depends_on": "BLE_MESH_SELF_TEST && BLE_MESH",
-                                        "help": "With this option enabled, users can use white list to filter mesh\nadvertising packets while scanning.",
-                                        "id": "BLE_MESH_TEST_USE_WHITE_LIST",
-                                        "name": "BLE_MESH_TEST_USE_WHITE_LIST",
-                                        "range": null,
-                                        "title": "Use white list to filter mesh advertising packets",
-                                        "type": "bool"
-                                    }
-                                ],
+                                "children": [],
                                 "depends_on": "BLE_MESH",
                                 "help": "This option adds extra self-tests which are run every time BLE Mesh\nnetworking is initialized.",
                                 "id": "BLE_MESH_SELF_TEST",
                                 "name": "BLE_MESH_SELF_TEST",
                                 "range": null,
                                 "title": "Perform BLE Mesh self-tests",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [
+                                    {
+                                        "children": [],
+                                        "depends_on": "BLE_MESH_BQB_TEST && BLE_MESH",
+                                        "help": "This option is used to enable the log of auto-pts test.",
+                                        "id": "BLE_MESH_BQB_TEST_LOG",
+                                        "name": "BLE_MESH_BQB_TEST_LOG",
+                                        "range": null,
+                                        "title": null,
+                                        "type": "bool"
+                                    }
+                                ],
+                                "depends_on": "BLE_MESH",
+                                "help": "This option is used to enable some internal functions for auto-pts test.",
+                                "id": "BLE_MESH_BQB_TEST",
+                                "name": "BLE_MESH_BQB_TEST",
+                                "range": null,
+                                "title": "Enable BLE Mesh specific internal test",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "BLE_MESH_SELF_TEST && BLE_MESH",
+                                "help": "With this option enabled, an unprovisioned device can automatically\nenters mesh network using a specific test function without the pro-\nvisioning procedure. And on the Provisioner side, a test function\nneeds to be invoked to add the node information into the mesh stack.",
+                                "id": "BLE_MESH_TEST_AUTO_ENTER_NETWORK",
+                                "name": "BLE_MESH_TEST_AUTO_ENTER_NETWORK",
+                                "range": null,
+                                "title": "Unprovisioned device enters mesh network automatically",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "BLE_MESH_SELF_TEST && BLE_MESH",
+                                "help": "With this option enabled, users can use white list to filter mesh\nadvertising packets while scanning.",
+                                "id": "BLE_MESH_TEST_USE_WHITE_LIST",
+                                "name": "BLE_MESH_TEST_USE_WHITE_LIST",
+                                "range": null,
+                                "title": "Use white list to filter mesh advertising packets",
                                 "type": "bool"
                             },
                             {
@@ -8161,6 +8301,26 @@
                                 "range": null,
                                 "title": "Disable DAC when ADC2 is used on GPIO 25 and 26",
                                 "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32S3",
+                                "help": "On ESP32C3 and ESP32S3, ADC2 Digital Controller is not stable. Therefore,\nADC2 continuous mode is not suggested on ESP32S3 and ESP32C3\n\nIf you stick to this, you can enable this option to force use ADC2 under above conditions.\nFor more details, you can search for errata on espressif website.",
+                                "id": "ADC_CONTINUOUS_FORCE_USE_ADC2_ON_C3_S3",
+                                "name": "ADC_CONTINUOUS_FORCE_USE_ADC2_ON_C3_S3",
+                                "range": null,
+                                "title": "Force use ADC2 continumous mode on ESP32S3 or ESP32C3",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "IDF_TARGET_ESP32C3",
+                                "help": "On ESP32C3, ADC2 Digital Controller is not stable. Therefore,\nADC2 oneshot mode is not suggested on ESP32C3\n\nIf you stick to this, you can enable this option to force use ADC2 under above conditions.\nFor more details, you can search for errata on espressif website.",
+                                "id": "ADC_ONESHOT_FORCE_USE_ADC2_ON_C3",
+                                "name": "ADC_ONESHOT_FORCE_USE_ADC2_ON_C3",
+                                "range": null,
+                                "title": "Force use ADC2 oneshot mode on ESP32C3",
+                                "type": "bool"
                             }
                         ],
                         "depends_on": null,
@@ -8285,6 +8445,16 @@
                                 "range": null,
                                 "title": "Add SW workaround for RX FIFO corruption errata",
                                 "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32C3",
+                                "help": "When in the listen only mode, the TWAI controller must not influence the TWAI bus (i.e., must not send\nany dominant bits). However, while in listen only mode on the ESP32/ESP32-S2/ESP32-S3/ESP32-C3, the\nTWAI controller will still transmit dominant bits when it detects an error (i.e., as part of an active\nerror frame). Enabling this option will add a workaround that forces the TWAI controller into an error\npassive state on initialization, thus preventing any dominant bits from being sent.",
+                                "id": "TWAI_ERRATA_FIX_LISTEN_ONLY_DOM",
+                                "name": "TWAI_ERRATA_FIX_LISTEN_ONLY_DOM",
+                                "range": null,
+                                "title": "Add SW workaround for listen only transmits dominant bit errata",
+                                "type": "bool"
                             }
                         ],
                         "depends_on": null,
@@ -8296,7 +8466,7 @@
                         "children": [
                             {
                                 "children": [],
-                                "depends_on": null,
+                                "depends_on": "!RINGBUF_PLACE_ISR_FUNCTIONS_INTO_FLASH",
                                 "help": "If this option is not selected, UART interrupt will be disabled for a long time and\nmay cause data lost when doing spi flash operation.",
                                 "id": "UART_ISR_IN_IRAM",
                                 "name": "UART_ISR_IN_IRAM",
@@ -8534,16 +8704,6 @@
                     },
                     {
                         "children": [],
-                        "depends_on": null,
-                        "help": "Enable support for creating server side SSL/TLS session, available for mbedTLS\nas well as wolfSSL TLS library.",
-                        "id": "ESP_TLS_SERVER",
-                        "name": "ESP_TLS_SERVER",
-                        "range": null,
-                        "title": "Enable ESP-TLS Server",
-                        "type": "bool"
-                    },
-                    {
-                        "children": [],
                         "depends_on": "ESP_TLS_USING_MBEDTLS && MBEDTLS_CLIENT_SSL_SESSION_TICKETS",
                         "help": "Enable session ticket support as specified in RFC5077.",
                         "id": "ESP_TLS_CLIENT_SESSION_TICKETS",
@@ -8555,22 +8715,43 @@
                     {
                         "children": [
                             {
-                                "children": [],
-                                "depends_on": "ESP_TLS_SERVER_SESSION_TICKETS",
-                                "help": "Sets the session ticket timeout used in the tls server.",
-                                "id": "ESP_TLS_SERVER_SESSION_TICKET_TIMEOUT",
-                                "name": "ESP_TLS_SERVER_SESSION_TICKET_TIMEOUT",
+                                "children": [
+                                    {
+                                        "children": [],
+                                        "depends_on": "ESP_TLS_SERVER_SESSION_TICKETS",
+                                        "help": "Sets the session ticket timeout used in the tls server.",
+                                        "id": "ESP_TLS_SERVER_SESSION_TICKET_TIMEOUT",
+                                        "name": "ESP_TLS_SERVER_SESSION_TICKET_TIMEOUT",
+                                        "range": null,
+                                        "title": "Server session ticket timeout in seconds",
+                                        "type": "int"
+                                    }
+                                ],
+                                "depends_on": "ESP_TLS_SERVER && ESP_TLS_USING_MBEDTLS && MBEDTLS_SERVER_SSL_SESSION_TICKETS",
+                                "help": "Enable session ticket support as specified in RFC5077",
+                                "id": "ESP_TLS_SERVER_SESSION_TICKETS",
+                                "name": "ESP_TLS_SERVER_SESSION_TICKETS",
                                 "range": null,
-                                "title": "Server session ticket timeout in seconds",
-                                "type": "int"
+                                "title": "Enable server session tickets",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "ESP_TLS_SERVER && ESP_TLS_USING_MBEDTLS",
+                                "help": "When this option is enabled, the peer (here, the client) certificate is checked by the server,\nhowever the handshake continues even if verification failed. By default, the\npeer certificate is not checked and ignored by the server.\n\nmbedtls_ssl_get_verify_result() can be called after the handshake is complete to\nretrieve status of verification.",
+                                "id": "ESP_TLS_SERVER_MIN_AUTH_MODE_OPTIONAL",
+                                "name": "ESP_TLS_SERVER_MIN_AUTH_MODE_OPTIONAL",
+                                "range": null,
+                                "title": "ESP-TLS Server: Set minimum Certificate Verification mode to Optional",
+                                "type": "bool"
                             }
                         ],
-                        "depends_on": "ESP_TLS_SERVER && ESP_TLS_USING_MBEDTLS && MBEDTLS_SERVER_SSL_SESSION_TICKETS",
-                        "help": "Enable session ticket support as specified in RFC5077",
-                        "id": "ESP_TLS_SERVER_SESSION_TICKETS",
-                        "name": "ESP_TLS_SERVER_SESSION_TICKETS",
+                        "depends_on": null,
+                        "help": "Enable support for creating server side SSL/TLS session, available for mbedTLS\nas well as wolfSSL TLS library.",
+                        "id": "ESP_TLS_SERVER",
+                        "name": "ESP_TLS_SERVER",
                         "range": null,
-                        "title": "Enable server session tickets",
+                        "title": "Enable ESP-TLS Server",
                         "type": "bool"
                     },
                     {
@@ -8651,7 +8832,7 @@
                                 "id": "ESP32_REV_MIN_0",
                                 "name": "ESP32_REV_MIN_0",
                                 "range": null,
-                                "title": "Rev 0",
+                                "title": "Rev v0.0 (ECO0)",
                                 "type": "bool"
                             },
                             {
@@ -8661,7 +8842,17 @@
                                 "id": "ESP32_REV_MIN_1",
                                 "name": "ESP32_REV_MIN_1",
                                 "range": null,
-                                "title": "Rev 1",
+                                "title": "Rev v1.0 (ECO1)",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice ESP32_REV_MIN>",
+                                "help": null,
+                                "id": "ESP32_REV_MIN_1_1",
+                                "name": "ESP32_REV_MIN_1_1",
+                                "range": null,
+                                "title": "Rev v1.1 (ECO1.1)",
                                 "type": "bool"
                             },
                             {
@@ -8671,7 +8862,7 @@
                                 "id": "ESP32_REV_MIN_2",
                                 "name": "ESP32_REV_MIN_2",
                                 "range": null,
-                                "title": "Rev 2",
+                                "title": "Rev v2.0 (ECO2)",
                                 "type": "bool"
                             },
                             {
@@ -8681,12 +8872,22 @@
                                 "id": "ESP32_REV_MIN_3",
                                 "name": "ESP32_REV_MIN_3",
                                 "range": null,
-                                "title": "Rev 3",
+                                "title": "Rev v3.0 (ECO3)",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice ESP32_REV_MIN>",
+                                "help": null,
+                                "id": "ESP32_REV_MIN_3_1",
+                                "name": "ESP32_REV_MIN_3_1",
+                                "range": null,
+                                "title": "Rev v3.1 (ECO4)",
                                 "type": "bool"
                             }
                         ],
                         "depends_on": null,
-                        "help": "Minimum revision that ESP-IDF would support.\nESP-IDF performs different strategy on different esp32 revision.",
+                        "help": "Required minimum chip revision. ESP-IDF will check for it and\nreject to boot if the chip revision fails the check.\nThis ensures the chip used will have some modifications (features, or bugfixes).\n\nThe complied binary will only support chips above this revision,\nthis will also help to reduce binary size.",
                         "id": "component-config-esp32-specific-minimum-supported-esp32-revision",
                         "name": "ESP32_REV_MIN",
                         "title": "Minimum Supported ESP32 Revision",
@@ -8698,6 +8899,66 @@
                         "help": null,
                         "id": "ESP32_REV_MIN",
                         "name": "ESP32_REV_MIN",
+                        "range": null,
+                        "title": null,
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": null,
+                        "id": "ESP32_REV_MIN_FULL",
+                        "name": "ESP32_REV_MIN_FULL",
+                        "range": null,
+                        "title": null,
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": null,
+                        "id": "ESP_REV_MIN_FULL",
+                        "name": "ESP_REV_MIN_FULL",
+                        "range": null,
+                        "title": null,
+                        "type": "int"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "<choice ESP32_REV_MAX_FULL_STR>",
+                                "help": null,
+                                "id": "ESP32_REV_MAX_FULL_STR_OPT",
+                                "name": "ESP32_REV_MAX_FULL_STR_OPT",
+                                "range": null,
+                                "title": "Rev v3.99",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": null,
+                        "help": null,
+                        "id": "component-config-esp32-specific-maximum-supported-esp32-revision",
+                        "name": "ESP32_REV_MAX_FULL_STR",
+                        "title": "Maximum Supported ESP32 Revision",
+                        "type": "choice"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": null,
+                        "id": "ESP32_REV_MAX_FULL",
+                        "name": "ESP32_REV_MAX_FULL",
+                        "range": null,
+                        "title": null,
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": null,
+                        "id": "ESP_REV_MAX_FULL",
+                        "name": "ESP_REV_MAX_FULL",
                         "range": null,
                         "title": null,
                         "type": "int"
@@ -8999,7 +9260,7 @@
                                     },
                                     {
                                         "children": [],
-                                        "depends_on": "(SPIRAM_USE_MEMMAP || SPIRAM_USE_CAPS_ALLOC || SPIRAM_USE_MALLOC) && ESP32_REV_MIN < 3 && ESP32_SPIRAM_SUPPORT",
+                                        "depends_on": "(SPIRAM_USE_MEMMAP || SPIRAM_USE_CAPS_ALLOC || SPIRAM_USE_MALLOC) && ESP32_REV_MIN_FULL < 300 && ESP32_SPIRAM_SUPPORT",
                                         "help": "Revision 1 of the ESP32 has a bug that can cause a write to PSRAM not to take place in some situations\nwhen the cache line needs to be fetched from external RAM and an interrupt occurs. This enables a\nfix in the compiler (-mfix-esp32-psram-cache-issue) that makes sure the specific code that is\nvulnerable to this will not be emitted.\n\nThis will also not use any bits of newlib that are located in ROM, opting for a version that is\ncompiled with the workaround and located in flash instead.\n\nThe workaround is not required for ESP32 revision 3 and above.",
                                         "id": "SPIRAM_CACHE_WORKAROUND",
                                         "name": "SPIRAM_CACHE_WORKAROUND",
@@ -9712,7 +9973,7 @@
                                 "type": "bool"
                             }
                         ],
-                        "depends_on": "ESP32_RTC_CLK_SRC_EXT_CRYS && ESP32_REV_MIN <= 1",
+                        "depends_on": "ESP32_RTC_CLK_SRC_EXT_CRYS && ESP32_REV_MIN_FULL < 200",
                         "help": "With some 32kHz crystal configurations, the X32N and X32P pins may not have enough\ndrive strength to keep the crystal oscillating. Choose the method to provide\nadditional current from touchpad 9 to the external 32kHz crystal. Note that\nthe deep sleep current is slightly high (4-5uA) and the touchpad and the\nwakeup sources of both touchpad and ULP are not available in method 1 and method 2.\n\nThis problem is fixed in ESP32 ECO 3, so this workaround is not needed. Setting the\nproject configuration to minimum revision ECO3 will disable this option, , allow\nall wakeup sources, and save some code size.\n\n- \"None\" option will not provide additional current to external crystal\n- \"Method 1\" option can't ensure 100% to solve the external 32k crystal start failed\n  issue, but the touchpad can work in this method.\n- \"Method 2\" option can solve the external 32k issue, but the touchpad can't work\n  in this method.",
                         "id": "component-config-esp32-specific-additional-current-for-external-32khz-crystal",
                         "name": "ESP32_RTC_EXT_CRYST_ADDIT_CURRENT_METHOD",
@@ -10517,6 +10778,16 @@
                                 "range": null,
                                 "title": null,
                                 "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "IDF_TARGET_ESP32",
+                                "help": "If you have an invalid MAC CRC (ESP_ERR_INVALID_CRC) problem\nand you still want to use this chip, you can enable this option to bypass such an error.\nThis applies to both MAC_FACTORY and CUSTOM_MAC efuses.",
+                                "id": "ESP_MAC_IGNORE_MAC_CRC_ERROR",
+                                "name": "ESP_MAC_IGNORE_MAC_CRC_ERROR",
+                                "range": null,
+                                "title": "Ignore MAC CRC error (not recommended)",
+                                "type": "bool"
                             }
                         ],
                         "depends_on": null,
@@ -10529,7 +10800,7 @@
                             {
                                 "children": [],
                                 "depends_on": "!SPIRAM",
-                                "help": "If enabled, chip will try to power down flash as part of esp_light_sleep_start(), which costs\nmore time when chip wakes up. Can only be enabled if there is no SPIRAM configured.\nThis option will in fact consider VDD_SDIO auto power value (ESP_PD_OPTION_AUTO) as OFF. Also, it is\npossible to force a power domain to stay ON during light sleep by using esp_sleep_pd_config()\nfunction.",
+                                "help": "If enabled, chip will try to power down flash as part of esp_light_sleep_start(), which costs\nmore time when chip wakes up. Can only be enabled if there is no SPIRAM configured.\n\nThis option will power down flash under a strict but relatively safe condition. Also, it is possible to\npower down flash under a relaxed condition by using esp_sleep_pd_config() to set ESP_PD_DOMAIN_VDDSDIO\nto ESP_PD_OPTION_OFF. It should be noted that there is a risk in powering down flash, you can refer\n`ESP-IDF Programming Guide/API Reference/System API/Sleep Modes/Power-down of Flash` for more details.",
                                 "id": "ESP_SLEEP_POWER_DOWN_FLASH",
                                 "name": "ESP_SLEEP_POWER_DOWN_FLASH",
                                 "range": null,
@@ -10549,7 +10820,7 @@
                             {
                                 "children": [],
                                 "depends_on": null,
-                                "help": "esp32c3 and esp32s3 will reset at wake-up if GPIO is received a small electrostatic\npulse during light sleep, with specific condition\n\n- GPIO needs to be configured as input-mode only\n- The pin receives a small electrostatic pulse, and reset occurs when the pulse\n  voltage is higher than 6 V\n\nFor GPIO set to input mode only, it is not a good practice to leave it open/floating,\nThe hardware design needs to controlled it with determined supply or ground voltage\nis necessary.\n\nThis option provides a software workaround for this issue. Configure to isolate all\nGPIO pins in sleep state.",
+                                "help": "esp32c3, esp32s3 and esp32h2 will reset at wake-up if GPIO is received a small electrostatic\npulse during light sleep, with specific condition\n\n- GPIO needs to be configured as input-mode only\n- The pin receives a small electrostatic pulse, and reset occurs when the pulse\n  voltage is higher than 6 V\n\nFor GPIO set to input mode only, it is not a good practice to leave it open/floating,\nThe hardware design needs to controlled it with determined supply or ground voltage\nis necessary.\n\nThis option provides a software workaround for this issue. Configure to isolate all\nGPIO pins in sleep state.",
                                 "id": "ESP_SLEEP_GPIO_RESET_WORKAROUND",
                                 "name": "ESP_SLEEP_GPIO_RESET_WORKAROUND",
                                 "range": null,
@@ -10575,6 +10846,16 @@
                                 "range": null,
                                 "title": "Flash leakage current workaround in light sleep",
                                 "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "ESP_SLEEP_PSRAM_LEAKAGE_WORKAROUND || ESP_SLEEP_FLASH_LEAKAGE_WORKAROUND",
+                                "help": "To reduce leakage current, some types of SPI Flash/RAM only need to pull up the CS pin\nduring light sleep. But there are also some kinds of SPI Flash/RAM that need to pull up\nall pins. It depends on the SPI Flash/RAM chip used.",
+                                "id": "ESP_SLEEP_MSPI_NEED_ALL_IO_PU",
+                                "name": "ESP_SLEEP_MSPI_NEED_ALL_IO_PU",
+                                "range": null,
+                                "title": "All pins of mspi need pull up",
+                                "type": "bool"
                             }
                         ],
                         "depends_on": null,
@@ -10586,8 +10867,26 @@
                         "children": [
                             {
                                 "children": [],
+                                "depends_on": "IDF_TARGET_ESP32C3",
+                                "help": "Its not able to stall ESP32C3 systimer in sleep.\nTo fix related RTOS TICK issue, select it to disable related systimer during sleep.\nTODO: IDF-7036",
+                                "id": "ESP_SLEEP_SYSTIMER_STALL_WORKAROUND",
+                                "name": "ESP_SLEEP_SYSTIMER_STALL_WORKAROUND",
+                                "range": null,
+                                "title": "ESP32C3 SYSTIMER Stall Issue Workaround",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": null,
+                        "id": "component-config-hardware-settings-esp_sleep_workaround",
+                        "title": "ESP_SLEEP_WORKAROUND",
+                        "type": "menu"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
                                 "depends_on": "ESP_CONSOLE_USB_SERIAL_JTAG || ESP_CONSOLE_SECONDARY_USB_SERIAL_JTAG",
-                                "help": "When the chip goes sleep or software reset, the clock source would change to XTAL\nand switch off the BBPLL clock for saving power. However, this might make the\nUSB_SERIAL_JTAG down which depends on BBPLL as its unique clock source.\nTherefore, this is used for keeping bbpll clock always on when USB_SERIAL_JTAG PORT is using.\nIf you want to use USB_SERIAL_JTAG under sw_reset case or sleep-wakeup case, you shoule select\nthis option. But be aware that this might increase the power consumption.",
+                                "help": "When software switches the CPU clock source from BBPLL clock to XTAL, usually the BBPLL will be\nswitched off. This helps to save some power consumption in sleep modes. However this may also happen\nduring the software reset, resulting in the inactive (disconnected from host) of the USB_SERIAL_JTAG\ndevice during software reset.\n\nWhen USB_SERIAL_JTAG is being used, whether to turn off the clock source during software reset and in\nsleep modes is determined by RTC_CLOCK_BBPLL_POWER_ON_WITH_USB.\n\n  - When RTC_CLOCK_BBPLL_POWER_ON_WITH_USB is enabled, the clock will be kept, so that the\n    USB_SERIAL_JTAG will keep alive during software reset. The side-effect is the increasing of power\n    consumption during sleep modes, even though USB_SERIAL_JTAG will not work in sleep modes.\n\n  - When RTC_CLOCK_BBPLL_POWER_ON_WITH_USB is disabled, the clock will be turned off. USB_SERIAL_JTAG\n    will be inactive during software reset and in sleep modes. This saves some power consumption in\n    sleep modes.\n\nWhen USB_SERIAL_JTAG is not being used, software will always turn off BBPLL regardless of\nRTC_CLOCK_BBPLL_POWER_ON_WITH_USB is set or not.",
                                 "id": "RTC_CLOCK_BBPLL_POWER_ON_WITH_USB",
                                 "name": "RTC_CLOCK_BBPLL_POWER_ON_WITH_USB",
                                 "range": null,
@@ -10660,6 +10959,16 @@
                                 "range": null,
                                 "title": "LCD panel io format buffer size",
                                 "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "IDF_TARGET_ESP32S3",
+                                "help": "Ensure the LCD interrupt is IRAM-Safe by allowing the interrupt handler to be\nexecutable when the cache is disabled (e.g. SPI Flash write).\nIf you want the LCD driver to keep flushing the screen even when cache ops disabled,\nyou can enable this option. Note, this will also increase the IRAM usage.",
+                                "id": "LCD_RGB_ISR_IRAM_SAFE",
+                                "name": "LCD_RGB_ISR_IRAM_SAFE",
+                                "range": null,
+                                "title": "RGB LCD ISR IRAM-Safe",
+                                "type": "bool"
                             }
                         ],
                         "depends_on": null,
@@ -10834,7 +11143,7 @@
                     },
                     {
                         "children": [],
-                        "depends_on": "ESP32_BROWNOUT_DET",
+                        "depends_on": "ESP32_BROWNOUT_DET || ESP32S2_BROWNOUT_DET || ESP32C3_BROWNOUT_DET || ESP32S3_BROWNOUT_DET",
                         "help": "When brownout reset occurs, reduce PHY TX power to keep the code running.",
                         "id": "ESP_PHY_REDUCE_TX_POWER",
                         "name": "ESP_PHY_REDUCE_TX_POWER",
@@ -10851,6 +11160,56 @@
                         "range": null,
                         "title": "Enable USB when phy init",
                         "type": "bool"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "<choice ESP_PHY_CALIBRATION_MODE>",
+                                "help": null,
+                                "id": "ESP_PHY_RF_CAL_PARTIAL",
+                                "name": "ESP_PHY_RF_CAL_PARTIAL",
+                                "range": null,
+                                "title": "Calibration partial",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice ESP_PHY_CALIBRATION_MODE>",
+                                "help": null,
+                                "id": "ESP_PHY_RF_CAL_NONE",
+                                "name": "ESP_PHY_RF_CAL_NONE",
+                                "range": null,
+                                "title": "Calibration none",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice ESP_PHY_CALIBRATION_MODE>",
+                                "help": null,
+                                "id": "ESP_PHY_RF_CAL_FULL",
+                                "name": "ESP_PHY_RF_CAL_FULL",
+                                "range": null,
+                                "title": "Calibration full",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": null,
+                        "help": "Select PHY calibration mode. During RF initialization, the partial calibration\nmethod is used by default for RF calibration. Full calibration takes about 100ms\nmore than partial calibration. If boot duration is not critical, it is suggested\nto use the full calibration method. No calibration method is only used when the\ndevice wakes up from deep sleep.",
+                        "id": "component-config-phy-calibration-mode",
+                        "name": "ESP_PHY_CALIBRATION_MODE",
+                        "title": "Calibration mode",
+                        "type": "choice"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": null,
+                        "id": "ESP_PHY_CALIBRATION_MODE",
+                        "name": "ESP_PHY_CALIBRATION_MODE",
+                        "range": null,
+                        "title": null,
+                        "type": "int"
                     }
                 ],
                 "depends_on": null,
@@ -10986,6 +11345,34 @@
                 "depends_on": null,
                 "id": "component-config-power-management",
                 "title": "Power Management",
+                "type": "menu"
+            },
+            {
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Place non-ISR ringbuf functions (like xRingbufferCreate/xRingbufferSend) into flash.\nThis frees up IRAM, but the functions can no longer be called when the cache is disabled.",
+                        "id": "RINGBUF_PLACE_FUNCTIONS_INTO_FLASH",
+                        "name": "RINGBUF_PLACE_FUNCTIONS_INTO_FLASH",
+                        "range": null,
+                        "title": "Place non-ISR ringbuf functions into flash",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Place non-ISR ringbuf functions (like xRingbufferSendFromISR/xRingbufferReceiveFromISR) into flash.\nThis frees up IRAM, but the functions can no longer be called when the cache is disabled\nor from an IRAM interrupt context.\n\nThis option is not compatible with ESP-IDF drivers which is configured to run the ISR from an IRAM context,\ne.g. CONFIG_UART_ISR_IN_IRAM.",
+                        "id": "RINGBUF_PLACE_ISR_FUNCTIONS_INTO_FLASH",
+                        "name": "RINGBUF_PLACE_ISR_FUNCTIONS_INTO_FLASH",
+                        "range": null,
+                        "title": "Place ISR ringbuf functions into flash",
+                        "type": "bool"
+                    }
+                ],
+                "depends_on": null,
+                "id": "component-config-esp-ringbuf",
+                "title": "ESP Ringbuf",
                 "type": "menu"
             },
             {
@@ -12167,6 +12554,70 @@
                         "range": null,
                         "title": "WiFi SoftAP Support",
                         "type": "bool"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "ESP_WIFI_SLP_BEACON_LOST_OPT",
+                                "help": "Timeout time for close rf phy when beacon loss occurs, Unit: 1024 microsecond.",
+                                "id": "ESP_WIFI_SLP_BEACON_LOST_TIMEOUT",
+                                "name": "ESP_WIFI_SLP_BEACON_LOST_TIMEOUT",
+                                "range": null,
+                                "title": "Beacon loss timeout",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "ESP_WIFI_SLP_BEACON_LOST_OPT",
+                                "help": "Maximum number of consecutive lost beacons allowed, WiFi keeps Rx state when\nthe number of consecutive beacons lost is greater than the given threshold.",
+                                "id": "ESP_WIFI_SLP_BEACON_LOST_THRESHOLD",
+                                "name": "ESP_WIFI_SLP_BEACON_LOST_THRESHOLD",
+                                "range": null,
+                                "title": "Maximum number of consecutive lost beacons allowed",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "ESP_WIFI_SLP_BEACON_LOST_OPT",
+                                "help": "Delta early time for rf phy on, When the beacon is lost, the next rf phy on will\nbe earlier the time specified by the configuration item, Unit: 32 microsecond.",
+                                "id": "ESP_WIFI_SLP_PHY_ON_DELTA_EARLY_TIME",
+                                "name": "ESP_WIFI_SLP_PHY_ON_DELTA_EARLY_TIME",
+                                "range": null,
+                                "title": "Delta early time for RF PHY on",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "ESP_WIFI_SLP_BEACON_LOST_OPT",
+                                "help": "Delta timeout time for rf phy off, When the beacon is lost, the next rf phy off will\nbe delayed for the time specified by the configuration item. Unit: 1024 microsecond.",
+                                "id": "ESP_WIFI_SLP_PHY_OFF_DELTA_TIMEOUT_TIME",
+                                "name": "ESP_WIFI_SLP_PHY_OFF_DELTA_TIMEOUT_TIME",
+                                "range": null,
+                                "title": "Delta timeout time for RF PHY off",
+                                "type": "int"
+                            }
+                        ],
+                        "depends_on": null,
+                        "help": "Enable wifi sleep optimization when beacon loss occurs and immediately enter\nsleep mode when the WiFi module detects beacon loss.",
+                        "id": "ESP_WIFI_SLP_BEACON_LOST_OPT",
+                        "name": "ESP_WIFI_SLP_BEACON_LOST_OPT",
+                        "range": null,
+                        "title": "Wifi sleep optimize when beacon lost",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Maximum number of encrypted peers supported by espnow.\nThe number of hardware keys for encryption is fixed. And the espnow and SoftAP share the same\nhardware keys. So this configuration will affect the maximum connection number of SoftAP.\nMaximum espnow encrypted peers number + maximum number of connections of SoftAP = Max hardware keys number.\n\nWhen using ESP mesh, this value should be set to a maximum of 6.",
+                        "id": "ESP_WIFI_ESPNOW_MAX_ENCRYPT_NUM",
+                        "name": "ESP_WIFI_ESPNOW_MAX_ENCRYPT_NUM",
+                        "range": [
+                            0,
+                            17
+                        ],
+                        "title": "Maximum espnow encrypt peers number",
+                        "type": "int"
                     }
                 ],
                 "depends_on": null,
@@ -12180,7 +12631,7 @@
                         "children": [
                             {
                                 "children": [],
-                                "depends_on": "!SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY && <choice ESP_COREDUMP_TO_FLASH_OR_UART>",
+                                "depends_on": "<choice ESP_COREDUMP_TO_FLASH_OR_UART>",
                                 "help": null,
                                 "id": "ESP_COREDUMP_ENABLE_TO_FLASH",
                                 "name": "ESP_COREDUMP_ENABLE_TO_FLASH",
@@ -12299,6 +12750,16 @@
                     {
                         "children": [],
                         "depends_on": "ESP_COREDUMP_ENABLE",
+                        "help": "Enable/disable coredump logs. Logs strings from espcoredump component are\nplaced in DRAM. Disabling these helps to save ~5KB of internal memory.",
+                        "id": "ESP_COREDUMP_LOGS",
+                        "name": "ESP_COREDUMP_LOGS",
+                        "range": null,
+                        "title": "Enable coredump logs for debugging",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "ESP_COREDUMP_ENABLE",
                         "help": "Maximum number of tasks snapshots in core dump.",
                         "id": "ESP_COREDUMP_MAX_TASKS_NUM",
                         "name": "ESP_COREDUMP_MAX_TASKS_NUM",
@@ -12318,7 +12779,17 @@
                     },
                     {
                         "children": [],
-                        "depends_on": "ESP_COREDUMP_ENABLE && IDF_TARGET_ARCH_RISCV",
+                        "depends_on": null,
+                        "help": "Force the use of a custom DRAM stack for coredump when Task stacks can be in PSRAM.",
+                        "id": "ESP_COREDUMP_USE_STACK_SIZE",
+                        "name": "ESP_COREDUMP_USE_STACK_SIZE",
+                        "range": null,
+                        "title": null,
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "ESP_COREDUMP_ENABLE",
                         "help": "Size of the memory to be reserved for core dump stack. If 0 core dump process will run on\nthe stack of crashed task/ISR, otherwise special stack will be allocated.\nTo ensure that core dump itself will not overflow task/ISR stack set this to the value above 800.\nNOTE: It eats DRAM.",
                         "id": "ESP_COREDUMP_STACK_SIZE",
                         "name": "ESP_COREDUMP_STACK_SIZE",
@@ -13096,63 +13567,11 @@
                     {
                         "children": [],
                         "depends_on": null,
-                        "help": "Modbus slave Timer group number that is used for timeout measurement.",
-                        "id": "FMB_TIMER_GROUP",
-                        "name": "FMB_TIMER_GROUP",
-                        "range": [
-                            0,
-                            1
-                        ],
-                        "title": "Slave Timer group number",
-                        "type": "int"
-                    },
-                    {
-                        "children": [],
-                        "depends_on": null,
-                        "help": "Modbus slave Timer Index in the group that is used for timeout measurement.",
-                        "id": "FMB_TIMER_INDEX",
-                        "name": "FMB_TIMER_INDEX",
-                        "range": [
-                            0,
-                            1
-                        ],
-                        "title": "Slave Timer index in the group",
-                        "type": "int"
-                    },
-                    {
-                        "children": [],
-                        "depends_on": null,
-                        "help": "Modbus master Timer group number that is used for timeout measurement.",
-                        "id": "FMB_MASTER_TIMER_GROUP",
-                        "name": "FMB_MASTER_TIMER_GROUP",
-                        "range": [
-                            0,
-                            1
-                        ],
-                        "title": "Master Timer group number",
-                        "type": "int"
-                    },
-                    {
-                        "children": [],
-                        "depends_on": null,
-                        "help": "Modbus master Timer Index in the group that is used for timeout measurement.\nNote: Modbus master and slave should have different timer index to be able to work simultaneously.",
-                        "id": "FMB_MASTER_TIMER_INDEX",
-                        "name": "FMB_MASTER_TIMER_INDEX",
-                        "range": [
-                            0,
-                            1
-                        ],
-                        "title": "Master Timer index",
-                        "type": "int"
-                    },
-                    {
-                        "children": [],
-                        "depends_on": null,
-                        "help": "This option places Modbus timer IRQ handler into IRAM.\nThis allows to avoid delays related to processing of non-IRAM-safe interrupts\nduring a flash write operation (NVS updating a value, or some other\nflash API which has to perform an read/write operation and disable CPU cache).\nThis option has dependency with the UART_ISR_IN_IRAM option which places UART interrupt\nhandler into IRAM to prevent delays related to processing of UART events.",
-                        "id": "FMB_TIMER_ISR_IN_IRAM",
-                        "name": "FMB_TIMER_ISR_IN_IRAM",
+                        "help": "If this option is set the Modbus stack uses ISR dispatch method\nto send timeout events from the callback function called from ISR.\nThis option has dependency with the UART_ISR_IN_IRAM option which places UART interrupt\nhandler into IRAM to prevent delays related to processing of UART events.",
+                        "id": "FMB_TIMER_USE_ISR_DISPATCH_METHOD",
+                        "name": "FMB_TIMER_USE_ISR_DISPATCH_METHOD",
                         "range": null,
-                        "title": "Place timer interrupt handler into IRAM",
+                        "title": "Modbus timer uses ISR dispatch method",
                         "type": "bool"
                     }
                 ],
@@ -14224,11 +14643,21 @@
                     {
                         "children": [],
                         "depends_on": null,
-                        "help": "If Enable tcpip\u3000core locking,Creates a global mutex that is held\nduring TCPIP thread operations.Can be locked by client code to perform\nlwIP operations without changing into TCPIP thread using callbacks.\nSee LOCK_TCPIP_CORE() and UNLOCK_TCPIP_CORE().\n\nIf disable tcpip\u3000core locking,TCP IP will perform tasks through context switching\uff0e",
+                        "help": "If Enable tcpip core locking,Creates a global mutex that is held\nduring TCPIP thread operations.Can be locked by client code to perform\nlwIP operations without changing into TCPIP thread using callbacks.\nSee LOCK_TCPIP_CORE() and UNLOCK_TCPIP_CORE().\n\nIf disable tcpip core locking,TCP IP will perform tasks through context switching",
                         "id": "LWIP_TCPIP_CORE_LOCKING",
                         "name": "LWIP_TCPIP_CORE_LOCKING",
                         "range": null,
-                        "title": "Enable tcpip\u3000core locking",
+                        "title": "Enable tcpip core locking",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Enable to check that the project does not violate lwip thread safety.\nIf enabled, all lwip functions that require thread awareness run an assertion\nto verify that the TCP/IP core functionality is either locked or accessed\nfrom the correct thread.",
+                        "id": "LWIP_CHECK_THREAD_SAFETY",
+                        "name": "LWIP_CHECK_THREAD_SAFETY",
+                        "range": null,
+                        "title": "Checks that lwip API runs in expected context",
                         "type": "bool"
                     },
                     {
@@ -14448,6 +14877,27 @@
                         "type": "bool"
                     },
                     {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "LWIP_ESP_MLDV6_REPORT",
+                                "help": "Set the timer interval for mldv6 report. The default value is 40s",
+                                "id": "LWIP_MLDV6_TMR_INTERVAL",
+                                "name": "LWIP_MLDV6_TMR_INTERVAL",
+                                "range": null,
+                                "title": "mldv6 report timer interval(seconds)",
+                                "type": "int"
+                            }
+                        ],
+                        "depends_on": "LWIP_IPV6",
+                        "help": "Enable this option allows to send mldv6 report periodically.\n\nThis option solve the issue that failed to receive multicast data.\nSome routers fail to forward multicast packets.\nTo solve this problem, send multicast mdlv6 report to routers regularly.",
+                        "id": "LWIP_ESP_MLDV6_REPORT",
+                        "name": "LWIP_ESP_MLDV6_REPORT",
+                        "range": null,
+                        "title": "Send mldv6 report periodically",
+                        "type": "bool"
+                    },
+                    {
                         "children": [],
                         "depends_on": null,
                         "help": "Set TCPIP task receive mail box size. Generally bigger value means higher throughput\nbut more memory. The value should be bigger than UDP/TCP mail box size.",
@@ -14511,6 +14961,19 @@
                             255
                         ],
                         "title": "DHCP total option length",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Set DHCP coarse interval in seconds.\nA higher value will be less precise but cost less power consumption.",
+                        "id": "LWIP_DHCP_COARSE_TIMER_SECS",
+                        "name": "LWIP_DHCP_COARSE_TIMER_SECS",
+                        "range": [
+                            1,
+                            10
+                        ],
+                        "title": "DHCP coarse timer interval(s)",
                         "type": "int"
                     },
                     {
@@ -14786,11 +15249,21 @@
                             {
                                 "children": [],
                                 "depends_on": null,
-                                "help": "Set maximum segment lifetime in in milliseconds.",
+                                "help": "Set maximum segment lifetime in milliseconds.",
                                 "id": "LWIP_TCP_MSL",
                                 "name": "LWIP_TCP_MSL",
                                 "range": null,
                                 "title": "Maximum segment lifetime (MSL)",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": null,
+                                "help": "Set maximum segment lifetime in milliseconds.",
+                                "id": "LWIP_TCP_FIN_WAIT_TIMEOUT",
+                                "name": "LWIP_TCP_FIN_WAIT_TIMEOUT",
+                                "range": null,
+                                "title": "Maximum FIN segment lifetime",
                                 "type": "int"
                             },
                             {
@@ -15532,6 +16005,16 @@
                             {
                                 "children": [],
                                 "depends_on": "LWIP_DEBUG",
+                                "help": "Enabling this option routes all enabled LWIP debugs through ESP_LOGD.",
+                                "id": "LWIP_DEBUG_ESP_LOG",
+                                "name": "LWIP_DEBUG_ESP_LOG",
+                                "range": null,
+                                "title": "Route LWIP debugs through ESP_LOG interface",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "LWIP_DEBUG",
                                 "help": null,
                                 "id": "LWIP_NETIF_DEBUG",
                                 "name": "LWIP_NETIF_DEBUG",
@@ -15931,7 +16414,7 @@
                             },
                             {
                                 "children": [],
-                                "depends_on": null,
+                                "depends_on": "MBEDTLS_GCM_C || MBEDTLS_CCM_C || MBEDTLS_CHACHAPOLY_C",
                                 "help": "Enable serialization of the TLS context structures\nThis is a local optimization in handling a single, potentially long-lived connection.\n\nSee mbedTLS documentation for required API and more details.\nDisabling this option will save some code size.",
                                 "id": "MBEDTLS_SSL_CONTEXT_SERIALIZATION",
                                 "name": "MBEDTLS_SSL_CONTEXT_SERIALIZATION",
@@ -16078,6 +16561,16 @@
                                         "range": null,
                                         "title": "Add custom certificates to the default bundle",
                                         "type": "bool"
+                                    },
+                                    {
+                                        "children": [],
+                                        "depends_on": "MBEDTLS_CERTIFICATE_BUNDLE",
+                                        "help": null,
+                                        "id": "MBEDTLS_CERTIFICATE_BUNDLE_MAX_CERTS",
+                                        "name": "MBEDTLS_CERTIFICATE_BUNDLE_MAX_CERTS",
+                                        "range": null,
+                                        "title": "Maximum no of certificates allowed in certificate bundle",
+                                        "type": "int"
                                     }
                                 ],
                                 "depends_on": null,
@@ -16568,7 +17061,7 @@
                     },
                     {
                         "children": [],
-                        "depends_on": "MBEDTLS_TLS_ENABLED",
+                        "depends_on": "MBEDTLS_TLS_ENABLED && (MBEDTLS_GCM_C || MBEDTLS_CCM_C || MBEDTLS_CHACHAPOLY_C)",
                         "help": "Server support for RFC 5077 session tickets. See mbedTLS documentation for more details.\nDisabling this option will save some code size.",
                         "id": "MBEDTLS_SERVER_SSL_SESSION_TICKETS",
                         "name": "MBEDTLS_SERVER_SSL_SESSION_TICKETS",
@@ -17545,6 +18038,16 @@
                         "range": null,
                         "title": "NVS partition encrypted flag compatible with ESP-IDF before v4.3",
                         "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "This option switches error checking type between assertions (y) or return codes (n).",
+                        "id": "NVS_ASSERT_ERROR_CHECK",
+                        "name": "NVS_ASSERT_ERROR_CHECK",
+                        "range": null,
+                        "title": "Use assertions for error checking",
+                        "type": "bool"
                     }
                 ],
                 "depends_on": null,
@@ -18223,6 +18726,16 @@
                         "name": "SPI_FLASH_ENABLE_ENCRYPTED_READ_WRITE",
                         "range": null,
                         "title": "Enable encrypted partition read/write operations",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "This option is invisible, and will be selected automatically\nwhen ``ESPTOOLPY_FLASHFREQ_120M`` is selected.",
+                        "id": "SPI_FLASH_HPM_ENABLE",
+                        "name": "SPI_FLASH_HPM_ENABLE",
+                        "range": null,
+                        "title": null,
                         "type": "bool"
                     }
                 ],
@@ -18908,6 +19421,54 @@
                         "name": "USB_HOST_HW_BUFFER_BIAS",
                         "title": "Hardware FIFO size biasing",
                         "type": "choice"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "USB_OTG_SUPPORTED",
+                                "help": "On connection of a USB device, the USB 2.0 specification requires a \"debounce interval with a minimum\nduration of 100ms\" to allow the connection to stabilize (see USB 2.0 chapter 7.1.7.3 for more details).\nDuring the debounce interval, no new connection/disconnection events are registered.\n\nThe default value is set to 250 ms to be safe.",
+                                "id": "USB_HOST_DEBOUNCE_DELAY_MS",
+                                "name": "USB_HOST_DEBOUNCE_DELAY_MS",
+                                "range": null,
+                                "title": "Debounce delay in ms",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "USB_OTG_SUPPORTED",
+                                "help": "The reset signaling can be generated on any Hub or Host Controller port by request from the USB System\nSoftware. The USB 2.0 specification requires that \"the reset signaling must be driven for a minimum of\n10ms\" (see USB 2.0 chapter 7.1.7.5 for more details).  After the reset, the hub port will transition to\nthe Enabled state (refer to Section 11.5).\n\nThe default value is set to 30 ms to be safe.",
+                                "id": "USB_HOST_RESET_HOLD_MS",
+                                "name": "USB_HOST_RESET_HOLD_MS",
+                                "range": null,
+                                "title": "Reset hold in ms",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "USB_OTG_SUPPORTED",
+                                "help": "After a port stops driving the reset signal, the USB 2.0 specification requires that the \"USB System\nSoftware guarantees a minimum of 10 ms for reset recovery\" before the attached device is expected to\nrespond to data transfers (see USB 2.0 chapter 7.1.7.3 for more details). The device may ignore any\ndata transfers during the recovery interval.\n\nThe default value is set to 30 ms to be safe.",
+                                "id": "USB_HOST_RESET_RECOVERY_MS",
+                                "name": "USB_HOST_RESET_RECOVERY_MS",
+                                "range": null,
+                                "title": "Reset recovery delay in ms",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "USB_OTG_SUPPORTED",
+                                "help": "\"After successful completion of the Status stage, the device is allowed a SetAddress() recovery\ninterval of 2 ms. At the end of this interval, the device must be able to accept Setup packets\naddressed to the new address. Also, at the end of the recovery interval, the device must not respond to\ntokens sent to the old address (unless, of course, the old and new address is the same).\" See USB 2.0\nchapter 9.2.6.3 for more details.\n\nThe default value is set to 10 ms to be safe.",
+                                "id": "USB_HOST_SET_ADDR_RECOVERY_MS",
+                                "name": "USB_HOST_SET_ADDR_RECOVERY_MS",
+                                "range": null,
+                                "title": "SetAddress() recovery time in ms",
+                                "type": "int"
+                            }
+                        ],
+                        "depends_on": null,
+                        "id": "component-config-usb-otg-root-hub-configuration",
+                        "title": "Root Hub configuration",
+                        "type": "menu"
                     }
                 ],
                 "depends_on": null,
@@ -18970,16 +19531,6 @@
                                         "name": "VFS_SEMIHOSTFS_MAX_MOUNT_POINTS",
                                         "range": null,
                                         "title": "Host FS: Maximum number of the host filesystem mount points",
-                                        "type": "int"
-                                    },
-                                    {
-                                        "children": [],
-                                        "depends_on": "VFS_SUPPORT_IO",
-                                        "help": "Define maximum path length for the host base directory which is to be mounted.\nIf host path passed to esp_vfs_semihost_register() is longer than this value\nit will be truncated.",
-                                        "id": "VFS_SEMIHOSTFS_HOST_PATH_MAX_LEN",
-                                        "name": "VFS_SEMIHOSTFS_HOST_PATH_MAX_LEN",
-                                        "range": null,
-                                        "title": "Host FS: Maximum path length for the host base directory",
                                         "type": "int"
                                     }
                                 ],
@@ -19128,6 +19679,47 @@
                         "range": null,
                         "title": "Enable BLE bonding",
                         "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "BT_NIMBLE_ENABLED",
+                        "help": "Used to enable Secure connection support when provisioning transport is BLE.",
+                        "id": "WIFI_PROV_BLE_SEC_CONN",
+                        "name": "WIFI_PROV_BLE_SEC_CONN",
+                        "range": null,
+                        "title": "Enable BLE Secure connection flag",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Used to enforce link encryption when attempting to read / write characteristic",
+                        "id": "WIFI_PROV_BLE_FORCE_ENCRYPTION",
+                        "name": "WIFI_PROV_BLE_FORCE_ENCRYPTION",
+                        "range": null,
+                        "title": "Force Link Encryption during characteristic Read / Write",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "WIFI_PROV_KEEP_BLE_ON_AFTER_PROV",
+                                "help": null,
+                                "id": "WIFI_PROV_DISCONNECT_AFTER_PROV",
+                                "name": "WIFI_PROV_DISCONNECT_AFTER_PROV",
+                                "range": null,
+                                "title": "Terminate connection after provisioning is done",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": "BT_ENABLED",
+                        "help": null,
+                        "id": "WIFI_PROV_KEEP_BLE_ON_AFTER_PROV",
+                        "name": "WIFI_PROV_KEEP_BLE_ON_AFTER_PROV",
+                        "range": null,
+                        "title": "Keep BT on after provisioning is done",
+                        "type": "bool"
                     }
                 ],
                 "depends_on": null,
@@ -19204,32 +19796,39 @@
                                 "depends_on": "WPA_11KV_SUPPORT",
                                 "help": "Keep scan results in cache, if not enabled, those\nwill be flushed immediately.",
                                 "id": "WPA_SCAN_CACHE",
-                                "is_menuconfig": true,
                                 "name": "WPA_SCAN_CACHE",
                                 "range": null,
                                 "title": "Keep scan results in cache",
-                                "type": "menu"
-                            },
-                            {
-                                "children": [],
-                                "depends_on": "WPA_11KV_SUPPORT",
-                                "help": "Select this option to enable WiFi Multiband operation certification support.",
-                                "id": "WPA_MBO_SUPPORT",
-                                "is_menuconfig": true,
-                                "name": "WPA_MBO_SUPPORT",
-                                "range": null,
-                                "title": "Enable MBO support in supplicant",
-                                "type": "menu"
+                                "type": "bool"
                             }
                         ],
                         "depends_on": null,
                         "help": "Select this option to enable 802.11k 802.11v APIs(RRM and BTM support).\nOnly APIs which are helpful for network assisted roaming\nare supported for now.\nEnable this option with BTM and RRM enabled in sta config\nto make device ready for network assisted roaming.\nBTM: BSS transition management enables an AP to request a station to transition\nto a specific AP, or to indicate to a station a set of preferred APs.\nRRM: Radio measurements enable STAs to understand the radio environment,\nit enables STAs to observe and gather data on radio link performance\nand on the radio environment. Current implementation adds beacon report,\nlink measurement, neighbor report.",
                         "id": "WPA_11KV_SUPPORT",
-                        "is_menuconfig": true,
                         "name": "WPA_11KV_SUPPORT",
                         "range": null,
-                        "title": "Enable 802.11k, 802.11v APIs handling in supplicant",
-                        "type": "menu"
+                        "title": "Enable 802.11k, 802.11v APIs handling",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Select this option to enable WiFi Multiband operation certification support.",
+                        "id": "WPA_MBO_SUPPORT",
+                        "name": "WPA_MBO_SUPPORT",
+                        "range": null,
+                        "title": "Enable MBO support",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Select this option to enable WiFi Easy Connect Support.",
+                        "id": "WPA_DPP_SUPPORT",
+                        "name": "WPA_DPP_SUPPORT",
+                        "range": null,
+                        "title": "Enable DPP support",
+                        "type": "bool"
                     }
                 ],
                 "depends_on": null,

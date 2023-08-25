@@ -12,6 +12,12 @@ The system consists of the several components shown in this diagram:
 
 ![alt text](https://github.com/KitesForFuture/powerplant/blob/main/connectivity.jpg?raw=true)
 
+## Step 1: Build and Flash to ESP32
+* Download and install espressif ide from https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html
+* before running './install.sh' you need to change the branch with 'git checkout origin/release/v4.4'
+* Run 'idf.py build' to build the project
+* Run 'idf.py flash' to flash it to an ESP32
+
 ## Kite
 
 The kite is controlled by an ESP32 sitting on a custom PCB that holds the sensors (gyro, accelerometer, pressure), an EEPROM memory and connectors to battery, servo motors and ESCs.

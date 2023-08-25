@@ -3,7 +3,7 @@
 
 #include <string.h>
 #include "../../../common/helpers/math.h"
-#include "../../../common/i2c_devices/mpu6050.h"
+//#include "../../../common/i2c_devices/mpu6050.h"
 #include "../../../common/i2c_devices/mpu9250.h"
 #include "../../../common/helpers/timer.h"
 
