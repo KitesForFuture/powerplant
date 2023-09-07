@@ -228,8 +228,8 @@ class Autopilot{
 		
 		
 		let angle_error = angle(new THREE.Vector3(mat[4], mat[5], 0), new THREE.Vector3(mat_line[7], mat_line[8], 0)) - Math.PI*0.5;
-		
 		let desired_roll_angle = clamp(this.landing.roll.P * angle_error - this.landing.roll.D * sensor_data.gyro.z, -80*Math.PI/180, 80*Math.PI/180);
+		console.log("angle_error = " + angle_error + ", desired_roll_angle = " + desired_roll_angle);
 		let roll_angle = asin_clamp(- mat[3]);
 		var x_axis_control = - 0.56 * this.landing.X.P * (desired_roll_angle-roll_angle) - 0.22 * this.landing.X.D * sensor_data.gyro.x;
 		x_axis_control *= 100;

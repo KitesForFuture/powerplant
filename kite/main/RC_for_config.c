@@ -13,7 +13,6 @@ static void (*actuator_control_callback)(float, float, float, float, float, floa
 
 
 Orientation_Data* orientation_data_kite;
-Orientation_Data* orientation_data_line;
 
 // ****** GET WEBSITE ******
 
@@ -200,12 +199,13 @@ static const httpd_uri_t kite_config_get_html = {
 									mov_matrix[8+i] = parseFloat(myArray[6+i]);\n\
 								}\n\
 								for(let i = 0; i < 3; i++){\n\
-									mov_matrix_line[i] = parseFloat(myArray[12+i]);\n\
-									mov_matrix_line[4+i] = parseFloat(myArray[12+3+i]);\n\
-									mov_matrix_line[8+i] = parseFloat(myArray[12+6+i]);\n\
+									line_vector[i] = parseFloat(myArray[12+i]);\n\
 								}\n\
-								setHeight(parseFloat(myArray[24]));\n\
-								setHeightDerivative(parseFloat(myArray[25]));\n\
+								vertices_line[6] = line_vector[0]*2;\n\
+								vertices_line[7] = line_vector[1]*2;\n\
+								vertices_line[8] = line_vector[2]*2;\n\
+								setHeight(parseFloat(myArray[15]));\n\
+								setHeightDerivative(parseFloat(myArray[16]));\n\
 		  						ready_to_download_orientation = true;\n\
 								//console.log(mov_matrix);\n\
 							}\n\
@@ -654,9 +654,10 @@ static const httpd_uri_t kite_config_get_html = {
 						\n\
 						var canvas = document.getElementById('my_Canvas');\n\
          				gl = canvas.getContext('experimental-webgl');\n\
-         				var vertices_line = [0, 0, 0, 0, -10, 0, 0, -10, 1];\n\
+         				var vertices_line = [0, 0, 0, 0.3, 0, 0, 0, 0, 0];\n\
          				var vertices = [  -0.83600000,-3.79000000,-0.12400000,-0.83600000,-3.79000000,0.12400000,-0.83600000,3.79000000,-0.12400000,-0.83600000,3.79000000,0.12400000,0.83600000,-3.79000000,-0.12400000,0.83600000,-3.79000000,0.12400000,0.83600000,3.79000000,-0.12400000,0.83600000,3.79000000,0.12400000,-2.11215697,-9.0000000e-2,-1.59186587,-2.11215697,-9.0000000e-2,-9.9865868e-2,-2.11215697,9.0000000e-2,-1.59186587,-2.11215697,9.0000000e-2,-9.9865868e-2,-0.11215697,-9.0000000e-2,-1.59186587,-0.11215697,-9.0000000e-2,-9.9865868e-2,-0.11215697,9.0000000e-2,-1.59186587,-0.11215697,9.0000000e-2,-9.9865868e-2,1.03290445,-2.40582380,-1.4085955e-18,1.03290445,-2.36060825,0.22731396,1.03290445,-2.23184523,0.42002143,1.03290445,-2.03913776,0.54878444,1.03290445,-1.81182380,0.59400000,1.03290445,-1.58450984,0.54878444,1.03290445,-1.39180238,0.42002143,1.03290445,-1.26303936,0.22731396,1.03290445,-1.21782380,7.1335424e-17,1.03290445,-1.26303936,-0.22731396,1.03290445,-1.39180238,-0.42002143,1.03290445,-1.58450984,-0.54878444,1.03290445,-1.81182380,-0.59400000,1.03290445,-2.03913776,-0.54878444,1.03290445,-2.23184523,-0.42002143,1.03290445,-2.36060825,-0.22731396,0.87290445,-2.40582380,-1.4085955e-18,0.87290445,-2.36060825,0.22731396,0.87290445,-2.23184523,0.42002143,0.87290445,-2.03913776,0.54878444,0.87290445,-1.81182380,0.59400000,0.87290445,-1.58450984,0.54878444,0.87290445,-1.39180238,0.42002143,0.87290445,-1.26303936,0.22731396,0.87290445,-1.21782380,7.1335424e-17,0.87290445,-1.26303936,-0.22731396,0.87290445,-1.39180238,-0.42002143,0.87290445,-1.58450984,-0.54878444,0.87290445,-1.81182380,-0.59400000,0.87290445,-2.03913776,-0.54878444,0.87290445,-2.23184523,-0.42002143,0.87290445,-2.36060825,-0.22731396,1.03290445,1.30658751,-1.4085955e-18,1.03290445,1.35180306,0.22731396,1.03290445,1.48056608,0.42002143,1.03290445,1.67327355,0.54878444,1.03290445,1.90058751,0.59400000,1.03290445,2.12790146,0.54878444,1.03290445,2.32060893,0.42002143,1.03290445,2.44937195,0.22731396,1.03290445,2.49458751,7.1335424e-17,1.03290445,2.44937195,-0.22731396,1.03290445,2.32060893,-0.42002143,1.03290445,2.12790146,-0.54878444,1.03290445,1.90058751,-0.59400000,1.03290445,1.67327355,-0.54878444,1.03290445,1.48056608,-0.42002143,1.03290445,1.35180306,-0.22731396,0.87290445,1.30658751,-1.4085955e-18,0.87290445,1.35180306,0.22731396,0.87290445,1.48056608,0.42002143,0.87290445,1.67327355,0.54878444,0.87290445,1.90058751,0.59400000,0.87290445,2.12790146,0.54878444,0.87290445,2.32060893,0.42002143,0.87290445,2.44937195,0.22731396,0.87290445,2.49458751,7.1335424e-17,0.87290445,2.44937195,-0.22731396,0.87290445,2.32060893,-0.42002143,0.87290445,2.12790146,-0.54878444,0.87290445,1.90058751,-0.59400000,0.87290445,1.67327355,-0.54878444,0.87290445,1.48056608,-0.42002143,0.87290445,1.35180306,-0.22731396];\n\
 \n\
+		var colors_line = [0.0, 0.0, 0.0,	0.0, 0.0, 0.0,	0.0, 0.0, 0.0];\n\
         var colors = [        	1.0, 1.0, 1.0,        	1.0, 1.0, 1.0,        	1.0, 1.0, 1.0,        	1.0, 1.0, 1.0,        	1.0, 1.0, 1.0,        	1.0, 1.0, 1.0,        	1.0, 1.0, 1.0,        	1.0, 1.0, 1.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0,        	0.0, 1.0, 0.0];\
 \n\
          var indices_line = [0, 1, 2];\n\
@@ -669,7 +670,7 @@ static const httpd_uri_t kite_config_get_html = {
 		}\n\
 		var vertex_buffer_line = gl.createBuffer();\n\
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer_line);\n\
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices_line), gl.STATIC_DRAW);\n\
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices_line), gl.DYNAMIC_DRAW);\n\
          var vertex_buffer = gl.createBuffer ();\n\
          gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);\n\
          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);\n\
@@ -677,6 +678,10 @@ static const httpd_uri_t kite_config_get_html = {
          var color_buffer = gl.createBuffer ();\n\
          gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);\n\
          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);\n\
+			\n\
+         var color_buffer_line = gl.createBuffer ();\n\
+         gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer_line);\n\
+         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors_line), gl.STATIC_DRAW);\n\
 \n\
 		var index_buffer_line = gl.createBuffer();\n\
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer_line);\n\
@@ -792,6 +797,7 @@ static const httpd_uri_t kite_config_get_html = {
 \n\
          var mov_matrix =      [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];\n\
          var mov_matrix_line = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];\n\
+         var line_vector = 	   [1, 0, 0];\n\
          var view_matrix =     [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];\n\
 \n\
          view_matrix[14] = view_matrix[14]-6;\n\
@@ -827,15 +833,28 @@ static const httpd_uri_t kite_config_get_html = {
             gl.uniformMatrix4fv(Vmatrix, false, view_matrix);\n\
             gl.uniformMatrix4fv(Mmatrix, false, mov_matrix);\n\
             gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);\n\
+            gl.vertexAttribPointer(position, 3, gl.FLOAT, false,0,0) ;\n\
+         	gl.enableVertexAttribArray(position);\n\
+         	gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);\n\
+         	gl.vertexAttribPointer(color, 3, gl.FLOAT, false,0,0) ;\n\
+         	gl.enableVertexAttribArray(color);\n\
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);\n\
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);\n\
             \n\
-            gl.uniformMatrix4fv(Mmatrix, false, mov_matrix_line);\n\
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer_line);\n\
+            gl.vertexAttribPointer(position, 3, gl.FLOAT, false,0,0) ;\n\
+         	gl.enableVertexAttribArray(position);\n\
+			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices_line), gl.DYNAMIC_DRAW);\n\
+			\n\
+         	gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer_line);\n\
+         	gl.vertexAttribPointer(color, 3, gl.FLOAT, false,0,0) ;\n\
+         	gl.enableVertexAttribArray(color);\n\
+            //gl.uniformMatrix4fv(Mmatrix, false, mov_matrix_line);\n\
             //gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer_line);\n\
-            //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer_line);\n\
-            gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);\n\
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer_line);\n\
+            gl.drawElements(gl.TRIANGLES, indices_line.length, gl.UNSIGNED_SHORT, 0);\n\
 \n\
-            setTimeout(() => {  window.requestAnimationFrame(animate); }, 100);\n\
+            setTimeout(() => {  window.requestAnimationFrame(animate); }, 10);\n\
          }\n\
          animate(0);\n\
 					</script>\n\
@@ -927,16 +946,13 @@ static esp_err_t orientation_get_handler(httpd_req_t *req)
 	ESP_LOGI(TAG, "Getting kite orientation");
 	esp_err_t error;
     
-    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f",
+    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f",
     orientation_data_kite->rotation_matrix[0], orientation_data_kite->rotation_matrix[3], orientation_data_kite->rotation_matrix[6],
     orientation_data_kite->rotation_matrix[1], orientation_data_kite->rotation_matrix[4], orientation_data_kite->rotation_matrix[7],
     orientation_data_kite->rotation_matrix[2], orientation_data_kite->rotation_matrix[5], orientation_data_kite->rotation_matrix[8],
     orientation_data_kite->gyro_in_kite_coords[0], orientation_data_kite->gyro_in_kite_coords[1], orientation_data_kite->gyro_in_kite_coords[2],
     
-    orientation_data_line->rotation_matrix[0], orientation_data_line->rotation_matrix[3], orientation_data_line->rotation_matrix[6],
-    orientation_data_line->rotation_matrix[1], orientation_data_line->rotation_matrix[4], orientation_data_line->rotation_matrix[7],
-    orientation_data_line->rotation_matrix[2], orientation_data_line->rotation_matrix[5], orientation_data_line->rotation_matrix[8],
-    orientation_data_line->gyro_in_kite_coords[0], orientation_data_line->gyro_in_kite_coords[1], orientation_data_line->gyro_in_kite_coords[2],
+    orientation_data_kite->line_vector_normed[0], orientation_data_kite->line_vector_normed[1], orientation_data_kite->line_vector_normed[2],
     
     getHeight(), getHeightDerivative());
     
@@ -1165,10 +1181,9 @@ void wifi_init_softap(void)
 
 // init wifi on the esp
 // register callbacks
-void network_setup_configuring(void (*read_callback_arg)(float*), void (*write_callback_arg)(float*), void (*actuator_control_callback_arg)(float, float, float, float, float, float, float), Orientation_Data* orientation_data_arg_kite, Orientation_Data* orientation_data_arg_line)
+void network_setup_configuring(void (*read_callback_arg)(float*), void (*write_callback_arg)(float*), void (*actuator_control_callback_arg)(float, float, float, float, float, float, float), Orientation_Data* orientation_data_arg_kite)
 {
 	orientation_data_kite = orientation_data_arg_kite;
-	orientation_data_line = orientation_data_arg_line;
 	read_callback = read_callback_arg;
 	write_callback = write_callback_arg;
 	actuator_control_callback = actuator_control_callback_arg;

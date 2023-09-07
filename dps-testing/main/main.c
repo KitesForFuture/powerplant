@@ -128,12 +128,6 @@ void main_task(void* arg)
 	init_cat24(bus1);
 	init_dps310(bus1);
 	
-	//testConfigWriting();//TODO: remove. DEBUGGING ONLY
-	
-	/*Mpu_raw_data kite_mpu_calibration = {
-		{readEEPROM(0), readEEPROM(1), readEEPROM(2)},
-		{readEEPROM(3), readEEPROM(4), readEEPROM(5)}
-	};*/
 	
 	Mpu_raw_data_9250 line_mpu_calibration = {
 		{0, 0, 0},
@@ -150,23 +144,19 @@ void main_task(void* arg)
 	setAngle(5, 0);
 	setSpeed(2, 0);
 	setSpeed(4, 0);
-	//setSpeed(2, 90);
-	//setSpeed(4, 90);
-	//MPU kite_mpu;
+	
+	
 	MPU9250 line_mpu;
-	//kite_mpu.bus = bus0;
+	
 	line_mpu.bus = bus0;
-	//kite_mpu.address = 104;
+	
 	line_mpu.address = 105;
 	line_mpu.magnetometer_address = 12;
-	//kite_mpu.calibration_data = kite_mpu_calibration;
+	
 	line_mpu.calibration_data = line_mpu_calibration;
-    //initMPU6050(&kite_mpu);
+	
     initMPU9250(&line_mpu);
-    /*Mpu_raw_data kite_mpu_raw_data = {
-		{0, 0, 0},
-		{0, 0, 0}
-	};*/
+    
 	Mpu_raw_data_9250 line_mpu_raw_data = {
 		{0, 0, 0},
 		{0, 0, 0},
@@ -184,97 +174,12 @@ void main_task(void* arg)
 	while(1) {
 		vTaskDelay(1);
 		update_dps310_if_necessary();
-		//readMPUData(&kite_mpu, &kite_mpu_raw_data);
+		
 		readMPUData9250(&line_mpu, &line_mpu_raw_data);
-		/*printf("accel = %f, %f, %f, gyro = %f, %f, %f, magnet = %f, %f, %f\n",
-		line_mpu_raw_data.accel[0], line_mpu_raw_data.accel[1], line_mpu_raw_data.accel[2],
-		line_mpu_raw_data.gyro[0], line_mpu_raw_data.gyro[1], line_mpu_raw_data.gyro[2],
-		line_mpu_raw_data.magnet[0], line_mpu_raw_data.magnet[1], line_mpu_raw_data.magnet[2]);
-		*/
+		
 		updateRotationMatrix(&line_orientation_data, line_mpu_raw_data);
 		float* mat = line_orientation_data.rotation_matrix;
 		
-		/*printf("rotation_matrix = %f, %f, %f, %f, %f, %f, %f, %f, %f\n",
-		mat[0], mat[1], mat[2],
-		mat[3], mat[4], mat[5],
-		mat[6], mat[7], mat[8]);
-		*/
-		
-		/*
-		if(magnet_calibration_data_counter < 128){
-			mag_x[magnet_calibration_data_counter] = line_mpu_raw_data.magnet[0];
-			mag_y[magnet_calibration_data_counter] = line_mpu_raw_data.magnet[1];
-			mag_z[magnet_calibration_data_counter] = line_mpu_raw_data.magnet[2];
-			magnet_calibration_data_counter++;
-			printf("%d\n", magnet_calibration_data_counter);
-		}else if (magnet_calibration_data_counter == 128){
-			
-			float a_x = 0;
-			float b_x = 1;
-			float a_y = 0;
-			float b_y = 1;
-			float a_z = 0;
-			float b_z = 1;
-			
-			for(int j = 0; j < 10000; j++){
-				vTaskDelay(1);
-				int random = rand() % 128;
-				float x = mag_x[random];
-				float y = mag_y[random];
-				float z = mag_z[random];
-				float delta_norm = 50*50 - ((a_x + b_x * x)*(a_x + b_x * x) + (a_y + b_y * y)*(a_y + b_y * y) + (a_z + b_z * z)*(a_z + b_z * z));
-				printf("norm = %f\n", delta_norm);
-				printf("a_x,a_y,a_z = %f, %f, %f, b_x,b_y,b_z = %f, %f, %f\n", a_x, a_y, a_z, b_x, b_y, b_z);
-				//printf("b_x,b_y,b_z = %f, %f, %f\n", b_x, b_y, b_z);
-				for(int i = 0; i < 20000; i++){
-					
-					int random = rand() % 128;
-					
-					x = mag_x[random];
-					y = mag_y[random];
-					z = mag_z[random];
-					//printf("x,y,z = %f, %f, %f, rand = %d\n", x, y, z, random);
-					//printf("a_x,a_y,a_z = %f, %f, %f\n", a_x, a_y, a_z);
-					//printf("b_x,b_y,b_z = %f, %f, %f\n", b_x, b_y, b_z);
-					float delta_norm = 50*50 - ((a_x + b_x * x)*(a_x + b_x * x) + (a_y + b_y * y)*(a_y + b_y * y) + (a_z + b_z * z)*(a_z + b_z * z));
-					//printf("norm = %f\n", delta_norm);
-					
-					
-					// GRADIENT
-					float delta_f_delta_a_x = -2*(a_x + b_x * x);
-					float delta_f_delta_a_y = -2*(a_y + b_y * y);
-					float delta_f_delta_a_z = -2*(a_z + b_z * z);
-					
-					float delta_f_delta_b_x = x*delta_f_delta_a_x;
-					float delta_f_delta_b_y = y*delta_f_delta_a_y;
-					float delta_f_delta_b_z = z*delta_f_delta_a_z;
-					
-					float h = 0.01 * delta_norm / (delta_f_delta_a_x*delta_f_delta_a_x + delta_f_delta_a_y*delta_f_delta_a_y + delta_f_delta_a_z*delta_f_delta_a_z
-					+ delta_f_delta_b_x*delta_f_delta_b_x + delta_f_delta_b_y*delta_f_delta_b_y + delta_f_delta_b_z*delta_f_delta_b_z);
-					
-					//printf("gradient = %f, %f, %f, %f, %f, %f\n", delta_f_delta_a_x, delta_f_delta_a_y, delta_f_delta_a_z, delta_f_delta_b_x, delta_f_delta_b_y, delta_f_delta_b_z);
-					
-					a_x -= h * delta_f_delta_a_x;
-					a_y -= h * delta_f_delta_a_y;
-					a_z -= h * delta_f_delta_a_z;
-					
-					b_x -= 0.0001 * h * delta_f_delta_b_x;
-					b_y -= 0.0001 * h * delta_f_delta_b_y;
-					b_z -= 0.0001 * h * delta_f_delta_b_z;
-					
-					//printf("a_x,a_y,a_z = %f, %f, %f\n", a_x, a_y, a_z);
-					//printf("b_x,b_y,b_z = %f, %f, %f\n", b_x, b_y, b_z);
-					delta_norm = 50*50 - ((a_x + b_x * x)*(a_x + b_x * x) + (a_y + b_y * y)*(a_y + b_y * y) + (a_z + b_z * z)*(a_z + b_z * z));
-					//printf("new local norm = %f\n", delta_norm);
-					//printf("___________________\n");
-				}
-			}
-			
-			magnet_calibration_data_counter++;
-		}
-		*/
-		
-		//updateRotationMatrix(&kite_orientation_data, kite_mpu_raw_data);
 		updateRotationMatrix(&line_orientation_data, line_mpu_raw_data);
 		
 	}

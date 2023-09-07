@@ -1,7 +1,7 @@
 {
     "version":            "1",
     "project_name":       "dps-testing",
-    "project_version":    "f2dd89c-dirty",
+    "project_version":    "e98051a-dirty",
     "project_path":       "/home/benjamin/KFF/powerplant/dps-testing",
     "idf_path":           "/home/benjamin/esp/esp-idf_new/esp-idf",
     "build_dir":          "/home/benjamin/KFF/powerplant/dps-testing/build",

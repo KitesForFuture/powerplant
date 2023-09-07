@@ -501,6 +501,8 @@
 							wind.setSpeedAndDirection(0.0, 0.0);
 						}
 						
+						if(autopilot.mode == LANDING_MODE) line_tensionSlider.setValue(4);
+						
 						if(autopilot.mode == EIGHT_MODE){
 							let northVector = projectToComplementOfNormedVector(new THREE.Vector3(1,0,0), kite.positionR.clone().normalize()).normalize().multiplyScalar(50);
 							let sidewaysVector = northVector.clone().cross(kite.positionR.clone().normalize());

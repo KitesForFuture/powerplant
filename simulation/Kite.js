@@ -297,8 +297,8 @@ class Kite extends RigidBody{
 	}
 	
 	setReflex(reflex_angle_in_radians){
-		this.leftReflex.rotation.y = reflex_angle_in_radians;
-		this.rightReflex.rotation.y = reflex_angle_in_radians;
+		this.leftReflex.rotation.y = -Math.PI*0.5;//reflex_angle_in_radians;
+		this.rightReflex.rotation.y = -Math.PI*0.5;//reflex_angle_in_radians;
 	}
 	
 	setTannenbaumLengthAndBridleLength(tannenbaum_length){

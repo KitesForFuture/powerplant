@@ -79,7 +79,7 @@ void readMPURawData9250(MPU9250 *mpu, Mpu_raw_data_9250 *out){
 		
 		out->magnet[0] = 1.0f*(int16_t)((data[3] << 8) | data[2]);
 		
-		out->magnet[2] = -1.0f*(int16_t)((data[5] << 8) | data[4]);
+		out->magnet[2] = 1.0f*(int16_t)((data[5] << 8) | data[4]);
 		
 		i2c_send(mpu->bus, mpu->magnetometer_address, 10, 1, 1);//go into single measurement mode 
 	}

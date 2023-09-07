@@ -73,7 +73,9 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	if(autopilot->fm == 3.0){ // 3.0 is VESC final landing mode
 		autopilot->mode = LANDING_MODE;
 	}
-	//autopilot->mode = LANDING_MODE;
+	
+	//autopilot->mode = LANDING_MODE; // FOR DEBUGGING ONLY
+	
 	float timestep_in_s = 0.02; // 50 Hz, but TODO: MUST measure more precisely!
 	if(autopilot->mode == AIRPLANE_MODE){
 		landing_control(autopilot, control_data_out, sensor_data, line_length, line_tension, false); return;
@@ -177,16 +179,20 @@ void test_control(Autopilot* autopilot, ControlData* control_data_out, SensorDat
 
 void landing_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension, int transition){
 	float* mat = sensor_data.rotation_matrix;
-	float* mat_line = sensor_data.rotation_matrix_line;
+	float* line_dir = sensor_data.line_direction_vector;
+	//float* mat_line = sensor_data.rotation_matrix_line;
 	
 	// HEIGHT CONTROL
 	float height = sensor_data.height-autopilot->landing.desired_height;
 	float height_error = clamp(height - line_length*0.2 /* 20 percent descent slope*/, -3, 10);//clamp(height, -3, 10);//ONLY FOR TESTING!, clamp(height - line_length*0.2 /* 20 percent descent slope*/, -3, 10);
 	
+	// FOR DEBUGGING ONLY
+	//height_error = height;
+	
 	float desired_dive_angle = 0.15*autopilot->landing.dive_angle_P*height_error;//-desired_line_angle - 2.0 * line_angle_error;
 	desired_dive_angle_smooth = 0.8 * desired_dive_angle_smooth + 0.2 * desired_dive_angle;
 	
-	desired_dive_angle_smooth = clamp( desired_dive_angle_smooth, -PI/6, PI/6 );
+	desired_dive_angle_smooth = clamp( desired_dive_angle_smooth, -PI/12, PI/6 );
 	
 	if(transition){
 		desired_dive_angle_smooth = -PI/6;
@@ -195,19 +201,28 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	float y_axis_offset = -getAngleErrorYAxis(-desired_dive_angle_smooth - PI/2, mat);
 	float y_axis_control = - 3*15.0 * autopilot->landing.Y.P * y_axis_offset - 7 * 0.5 * 0.66 * autopilot->landing.Y.D * sensor_data.gyro[1];
 	
+	float angle_error = 0;//signed_angle2(flight_direction, line_direction);//angle(new THREE.Vector3(mat[4], mat[5], 0), new THREE.Vector3(mat_line[7], mat_line[8], 0)) - Math.PI*0.5;
+	if(line_dir[0] == 0){
+		angle_error = PI/2*sign(line_dir[1]);
+	}else if(line_dir[0] > 0){
+		angle_error = atan(line_dir[1]/line_dir[0]);
+	}else if(line_dir[1] < 0){
+		angle_error = -PI+atan(line_dir[1]/line_dir[0]);
+	}else{
+		angle_error = PI+atan(line_dir[1]/line_dir[0]);
+	}
+	printf("angle error = %f\n", angle_error);
 	
-	float flight_direction[2] = {mat[1], mat[2]};
-	float line_direction[2] = {-mat_line[4], -mat_line[5]};
-	float angle_error = signed_angle2(flight_direction, line_direction);//angle(new THREE.Vector3(mat[4], mat[5], 0), new THREE.Vector3(mat_line[7], mat_line[8], 0)) - Math.PI*0.5;
-		
 	float desired_roll_angle = clamp(autopilot->landing.roll.P * angle_error - autopilot->landing.roll.D * sensor_data.gyro[2], -60*PI/180, 60*PI/180);
 	float roll_angle = safe_asin(-mat[3]);
 	float x_axis_control = - 0.56 * autopilot->landing.X.P * (desired_roll_angle-roll_angle) - 0.22 * autopilot->landing.X.D * sensor_data.gyro[0];//-100 * mat[3] * autopilot->landing.X.P;// - 0*50*autopilot->landing.X.D * sensor_data.gyro[0];
 	x_axis_control *= 50;
 	x_axis_control = clamp(x_axis_control, -30, 30);
-	y_axis_control = clamp(y_axis_control, -40, 40);
-	sendDebuggingData(angle_error, roll_angle, desired_roll_angle, x_axis_control, -mat[3], mat[1]);
-	initControlData(control_data_out, 0, 0, 0*autopilot->brake - y_axis_control-1*x_axis_control + abs(x_axis_control)*0.5, 0*autopilot->brake - y_axis_control+1*x_axis_control + abs(x_axis_control)*0.5, -autopilot->brake-5, 0, LINE_TENSION_LANDING); return;
+	y_axis_control = clamp(y_axis_control, -50, 50);
+	sendDebuggingData(angle_error, roll_angle, desired_roll_angle, x_axis_control, height_error, desired_dive_angle_smooth);
+	float airbrake = 90;
+	if (height_error < -2.5) airbrake = -90;
+	initControlData(control_data_out, 0, 0, autopilot->brake - y_axis_control-1*x_axis_control + abs(x_axis_control)*0.3, autopilot->brake - y_axis_control+1*x_axis_control + abs(x_axis_control)*0.3, airbrake, 0, LINE_TENSION_LANDING); return;
 }
 
 void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float timestep_in_s){
@@ -221,18 +236,18 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	
 	float* mat = sensor_data.rotation_matrix;
-	float* mat_line = sensor_data.rotation_matrix_line;
+	//float* mat_line = sensor_data.rotation_matrix_line;
 	
 	// ACCURATE LINE ANGLE FROM LINE ANGLE SENSOR
 	//float line_angle = safe_acos(sensor_data.height/(line_length == 0 ? 1.0 : line_length));
-	//float z_axis_angle_from_zenith = safe_acos(1.4*sensor_data.height/(line_length == 0 ? 1.0 : line_length)); //safe_acos(mat[6]); // roll angle of kite = line angle
-	float z_axis_angle_from_zenith = safe_acos(-mat_line[3]);
+	float z_axis_angle_from_zenith = safe_acos(1.4*sensor_data.height/(line_length == 0 ? 1.0 : line_length)); //safe_acos(mat[6]); // roll angle of kite = line angle
+	//float z_axis_angle_from_zenith = safe_acos(-mat_line[3]);
 	
 	
 	// ACCURATE (for low pitch angles) ROLL ANGLE w.r.t. KITE LINE
-	float line_vector[3] = {-mat_line[3], -mat_line[4], -mat_line[5]};
+	//float line_vector[3] = {-mat_line[3], -mat_line[4], -mat_line[5]};
 	float wing_direction[3] = {mat[3], mat[4], mat[5]};
-	float roll_angle = angle(line_vector, wing_direction) - PI*0.5;
+	float roll_angle = 0;//angle(line_vector, wing_direction) - PI*0.5;
 	
 	
 	// 1. STAGE P(I)D: line angle -> flight direction
@@ -328,6 +343,6 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	}
 	
 	sendDebuggingData(sensor_data.height, x_axis_control, z_axis_control, groundstation_height, autopilot->RC_switch, autopilot->RC_target_angle);
-	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, y_axis_control*0.25, 0, line_tension); return;
+	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, /*y_axis_control*0.25*/-90, 0, line_tension); return;
 	
 }

@@ -144,7 +144,7 @@ void transpose_matrix(float source[], float destination[]){
 // rotates matrix mat such that mat'*(a_init, b_init, c_init)' aligns more with (a,b,c)'
 // (a_init, b_init, c_init) can be initially measured acceleration vector, usually something close to (0,0,1)
 // (a,b,c) can be the currently measured acceleration vector
-void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, float a, float b, float c, float out[]){
+void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, float a, float b, float c, float out[], float speed_factor){
 	// mat'*(a_init, b_init, c_init)'
 	float tmp_vec[3];
 	mat_transp_mult_vec(mat, a_init, b_init, c_init, tmp_vec); // tmp_vec is how the three sensors should feel gravitational acceleration. The three x-components of the three rotation matrix vectors.
@@ -159,9 +159,10 @@ void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, flo
 	axis_3 *= InvNorm;
 	
 	// determine the approximate angle between mat'*(a_init, b_init, c_init)' and (a,b,c)'
-	float differenceNorm = sqrt((mat[2]-a)*(mat[2]-a) + (mat[5]-b)*(mat[5]-b) + (mat[8]-c)*(mat[8]-c)); // TODO: there is a BUG here. mat[2] should be either mat[0] or tmp_vec[0], etc.
+	float differenceNorm = sqrt((tmp_vec[0]-a*0.1)*(tmp_vec[0]-a*0.1) + (tmp_vec[1]-b*0.1)*(tmp_vec[1]-b*0.1) + (tmp_vec[2]-c*0.1)*(tmp_vec[2]-c*0.1));
+	//float differenceNorm = sqrt((mat[2]-a)*(mat[2]-a) + (mat[5]-b)*(mat[5]-b) + (mat[8]-c)*(mat[8]-c)); // TODO: there is a BUG here. mat[2] should be either mat[0] or tmp_vec[0], etc.
 	// multiply by small number, so we move only tiny bit in right direction at every step -> averaging measured acceleration from vibration
-	float angle = differenceNorm*0.001;//When connected to USB, then 0.00004 suffices. When autonomous on battery 0.0004 (10 times larger) does just fine.
+	float angle = differenceNorm*0.001*speed_factor;//When connected to USB, then 0.00004 suffices. When autonomous on battery 0.0004 (10 times larger) does just fine.
 	// 0.00004 works, error 0.0004
 	// 0.0004 works, error 0.002 except in battery mode
 	// 0.004 works, error 0.01

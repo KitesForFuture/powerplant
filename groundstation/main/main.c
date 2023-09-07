@@ -24,7 +24,7 @@
 
 
 #include "../../common/i2c_devices/cat24c256.h"
-#include "../../common/i2c_devices/bmp280.h"
+#include "../../common/i2c_devices/dps310.h"
 
 #include "../../common/uart.c"
 
@@ -63,7 +63,7 @@ void set_bmp_calibration(float value){
 		write2EEPROM(value, 0);
 	}
 	bmp_calib = value;
-	updateBMP280Config(value);
+	//updateBMP280Config(value);
 }
 
 void controlServoAngle(float reel_in_speed){
@@ -106,8 +106,8 @@ void processReceivedDebuggingDataViaWiFi(float* debugging_data){
 void init(){
 	
 	init_cat24(bus0);
-	bmp_calib = readEEPROM(0);
-    init_bmp280(bus0, bmp_calib);
+	//bmp_calib = readEEPROM(0);
+    init_dps310(bus0);
 	
 	initMotors(); // servo (pwm) outputs
 	storeServoArmForEnergyGeneration();
@@ -142,7 +142,7 @@ void app_main(void){
 	float line_length_raw, flight_mode;
 	printf("waiting for UART...\n");
 	while(1){
-		update_bmp280_if_necessary();
+		update_dps310_if_necessary();
 		printf("getHeight() = %f\n", getHeight());
 		//sendUART(1, 2, VESC_UART);//DEBUGGING
 		//sendUART(1, 2, ESP32_UART);//DEBUGGING

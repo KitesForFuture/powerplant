@@ -5,12 +5,11 @@
 
 
 #include "../../common/i2c_devices/cat24c256.h"
-#include "../../common/i2c_devices/bmp280.h"
-#include "../../common/i2c_devices/mpu6050.h"
+#include "../../common/i2c_devices/dps310.h"
+#include "../../common/i2c_devices/mpu9250.h"
 
 #include "control/rotation_matrix.h"
 #include "../../common/pwm/motors.h"
-//#include "../../common/pwm/pwm_input.h"
 
 #include "nvs_flash.h"
 #include "esp_wifi.h"
@@ -24,6 +23,7 @@
 #include "esp_log.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
+
 // for http Web Server
 #include <sys/param.h>
 #include "esp_netif.h"
@@ -33,8 +33,9 @@
 
 #include "control/autopilot.h"
 
-#define MAX_SERVO_DEFLECTION 80
-#define MAX_BRAKE_DEFLECTION 80
+#define MAX_SERVO_DEFLECTION 60//50
+#define MIN_BRAKE_DEFLECTION -59//-64
+#define MAX_BRAKE_DEFLECTION 59
 #define MAX_PROPELLER_SPEED 90 // AT MOST 90
 
 struct i2c_bus bus0 = {14, 25};
@@ -66,11 +67,10 @@ void getConfigValues(float* values){
 }
 int groundstation_has_config_values_initialized_from_kite_EEPROM = false;
 void setConfigValues(float* values){
-	if(values[6] == 0) printf("here bmp_calib is 0\n");
 	for (int i = 6; i < NUM_CONFIG_FLOAT_VARS; i++){
 		config_values[i] = values[i];
 	}
-	updateBMP280Config(config_values[6]);
+	
 	data_needs_being_written_to_EEPROM = 1;
 	groundstation_has_config_values_initialized_from_kite_EEPROM = true;
 	loadConfigVariables(&autopilot, config_values);
@@ -120,13 +120,9 @@ void main_task(void* arg)
 	Orientation_Data kite_orientation_data;
 	initRotationMatrix(&kite_orientation_data);
 	
-	Orientation_Data line_orientation_data;
-	initLineMatrix(&line_orientation_data);
-	
 	init_cat24(bus1);
 	
-	//testConfigWriting();//TODO: remove. DEBUGGING ONLY
-	
+	/*
 	Mpu_raw_data kite_mpu_calibration = {
 		{readEEPROM(0), readEEPROM(1), readEEPROM(2)},
 		{readEEPROM(3), readEEPROM(4), readEEPROM(5)}
@@ -136,6 +132,14 @@ void main_task(void* arg)
 		{readEEPROM(1024+0), readEEPROM(1024+1), readEEPROM(1024+2)},
 		{readEEPROM(1024+3), readEEPROM(1024+4), readEEPROM(1024+5)}
 	};
+	*/
+	
+	Mpu_raw_data_9250 kite_and_line_mpu_calibration = {
+		{0.132-0.135, 0.12, 0.135-0.31},
+		{2.76, 0.66, -0.33},//{1.74, 0.93, 0.08},
+		{65.6, 6.8, 22.5}
+	};
+	
 	
 	int output_pins[] = {27,26,12,13,5,15};
 	initMotors(output_pins, 6);
@@ -148,30 +152,24 @@ void main_task(void* arg)
 	setSpeed(4, 0);
 	//setSpeed(2, 90);
 	//setSpeed(4, 90);
-	MPU kite_mpu;
-	MPU line_mpu;
-	kite_mpu.bus = bus0;
-	line_mpu.bus = bus0;
-	kite_mpu.address = 104;
-	line_mpu.address = 105;
-	kite_mpu.calibration_data = kite_mpu_calibration;
-	line_mpu.calibration_data = line_mpu_calibration;
-    initMPU6050(&kite_mpu);
-    initMPU6050(&line_mpu);
-    Mpu_raw_data kite_mpu_raw_data = {
-		{0, 0, 0},
-		{0, 0, 0}
-	};
-	Mpu_raw_data line_mpu_raw_data = {
-		{0, 0, 0},
-		{0, 0, 0}
-	};
-	readMPUData(&kite_mpu, &kite_mpu_raw_data);
-	readMPUData(&line_mpu, &line_mpu_raw_data);
-	updateRotationMatrix(&kite_orientation_data, kite_mpu_raw_data); // to find out if nose (or wing tip) up or down on initialization
-	updateRotationMatrix(&line_orientation_data, line_mpu_raw_data); // to find out if nose (or wing tip) up or down on initialization
+	MPU9250 kite_and_line_mpu;
 	
-	// ************************ KITE WING TIP POINTING UP -> ESC CALIBRATION MODE ************************
+	kite_and_line_mpu.bus = bus0;
+	kite_and_line_mpu.address = 105;
+	kite_and_line_mpu.magnetometer_address = 12;
+	kite_and_line_mpu.calibration_data = kite_and_line_mpu_calibration;
+    initMPU9250(&kite_and_line_mpu);
+    
+    Mpu_raw_data_9250 kite_and_line_mpu_raw_data = {
+		{0, 0, 0},
+		{0, 0, 0},
+		{0, 0, 0}
+	};
+	readMPUData9250(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
+	updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
+	
+	
+	// ************************ KITE WING TIP POINTING UP -> ESC CALIBRATION MODE (TODO: get it right) ************************
 	/*
 	if(getAccelY() < -7 || getAccelY() > 7){ // m/s**2
 		printf("entering ESC calibration mode:\n");
@@ -186,23 +184,28 @@ void main_task(void* arg)
 	
 	// ************************ KITE NOSE POINTING DOWN -> CONFIG MODE ************************
 	
-	if(getAccelX(kite_mpu_raw_data) < 0){
+	float avg_x = 0;
+	float avg_y = 0;
+	float avg_z = 0;
+	if(getAccelX(kite_and_line_mpu_raw_data) < 0){
 		printf("entering config mode\n");
 		readConfigValuesFromEEPROM(config_values);
-		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data, &line_orientation_data);
+		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data);
 		
-		// THIS TAKES TIME...
-		float bmp_calib = readEEPROM(6);//-0.000001; // TODO: recalibrate and remove the -0.000001 hack
-    	init_bmp280(bus1, bmp_calib);
+		init_dps310(bus1);
+		
 		while(1){
 			vTaskDelay(1);
-			update_bmp280_if_necessary();
-			readMPUData(&kite_mpu, &kite_mpu_raw_data);
-			readMPUData(&line_mpu, &line_mpu_raw_data);
-			updateRotationMatrix(&kite_orientation_data, kite_mpu_raw_data);
-			turnYAxisTowards(&line_orientation_data, kite_orientation_data.rotation_matrix[5], kite_orientation_data.rotation_matrix[8]);
-			updateRotationMatrix(&line_orientation_data, line_mpu_raw_data);
-			printf("z-axis up? = %f\n", -line_orientation_data.rotation_matrix_transpose[3]);
+			update_dps310_if_necessary();
+			readMPUData9250(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
+			avg_x = avg_x*0.95+kite_and_line_mpu_raw_data.gyro[0]*0.05;
+			avg_y = avg_y*0.95+kite_and_line_mpu_raw_data.gyro[1]*0.05;
+			avg_z = avg_z*0.95+kite_and_line_mpu_raw_data.gyro[2]*0.05;
+			printf("gyro = %f, %f, %f\n", avg_x, avg_y, avg_z);
+			//printf("z-comp of mag = %f\n", kite_and_line_mpu_raw_data.magnet[2]);
+			updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
+			
+			//printf("z-axis up? = %f\n", -kite_orientation_data.rotation_matrix_transpose[3]);
 			if(data_needs_being_written_to_EEPROM == 1){
 				writeConfigValuesToEEPROM(config_values);
 				data_needs_being_written_to_EEPROM = 0;
@@ -215,11 +218,7 @@ void main_task(void* arg)
 	printf("Entering flight mode. Excitement guaranteed :D\n");
 	network_setup_kite_flying(&setConfigValues);
 	
-	//int input_pins[] = {4, 33, 2, 17, 16};
-	//initPWMInput(input_pins, 5);
-	
-	
-    
+    printf("reading config values from eeprom\n");
     readConfigValuesFromEEPROM(config_values);
     
     // **** WAITING for GROUNDSTATION to ECHO the config array ****
@@ -230,10 +229,12 @@ void main_task(void* arg)
     	vTaskDelay(100);
     }
     
-    // THIS TAKES TIME...
-	float bmp_calib = readEEPROM(6);//-0.000001; // TODO: recalibrate and remove the -0.000001 hack
-    init_bmp280(bus1, bmp_calib);
-	
+    printf("initializing dps310\n");
+    
+    vTaskDelay(10);
+    init_dps310(bus1);
+    vTaskDelay(10);
+    
 	initAutopilot(&autopilot, config_values);
 	
 	//autopilot.mode = TEST_MODE;//autopilot.mode = EIGHT_MODE;//FINAL_LANDING_MODE;//EIGHT_MODE;//FINAL_LANDING_MODE; // ONLY FOR DEBUGGING; TODO: REMOVE
@@ -245,34 +246,24 @@ void main_task(void* arg)
 		vTaskDelay(1);
 		//printf("mode = %d\n", autopilot.mode);
 		if(data_needs_being_written_to_EEPROM == 1){
+			printf("writing config to eeprom");
 			writeConfigValuesToEEPROM(config_values);
 			data_needs_being_written_to_EEPROM = 0;
 		}
 		
-		update_bmp280_if_necessary();
+		update_dps310_if_necessary();
 		
-		readMPUData(&kite_mpu, &kite_mpu_raw_data);
-		readMPUData(&line_mpu, &line_mpu_raw_data);
-		updateRotationMatrix(&kite_orientation_data, kite_mpu_raw_data);
-		//if(abs(getAccelX(kite_mpu_raw_data)) < 0.7){
-		if(autopilot.mode == LANDING_MODE){
-			turnYAxisTowards(&line_orientation_data, -kite_orientation_data.rotation_matrix[3], -kite_orientation_data.rotation_matrix[6]);
-		}else{
-			turnYAxisTowards(&line_orientation_data, kite_orientation_data.rotation_matrix[5], kite_orientation_data.rotation_matrix[8]);
-		}
-		//}
-		updateRotationMatrix(&line_orientation_data, line_mpu_raw_data);
+		readMPUData9250(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
+		updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
 		
-		//updatePWMInput();
-		//propellerFactor = getPWMInput0to1normalized(2);
-		if(propellerBootState < 0 && getAccelX(kite_mpu_raw_data) < 0){ // kite nose pointing down
+		if(propellerBootState < 0 && getAccelX(kite_and_line_mpu_raw_data) < 0){ // kite nose pointing down
 			propellerBootState++;
 		}
 		if(propellerBootState == 0){ // kite nose pointing down
 			propellerBootState = 1;
 			propellerFactor = 0.2;
 		}
-		if(propellerBootState == 1 && getAccelX(kite_mpu_raw_data) > 0){ // kite nose pointing up
+		if(propellerBootState == 1 && getAccelX(kite_and_line_mpu_raw_data) > 0){ // kite nose pointing up
 			propellerBootState = 2;
 		}
 		if(propellerBootState == 2 && propellerFactor < 1){
@@ -283,7 +274,7 @@ void main_task(void* arg)
 		autopilot.fm = flight_mode;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
 		SensorData sensorData;
-		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, line_orientation_data.rotation_matrix_transpose, kite_orientation_data.gyro_in_kite_coords, getHeight()-groundstation_height, getHeightDerivative());
+		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.line_vector_normed, kite_orientation_data.gyro_in_kite_coords, getHeight()-groundstation_height, getHeightDerivative());
 		
 		//TODO: decide size of timestep_in_s in main.c and pass to stepAutopilot(), or use same method as used in updateRotationMatrix
 		ControlData control_data;
@@ -293,13 +284,12 @@ void main_task(void* arg)
 		stepAutopilot(&autopilot, &control_data, sensorData, line_length, 3/*line tension*/);
 		
 		// DON'T LET SERVOS BREAK THE KITE
-		control_data.brake = clamp(control_data.brake, -MAX_BRAKE_DEFLECTION, MAX_BRAKE_DEFLECTION);
+		control_data.brake = clamp(control_data.brake, MIN_BRAKE_DEFLECTION, MAX_BRAKE_DEFLECTION);
 		control_data.left_elevon = clamp(control_data.left_elevon, -MAX_SERVO_DEFLECTION, MAX_SERVO_DEFLECTION);
 		control_data.right_elevon = clamp(control_data.right_elevon, -MAX_SERVO_DEFLECTION, MAX_SERVO_DEFLECTION);
 		
 		//TODO: setAngle in radians ( * PI/180) and setSpeed from [0, 1] or so
 		actuatorControl(control_data.left_elevon, control_data.right_elevon, control_data.brake, control_data.rudder, propellerFactor*control_data.left_prop, propellerFactor*control_data.right_prop, MAX_PROPELLER_SPEED);
-		
 	}
 }
 

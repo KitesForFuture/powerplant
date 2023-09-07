@@ -43,8 +43,8 @@
 #define gyro_z mpu_raw_data.gyro[2]
 */
 
-//Erster EPP-Flügel, längs eingebaut, Akku-Anschluss hinten, ESP32 richtung Bauch
-/*
+//Erster EPP-Flügel und erster 3m-Kohlefaserflügel mit Seilwinkelsensor, längs eingebaut, Akku-Anschluss hinten, ESP32 richtung Bauch
+
 #define accel_x -mpu_raw_data.accel[0]
 #define accel_y -mpu_raw_data.accel[1]
 #define accel_z mpu_raw_data.accel[2]
@@ -52,9 +52,9 @@
 #define gyro_x -mpu_raw_data.gyro[0]
 #define gyro_y -mpu_raw_data.gyro[1]
 #define gyro_z mpu_raw_data.gyro[2]
-*/
-//Zweiter EPP-Flügel (1,80m), längs eingebaut, USB-Anschluss hinten, ESP32 richtung Bauch
 
+//Zweiter EPP-Flügel (1,80m), längs eingebaut, USB-Anschluss hinten, ESP32 richtung Bauch
+/*
 #define accel_x mpu_raw_data.accel[0]
 #define accel_y mpu_raw_data.accel[1]
 #define accel_z mpu_raw_data.accel[2]
@@ -66,15 +66,11 @@
 #define mag_x mpu_raw_data.magnet[0]
 #define mag_y mpu_raw_data.magnet[1]
 #define mag_z mpu_raw_data.magnet[2]
-
+*/
 // The Gravity vector is the direction the gravitational force is supposed to point in KITE COORDINATES with the nose pointing to the sky
 #define gravity_x 1
 #define gravity_y 0
 #define gravity_z 0
-
-#define north_x 0
-#define north_y 0
-#define north_z 1
 
 // rotation of the drone in world coordinates
 //float rotation_matrix[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
@@ -89,13 +85,13 @@
 
 //Time mpu_last_update_time = 0;
 
-float getAccelX(Mpu_raw_data mpu_raw_data){
+float getAccelX(Mpu_raw_data_9250 mpu_raw_data){
 	return accel_x;
 }
-float getAccelY(Mpu_raw_data mpu_raw_data){
+float getAccelY(Mpu_raw_data_9250 mpu_raw_data){
 	return accel_y;
 }
-float getAccelZ(Mpu_raw_data mpu_raw_data){
+float getAccelZ(Mpu_raw_data_9250 mpu_raw_data){
 	return accel_z;
 }
 
@@ -105,14 +101,8 @@ void initRotationMatrix(Orientation_Data* orientation_data){
 	memcpy(orientation_data->rotation_matrix, tmp, 9*sizeof(float));
 	float tmp_gyro[3] = {0,0,0};
 	memcpy(orientation_data->gyro_in_kite_coords, tmp_gyro, 3*sizeof(float));
-}
-
-void initLineMatrix(Orientation_Data* orientation_data){
-	orientation_data->mpu_last_update_time = 0;
-	float tmp[9] = {1, 0, 0, 0, 0, 1, 0, -1, 0};
-	memcpy(orientation_data->rotation_matrix, tmp, 9*sizeof(float));
-	float tmp_gyro[3] = {0,0,0};
-	memcpy(orientation_data->gyro_in_kite_coords, tmp_gyro, 3*sizeof(float));
+	float tmp_mag[3] = {0,0,1};
+	memcpy(orientation_data->line_vector_normed, tmp_mag, 3*sizeof(float));
 }
 
 void FAKEupdateRotationMatrix(Orientation_Data* orientation_data){
@@ -163,7 +153,7 @@ void FAKEupdateRotationMatrix(Orientation_Data* orientation_data){
 	orientation_data->rotation_matrix_transpose[8] = orientation_data->rotation_matrix[8];
 }
 
-void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data mpu_raw_data){
+void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data_9250 mpu_raw_data){
 	
 	if(orientation_data->mpu_last_update_time == 0){
 		orientation_data->mpu_last_update_time = start_timer();
@@ -204,7 +194,15 @@ void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data mpu_r
 	float temp_rotation_matrix[9];
 	mat_mult(orientation_data->rotation_matrix, diff, temp_rotation_matrix);
 	
-	rotate_towards_g(temp_rotation_matrix, gravity_x, gravity_y, gravity_z, accel_x, accel_y, accel_z, orientation_data->rotation_matrix);
+	static int speed_factor_counter = 0;
+	
+	float speed_factor = 1;
+	if(speed_factor_counter < 1000){
+		speed_factor = 10;
+		speed_factor_counter++;
+	}
+	
+	rotate_towards_g(temp_rotation_matrix, gravity_x, gravity_y, gravity_z, accel_x, accel_y, accel_z, orientation_data->rotation_matrix, speed_factor);
 	//memcpy(orientation_data->rotation_matrix, temp_rotation_matrix, sizeof(temp_rotation_matrix));// TODO: remove when above line uncommented!!!
 	
 	normalize_matrix(orientation_data->rotation_matrix);
@@ -218,44 +216,14 @@ void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data mpu_r
 	orientation_data->rotation_matrix_transpose[6] = orientation_data->rotation_matrix[2];
 	orientation_data->rotation_matrix_transpose[7] = orientation_data->rotation_matrix[5];
 	orientation_data->rotation_matrix_transpose[8] = orientation_data->rotation_matrix[8];
+	
+	// norm line_vector
+	float norm_squared = 0;
+	for(int i = 0; i < 3; i++){
+		norm_squared += mpu_raw_data.magnet[i]*mpu_raw_data.magnet[i];
+	}
+	float factor = 1/sqrt(norm_squared);
+	for(int i = 0; i < 3; i++){
+		orientation_data->line_vector_normed[i] = factor*mpu_raw_data.magnet[i];
+	}
 }
-
-void turnYAxisTowards(Orientation_Data* orientation_data, float y, float z){
-	float current_y_y = orientation_data->rotation_matrix[4];
-	float current_y_z = orientation_data->rotation_matrix[7];
-	
-	//printf("turn %f, %f, %f, towards %f, %f, ", orientation_data->rotation_matrix[1], current_y_y, current_y_z, y, z);
-	
-	float invNorm = 1/sqrt(y*y+z*z);
-	float InvNorm = 1/sqrt(current_y_y*current_y_y+current_y_z*current_y_z);
-	
-	y *= invNorm;
-	z *= invNorm;
-	current_y_y *= InvNorm;
-	current_y_z *= InvNorm;
-	
-	// multiply by small number, so we move only tiny bit in right direction at every step -> averaging measured acceleration from vibration
-	// constant sufficient, because rotation axis already contains approximate angle size
-	float angleFactor = -0.004;
-	
-	float axis = y*current_y_z - z*current_y_y; // rotation Axis either (1,0,0) or (-1,0,0)
-	//printf("axis = %f, ", axis);
-	
-	float tmp_rot_matrix[9];
-	tmp_rot_matrix[0] = 1;
-	tmp_rot_matrix[1] = 0;
-	tmp_rot_matrix[2] = 0;
-	tmp_rot_matrix[3] = 0;
-	tmp_rot_matrix[4] = 1;
-	tmp_rot_matrix[5] = -axis*angleFactor;
-	tmp_rot_matrix[6] = 0;
-	tmp_rot_matrix[7] = axis*angleFactor;
-	tmp_rot_matrix[8] = 1;
-	
-	float out[9];
-	mat_mult(tmp_rot_matrix, orientation_data->rotation_matrix, out);
-	
-	memcpy(orientation_data->rotation_matrix, out, 9*4);
-	//printf("new = %f, %f\n", orientation_data->rotation_matrix[4], orientation_data->rotation_matrix[7]);
-}
-

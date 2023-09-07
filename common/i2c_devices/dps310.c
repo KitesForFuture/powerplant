@@ -34,7 +34,6 @@ int update_dps310_if_necessary() {
 	
 	uint8_t fifo_empty = i2c_receive(dps310_bus, dps_address, 0x0B, 1);
 	while(!(fifo_empty&0x01)){ // FIFO not empty
-		
 		high_byte = i2c_receive(dps310_bus, dps_address, 0x00, 1);
 		medium_byte = i2c_receive(dps310_bus, dps_address, 0x01, 1);
 		low_byte = i2c_receive(dps310_bus, dps_address, 0x02, 1);
