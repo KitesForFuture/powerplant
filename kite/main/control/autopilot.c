@@ -184,7 +184,7 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	
 	// HEIGHT CONTROL
 	float height = sensor_data.height-autopilot->landing.desired_height;
-	float height_error = clamp(height - line_length*0.2 /* 20 percent descent slope*/, -3, 10);//clamp(height, -3, 10);//ONLY FOR TESTING!, clamp(height - line_length*0.2 /* 20 percent descent slope*/, -3, 10);
+	float height_error = clamp(height - line_length*0.2 /* 20 percent descent slope*/, -10, 10);//clamp(height, -3, 10);//ONLY FOR TESTING!, clamp(height - line_length*0.2 /* 20 percent descent slope*/, -3, 10);
 	
 	// FOR DEBUGGING ONLY
 	//height_error = height;
@@ -192,7 +192,7 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	float desired_dive_angle = 0.15*autopilot->landing.dive_angle_P*height_error;//-desired_line_angle - 2.0 * line_angle_error;
 	desired_dive_angle_smooth = 0.8 * desired_dive_angle_smooth + 0.2 * desired_dive_angle;
 	
-	desired_dive_angle_smooth = clamp( desired_dive_angle_smooth, -PI/12, PI/6 );
+	desired_dive_angle_smooth = clamp( desired_dive_angle_smooth, -PI/10, PI/6 );
 	
 	if(transition){
 		desired_dive_angle_smooth = -PI/6;
@@ -219,10 +219,10 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	x_axis_control *= 50;
 	x_axis_control = clamp(x_axis_control, -30, 30);
 	y_axis_control = clamp(y_axis_control, -50, 50);
-	sendDebuggingData(angle_error, roll_angle, desired_roll_angle, x_axis_control, height_error, desired_dive_angle_smooth);
+	sendDebuggingData(height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control, height, line_length);
 	float airbrake = 90;
 	if (height_error < -2.5) airbrake = -90;
-	initControlData(control_data_out, 0, 0, autopilot->brake - y_axis_control-1*x_axis_control + abs(x_axis_control)*0.3, autopilot->brake - y_axis_control+1*x_axis_control + abs(x_axis_control)*0.3, airbrake, 0, LINE_TENSION_LANDING); return;
+	initControlData(control_data_out, 0, 0, autopilot->brake*(90+airbrake)*0.005 - y_axis_control-1*x_axis_control + abs(x_axis_control)*0.3, autopilot->brake*(90+airbrake)*0.005 - y_axis_control+1*x_axis_control + abs(x_axis_control)*0.3, airbrake, 0, LINE_TENSION_LANDING); return;
 }
 
 void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float timestep_in_s){

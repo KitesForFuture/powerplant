@@ -136,7 +136,8 @@ void main_task(void* arg)
 	
 	Mpu_raw_data_9250 kite_and_line_mpu_calibration = {
 		{0.132-0.135, 0.12, 0.135-0.31},
-		{2.76, 0.66, -0.33},//{1.74, 0.93, 0.08},
+		{readEEPROM(3), readEEPROM(4), readEEPROM(5)},
+		//{52.76, 50.66, -50.33},//{1.74, 0.93, 0.08},
 		{65.6, 6.8, 22.5}
 	};
 	
@@ -187,6 +188,9 @@ void main_task(void* arg)
 	float avg_x = 0;
 	float avg_y = 0;
 	float avg_z = 0;
+	int numGyroCalibrationSteps = 100;
+	int gyroCalibrationStepsOutstanding = 0;
+	
 	if(getAccelX(kite_and_line_mpu_raw_data) < 0){
 		printf("entering config mode\n");
 		readConfigValuesFromEEPROM(config_values);
@@ -197,13 +201,53 @@ void main_task(void* arg)
 		while(1){
 			vTaskDelay(1);
 			update_dps310_if_necessary();
-			readMPUData9250(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
+			
+			
+			
+			if(gyroCalibrationCommand){
+				gyroCalibrationCommand = false;
+				gyroCalibrationStepsOutstanding = numGyroCalibrationSteps;
+				avg_x = 0;
+				avg_y = 0;
+				avg_z = 0;
+			}
+			
+			if(gyroCalibrationStepsOutstanding > 0){
+				readMPURawData9250(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
+				avg_x += kite_and_line_mpu_raw_data.gyro[0];
+				avg_y += kite_and_line_mpu_raw_data.gyro[1];
+				avg_z += kite_and_line_mpu_raw_data.gyro[2];
+				printf("gyro = %f, %f, %f\n", kite_and_line_mpu_raw_data.gyro[0], kite_and_line_mpu_raw_data.gyro[1], kite_and_line_mpu_raw_data.gyro[2]);
+				gyroCalibrationStepsOutstanding -= 1;
+			}else if(!gyroCalibrated){
+				avg_x *= 1.0/numGyroCalibrationSteps;
+				avg_y *= 1.0/numGyroCalibrationSteps;
+				avg_z *= 1.0/numGyroCalibrationSteps;
+				
+				// save to EEPROM
+				write2EEPROM(avg_x, 3);
+				write2EEPROM(avg_y, 4);
+				write2EEPROM(avg_z, 5);
+				
+				printf("gyro calibration = %f, %f, %f\n", avg_x, avg_y, avg_z);
+				
+				// use now
+				kite_and_line_mpu.calibration_data.gyro[0] = avg_x;
+				kite_and_line_mpu.calibration_data.gyro[1] = avg_y;
+				kite_and_line_mpu.calibration_data.gyro[2] = avg_z;
+				
+				gyroCalibrated = true;
+			}else{
+				readMPUData9250(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
+				updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
+			}
+			/*
 			avg_x = avg_x*0.95+kite_and_line_mpu_raw_data.gyro[0]*0.05;
 			avg_y = avg_y*0.95+kite_and_line_mpu_raw_data.gyro[1]*0.05;
 			avg_z = avg_z*0.95+kite_and_line_mpu_raw_data.gyro[2]*0.05;
 			printf("gyro = %f, %f, %f\n", avg_x, avg_y, avg_z);
+			*/
 			//printf("z-comp of mag = %f\n", kite_and_line_mpu_raw_data.magnet[2]);
-			updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
 			
 			//printf("z-axis up? = %f\n", -kite_orientation_data.rotation_matrix_transpose[3]);
 			if(data_needs_being_written_to_EEPROM == 1){

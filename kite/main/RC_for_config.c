@@ -14,6 +14,9 @@ static void (*actuator_control_callback)(float, float, float, float, float, floa
 
 Orientation_Data* orientation_data_kite;
 
+int gyroCalibrated = true;
+int gyroCalibrationCommand = false;
+
 // ****** GET WEBSITE ******
 
 static esp_err_t kite_config_html_handler(httpd_req_t *req)
@@ -98,6 +101,7 @@ static const httpd_uri_t kite_config_get_html = {
 <body>\n\
 					\n\
 					<canvas width = \"600\" height = \"400\" id = \"my_Canvas\"></canvas>\n\
+					<button id=\"CalibrateGyro\" class=\"button button1\">Calibrate Gyro (C-Key)</button>\n\
 					<button id=\"ResetRoll\" class=\"button button1\">Reset Roll</button>\n\
 					<button id=\"ResetConfig\" class=\"button button1\">&#8681</button>\n\
 					<tr>\n\
@@ -180,7 +184,7 @@ static const httpd_uri_t kite_config_get_html = {
 								for(let i = 0; i < numConfigValues; i++){\n\
 									configValues[i] = parseFloat(myArray[i]);\n\
 								}\n\
-								console.log(configValues);\n\
+								//console.log(configValues);\n\
 								updateConfigValuesInHTML();\n\
 							}\n\
 							xhr.send();\n\
@@ -211,6 +215,28 @@ static const httpd_uri_t kite_config_get_html = {
 							}\n\
 							xhr.send();\n\
 						}\n\
+						function calibrateGyro(){\n\
+							let buttonLocal = document.getElementById(\"CalibrateGyro\");\n\
+							buttonLocal.innerText = buttonLocal.textContent = 'new text';\n\
+							var xhr = new XMLHttpRequest();\n\
+							xhr.open('GET', 'getCalibrateGyroFinished', true);\n\
+							xhr.responseType = 'text';\n\
+							xhr.onload = function(e){\n\
+								if(xhr.response == \"calibrated\"){\n\
+									alert('Gyro successfully calibrated');\n\
+								}else if(xhr.response == \"not calibrated\"){\n\
+									\n\
+								}\n\
+							}\n\
+							xhr.send();\n\
+						}\n\
+						document.addEventListener(\"keydown\", function(event){\n\
+							if(event.keyCode == 67){ // key c\n\
+								//event.preventDefault();\n\
+								calibrateGyro();\n\
+							}\n\
+						}, false);\n\
+						\n\
 						function uploadConfig(){\n\
 							\n\
 							let config_string = \"\";\n\
@@ -232,7 +258,7 @@ static const httpd_uri_t kite_config_get_html = {
 						}\n\
 						ready_to_upload_controls = true;\n\
 						function sendData(data, filename, successCallback, failedCallback){\n\
-							console.log(data);\n\
+							//console.log(data);\n\
 							var xmlhttp;\n\
 							xmlhttp = new XMLHttpRequest();\n\
 							xmlhttp.onreadystatechange = function() {\n\
@@ -262,7 +288,7 @@ static const httpd_uri_t kite_config_get_html = {
 						\n\
 						var need_to_upload_controls = false;\n\
 						function uploadControls(){\n\
-							console.log(\"window...innerHTML = \" + window[\"value\" + 10].innerHTML);\n\
+							//console.log(\"window...innerHTML = \" + window[\"value\" + 10].innerHTML);\n\
 							controlActuators(\n\
 								  	window[\"value\" + 7].innerHTML,\n\
 								  	window[\"value\" + 8].innerHTML,\n\
@@ -273,6 +299,9 @@ static const httpd_uri_t kite_config_get_html = {
 								  );\n\
 						}\n\
 						\n\
+						document.getElementById(\"CalibrateGyro\").onclick = function() {\n\
+							calibrateGyro();\n\
+						}\n\
 						document.getElementById(\"ResetRoll\").onclick = function() {\n\
 							configValues[42] = 1;\n\
 							configValues[43] = 1;\n\
@@ -556,8 +585,8 @@ static const httpd_uri_t kite_config_get_html = {
 							for(let i = 0; i < numConfigValues; i++){\n\
 								if(document.getElementById(\"value\" + i) != null && i!=7 && i!=8 && i!=10 && i!=40 && i!= numConfigValues + 0 && i!=numConfigValues + 1){\n\
 									document.getElementById(\"value\" + i).innerHTML = configValues[i];\n\
-									console.log(document.getElementById(\"value\" + i));\n\
-									console.log(configValues[i]);\n\
+									//console.log(document.getElementById(\"value\" + i));\n\
+									//console.log(configValues[i]);\n\
 								}\n\
 							}\n\
 						}\n\
@@ -977,6 +1006,39 @@ int getIndexToNextNumber(char* string_arg, int current_index){
     return current_index;
 }
 
+// ****** GET GYRO CALIBRATION FINISHED ******
+
+static esp_err_t gyro_calibration_finished_get_handler(httpd_req_t *req)
+{
+	ESP_LOGI(TAG, "Getting gyro calibration finished");
+	esp_err_t error;
+    
+    //demand for gyro calibration
+    gyroCalibrationCommand = true;
+    gyroCalibrated = false;
+    //waiting for gyro calibration finished...
+    while(!gyroCalibrated){
+    	vTaskDelay(10);
+	}
+    
+    sprintf(response2, "calibrated");
+    
+    error = httpd_resp_send(req, response2, strlen(response2));
+    return error;
+}
+
+static const httpd_uri_t gyro_calibration_finished_get = {
+    .uri       = "/getCalibrateGyroFinished",
+    .method    = HTTP_GET,
+    .handler   = gyro_calibration_finished_get_handler,
+    /* Let's pass response string in user
+     * context to demonstrate it's usage */
+    .user_ctx  = NULL
+};
+
+
+
+
 // ****** POST CONFIG ******
 
 esp_err_t config_post_handler(httpd_req_t *req)
@@ -1087,6 +1149,7 @@ static httpd_handle_t start_webserver(void)
         httpd_register_uri_handler(server, &kite_config_get_html);
         httpd_register_uri_handler(server, &kite_config_get_values);
         httpd_register_uri_handler(server, &kite_orientation_get_values);
+        httpd_register_uri_handler(server, &gyro_calibration_finished_get);
         httpd_register_uri_handler(server, &config_post);
         httpd_register_uri_handler(server, &control_post);
         #if CONFIG_EXAMPLE_BASIC_AUTH
