@@ -225,11 +225,16 @@ void main_task(void* arg)
 				avg_z *= 1.0/numGyroCalibrationSteps;
 				
 				// save to EEPROM
+				vTaskDelay(10);
 				write2EEPROM(avg_x, 3);
+				vTaskDelay(10);
 				write2EEPROM(avg_y, 4);
+				vTaskDelay(10);
 				write2EEPROM(avg_z, 5);
+				vTaskDelay(10);
 				
 				printf("gyro calibration = %f, %f, %f\n", avg_x, avg_y, avg_z);
+				printf("eeprom state = %f, %f, %f\n", readEEPROM(3), readEEPROM(4), readEEPROM(5));
 				
 				// use now
 				kite_and_line_mpu.calibration_data.gyro[0] = avg_x;
