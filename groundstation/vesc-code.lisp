@@ -1,6 +1,6 @@
-(define launch-line-length 180)
-(define min-eight-line-length 200)
-(define max-eight-line-length 230)
+(define launch-line-length 250)
+(define min-eight-line-length 100)
+(define max-eight-line-length 330)
 
 (define launch-command 0.0)
 (define land-command 1.0)
@@ -82,7 +82,7 @@
                     (set-brake 0.1) ; LAUNCHING
                     (progn
                         (print "generating") 
-                        (set-brake 9) ; GENERATING max-reel-out-tension
+                        (set-brake 15) ; GENERATING max-reel-out-tension
                     )
                 )
                 
@@ -112,7 +112,7 @@
                     (if (= flightmode eight)
                         (progn
                             (print "REEL IN while Eight")
-                            (set-current 9)
+                            (set-current 15)
                         )
                         ; flightmode = landing or final-landing
                         (if (> line-length 53)
