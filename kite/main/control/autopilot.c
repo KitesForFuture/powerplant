@@ -129,6 +129,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	}
 }
 
+// TODO. calculate the correct error even when offset is 180 degrees.
 float getAngleError(float offset, float controllable_axis[3], float axis_we_wish_horizontal[3]){
 	
 	// cross product with (1,0,0)
@@ -156,6 +157,19 @@ float getAngleErrorRollInHorizontalFlight(float offset, float mat[9]){
 float getAngleErrorZAxis(float offset, float mat[9]){
 	float controllable_axis[3] = {mat[6], mat[7], mat[8]};
 	float axis_we_wish_horizontal[3] = {mat[3], mat[4], mat[5]};
+	return getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
+}
+
+float getAngleErrorZAxisImproved(float offset, float mat[9], float line_dir[3]){
+	// the controllable axis is not the z-axis, but the line direction in world coordinates.
+	float controllable_axis[3];
+	mat_transp_mult_vec(mat, line_dir[0], line_dir[1], line_dir[2], controllable_axis);
+	
+	// The y-axis can lie horizontal as a result of yaw and roll. Thus this cannot be used as axis that needs to be made horizontal.
+	// Instead we use the vector orthogonal to nose-direction and line direction.
+	float axis_we_wish_horizontal[3];
+	crossProduct(mat[0], mat[1], mat[2], controllable_axis[0], controllable_axis[1], controllable_axis[2], axis_we_wish_horizontal);
+	
 	return getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
 }
 
@@ -269,7 +283,7 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	
 	//for TESTING HAND LAUNCH:
 	if(mat[0] > 0.12){
-		angle_error = getAngleErrorZAxis(0.0, mat);
+		angle_error = getAngleErrorZAxisImproved(0.0, mat, line_dir);
 	}
 	
 	float desired_roll_angle = clamp(autopilot->landing.roll.P * angle_error - autopilot->landing.roll.D * sensor_data.gyro[2], -60*PI/180, 60*PI/180);
@@ -326,7 +340,8 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	
 	// 2. STAGE P(I)D: flight direction -> neccessary roll angle
-	float z_axis_offset = getAngleErrorZAxis(0.0, mat) - slowly_changing_target_angle_local;
+	float angleErrorZAxis = getAngleErrorZAxisImproved(0.0, mat, line_dir);
+	float z_axis_offset = angleErrorZAxis - slowly_changing_target_angle_local;
 	float desired_roll_angle = clamp(autopilot->eight.roll.P * z_axis_offset - autopilot->eight.roll.D * sensor_data.gyro[2], -45*PI/180, 45*PI/180);
 	
 	
@@ -339,7 +354,7 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	float airbrake = AIRBRAKE_OFF;
 	
-	sendDebuggingData(sensor_data.height, getAngleErrorZAxis(0.0, mat), desired_roll_angle, slowly_changing_target_angle_local, target_angle_adjustment, line_length);
+	sendDebuggingData(sensor_data.height, angleErrorZAxis, desired_roll_angle, slowly_changing_target_angle_local, target_angle_adjustment, line_length);
 	
 	initControlData(control_data_out, 0, 0,
 		y_axis_control - z_axis_control + abs(z_axis_control)*0.3,
@@ -350,6 +365,7 @@ float groundstation_height;
 void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension){
 	
 	float* mat = sensor_data.rotation_matrix;
+	float* line_dir = sensor_data.line_direction_vector;
 	// HEIGHT
 	
 	float d_height = sensor_data.d_height;
@@ -378,7 +394,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	// Z-AXIS
 	
-	float z_axis_offset = getAngleErrorZAxis(0.0, mat);
+	float z_axis_offset = getAngleErrorZAxisImproved(0.0, mat, line_dir); // could use getAngleErrorZAxis(), if pitch stays near horizontal.
 	float z_axis_control = - autopilot->hover.Z.P * z_axis_offset * 0.195935*0.44 * 1.5 + autopilot->hover.Z.D * sensor_data.gyro[2]*0.017341*2;
 	z_axis_control *=100;
 	if(fabs(y_axis_offset) > 1.5) z_axis_control = 0;
