@@ -76,7 +76,12 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	if(autopilot->fm == 3.0){ // 3.0 is VESC final landing mode
 		autopilot->mode = LANDING_MODE;
 	}
-	
+	if (sensor_data.height > 10 && 1.4*sensor_data.height > line_length){
+		autopilot->mode = NOTLANDUNG;
+	}
+	if(autopilot->mode == NOTLANDUNG){
+		notlandung(autopilot, control_data_out, sensor_data); return;
+	}
 	//autopilot->mode = LANDING_MODE; // FOR DEBUGGING ONLY
 	
 	float timestep_in_s = 0.02; // 50 Hz, but TODO: MUST measure more precisely!
@@ -210,6 +215,32 @@ void test_control(Autopilot* autopilot, ControlData* control_data_out, SensorDat
 	float y_axis_control = autopilot->eight.elevator + autopilot->eight.Y.D * sensor_data.gyro[1];
 	sendDebuggingData(3, z_axis_control, autopilot->eight.Z.P, autopilot->eight.Z.D, autopilot->eight.roll.P, autopilot->eight.roll.D);
 	initControlData(control_data_out, 0, 0, y_axis_control - z_axis_control + abs(z_axis_control)*0.5, y_axis_control + z_axis_control + abs(z_axis_control)*0.5, 0, 0, LINE_TENSION_EIGHT); return;
+}
+
+void notlandung(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data){
+	float* mat = sensor_data.rotation_matrix;
+	
+	// SLIGHT DIVE ANGLE
+	float desired_dive_angle = 0.1;
+	
+	float y_axis_offset = -getAngleErrorYAxis(-desired_dive_angle - PI/2, mat);
+	float y_axis_control = 45.0 * autopilot->landing.Y.P * y_axis_offset + 2.31 * autopilot->landing.Y.D * sensor_data.gyro[1];
+	
+	// FIXED ROLL ANGLE OF 30 DEGREES
+	float desired_roll_angle = 30*PI/180;
+	
+	float roll_angle = getAngleErrorRollInHorizontalFlight(0.0, mat); // good in horizontal flight, but better at higher climb/sink rates
+	
+	float x_axis_control = - 28 * autopilot->landing.X.P * (desired_roll_angle-roll_angle) - 11 * autopilot->landing.X.D * sensor_data.gyro[0];
+	x_axis_control = clamp(x_axis_control, -30, 30);
+	y_axis_control = clamp(y_axis_control, -50, 50);
+	
+	// AIRBRAKE EXTENDED
+	float airbrake = AIRBRAKE_ON;
+	initControlData(control_data_out, 0, 0,
+		autopilot->brake*(90+airbrake)*0.005 + y_axis_control - x_axis_control + abs(x_axis_control)*0.3,
+		autopilot->brake*(90+airbrake)*0.005 + y_axis_control + x_axis_control + abs(x_axis_control)*0.3,
+		airbrake, 0, LINE_TENSION_LANDING); return;
 }
 
 void landing_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension, int transition){

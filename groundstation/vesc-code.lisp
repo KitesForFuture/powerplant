@@ -1,6 +1,6 @@
-(define launch-line-length 250)
-(define min-eight-line-length 100)
-(define max-eight-line-length 330)
+(define launch-line-length 200)
+(define min-eight-line-length 150)
+(define max-eight-line-length 250)
 
 (define launch-command 0.0)
 (define land-command 1.0)
@@ -82,7 +82,7 @@
                     (set-brake 0.1) ; LAUNCHING
                     (progn
                         (print "generating") 
-                        (set-brake 15) ; GENERATING max-reel-out-tension
+                        (set-brake 12) ; GENERATING max-reel-out-tension
                     )
                 )
                 

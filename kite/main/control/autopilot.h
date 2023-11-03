@@ -16,6 +16,7 @@
 #define FINAL_LANDING_MODE_HOVER 8 // deprecated
 #define AIRPLANE_MODE 9
 #define TEST_MODE 10
+#define NOTLANDUNG 112
 
 #define FIRST_TURN_MULTIPLIER 0.5
 
@@ -122,6 +123,7 @@ void initAutopilot(Autopilot* autopilot, float* config_values);
 
 void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension);
 
+void notlandung(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data);
 void test_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension);
 void landing_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension, int transition);
 void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float timestep_in_s);
