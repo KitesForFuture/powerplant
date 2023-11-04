@@ -134,6 +134,7 @@ float last_line_length = 0;
 
 void app_main(void){
 	init();
+	printf("compile speed test\n");
 	//storeServoArmForEnergyGeneration();
 	//controlServoAngle(30.0 * reel_in_high_duty_voltage);
 	//float landing_request = 0.0;
