@@ -11,6 +11,7 @@ void sendDebuggingData(float num1, float num2, float num3, float num4, float num
 
 
 void loadConfigVariables(Autopilot* autopilot, float* config_values){
+	printf("test\n");
 	autopilot->hover.Y.P = config_values[14];
 	autopilot->hover.Y.D = config_values[15];
 	
