@@ -157,18 +157,21 @@ float getAngleErrorRollInHorizontalFlight(float offset, float mat[9]){
 float getAngleErrorZAxis(float offset, float mat[9]){
 	float controllable_axis[3] = {mat[6], mat[7], mat[8]};
 	float axis_we_wish_horizontal[3] = {mat[3], mat[4], mat[5]};
+	//printf("OLD: contr_axis = %f, %f, %f, awh = %f, %f, %f\n", controllable_axis[0], controllable_axis[1], controllable_axis[2], axis_we_wish_horizontal[0], axis_we_wish_horizontal[1], axis_we_wish_horizontal[2]);
 	return getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
 }
 
 float getAngleErrorZAxisImproved(float offset, float mat[9], float line_dir[3]){
 	// the controllable axis is not the z-axis, but the line direction in world coordinates.
 	float controllable_axis[3];
-	mat_transp_mult_vec(mat, line_dir[0], line_dir[1], line_dir[2], controllable_axis);
+	mat_transp_mult_vec(mat, -line_dir[0], -line_dir[1], -line_dir[2], controllable_axis);
 	
 	// The y-axis can lie horizontal as a result of yaw and roll. Thus this cannot be used as axis that needs to be made horizontal.
 	// Instead we use the vector orthogonal to nose-direction and line direction.
 	float axis_we_wish_horizontal[3];
-	crossProduct(mat[0], mat[1], mat[2], controllable_axis[0], controllable_axis[1], controllable_axis[2], axis_we_wish_horizontal);
+	crossProduct(controllable_axis[0], controllable_axis[1], controllable_axis[2], mat[0], mat[1], mat[2], axis_we_wish_horizontal);
+	
+	//printf("NEW: line = %f, %f, %f, contr_axis = %f, %f, %f, awh = %f, %f, %f, ", line_dir[0], line_dir[1], line_dir[2], controllable_axis[0], controllable_axis[1], controllable_axis[2], axis_we_wish_horizontal[0], axis_we_wish_horizontal[1], axis_we_wish_horizontal[2]);
 	
 	return getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
 }
@@ -355,7 +358,7 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	float airbrake = AIRBRAKE_OFF;
 	
 	sendDebuggingData(sensor_data.height, angleErrorZAxis, desired_roll_angle, slowly_changing_target_angle_local, target_angle_adjustment, line_length);
-	
+	//sendDebuggingData(angleErrorZAxis, getAngleErrorZAxis(0.0, mat), 0, 0, 0, 0);
 	initControlData(control_data_out, 0, 0,
 		y_axis_control - z_axis_control + abs(z_axis_control)*0.3,
 		y_axis_control + z_axis_control + abs(z_axis_control)*0.3,
