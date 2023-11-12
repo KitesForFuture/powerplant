@@ -13,6 +13,85 @@ float powerInWatts = 0;
 void sendDebuggingData(float num1, float num2, float num3, float num4, float num5, float num6);
 
 
+// TODO. calculate the correct error even when offset is 180 degrees.
+float getAngleError(float offset, float controllable_axis[3], float axis_we_wish_horizontal[3]){
+	
+	// cross product with (1,0,0)
+	float where_axis_we_wish_horizontal_should_be[3];
+	where_axis_we_wish_horizontal_should_be[0] = 0;
+	where_axis_we_wish_horizontal_should_be[1] = controllable_axis[2];
+	where_axis_we_wish_horizontal_should_be[2] = -controllable_axis[1];
+	
+	float l_1_norm = fabs(where_axis_we_wish_horizontal_should_be[1]) + fabs(where_axis_we_wish_horizontal_should_be[2]);
+	
+	if(l_1_norm < 0.05){ // close to undefinedness
+		return 0;
+	}else{
+		normalize(where_axis_we_wish_horizontal_should_be, 3);
+		return sign(axis_we_wish_horizontal[0]) * angle(axis_we_wish_horizontal, where_axis_we_wish_horizontal_should_be) - offset;
+	}
+}
+
+float getAngleErrorRollInHorizontalFlight(float offset, float mat[9]){
+	float controllable_axis[3] = {-mat[0], -mat[1], -mat[2]};
+	float axis_we_wish_horizontal[3] = {mat[3], mat[4], mat[5]};
+	return -getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
+}
+
+float getAngleErrorZAxis(float offset, float mat[9]){
+	float controllable_axis[3] = {mat[6], mat[7], mat[8]};
+	float axis_we_wish_horizontal[3] = {mat[3], mat[4], mat[5]};
+	//printf("OLD: contr_axis = %f, %f, %f, awh = %f, %f, %f\n", controllable_axis[0], controllable_axis[1], controllable_axis[2], axis_we_wish_horizontal[0], axis_we_wish_horizontal[1], axis_we_wish_horizontal[2]);
+	return getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
+}
+
+float getAngleErrorZAxisImproved(float offset, float mat[9], float line_dir[3]){
+	// the controllable axis is not the z-axis, but the line direction in world coordinates.
+	float controllable_axis[3];
+	mat_transp_mult_vec(mat, -line_dir[0], -line_dir[1], -line_dir[2], controllable_axis);
+	
+	// The y-axis can lie horizontal as a result of yaw and roll. Thus this cannot be used as axis that needs to be made horizontal.
+	// Instead we use the vector orthogonal to nose-direction and line direction.
+	float axis_we_wish_horizontal[3];
+	crossProduct(controllable_axis[0], controllable_axis[1], controllable_axis[2], mat[0], mat[1], mat[2], axis_we_wish_horizontal);
+	
+	//printf("NEW: line = %f, %f, %f, contr_axis = %f, %f, %f, awh = %f, %f, %f, ", line_dir[0], line_dir[1], line_dir[2], controllable_axis[0], controllable_axis[1], controllable_axis[2], axis_we_wish_horizontal[0], axis_we_wish_horizontal[1], axis_we_wish_horizontal[2]);
+	
+	return getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
+}
+
+float getAngleErrorYAxis(float offset, float mat[9]){
+	float controllable_axis[3] = {mat[3], mat[4], mat[5]};
+	float axis_we_wish_horizontal[3] = {-mat[6], -mat[7], -mat[8]};
+	return getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
+}
+
+float getLineAngle(float direction_of_neutral_angle, float direction_of_90_deg_angle){
+	float angle = 0;//signed_angle2(flight_direction, line_direction);//angle(new THREE.Vector3(mat[4], mat[5], 0), new THREE.Vector3(mat_line[7], mat_line[8], 0)) - Math.PI*0.5;
+	if(direction_of_neutral_angle == 0){
+		angle = PI/2*sign(direction_of_90_deg_angle);
+	}else if(direction_of_neutral_angle > 0){
+		angle = atan(direction_of_90_deg_angle/direction_of_neutral_angle);
+	}else if(direction_of_90_deg_angle < 0){
+		angle = -PI+atan(direction_of_90_deg_angle/direction_of_neutral_angle);
+	}else{
+		angle = PI+atan(direction_of_90_deg_angle/direction_of_neutral_angle);
+	}
+	return angle;
+}
+
+float getLineRollAngle(float* line_dir){
+	return getLineAngle(-line_dir[2], line_dir[1]);
+}
+
+float getLineYawAngle(float* line_dir){
+	return getLineAngle(line_dir[0], line_dir[1]);
+}
+
+float getLinePitchAngle(float* line_dir){
+	return getLineAngle(-line_dir[2], -line_dir[0]);
+}
+
 void loadConfigVariables(Autopilot* autopilot, float* config_values){
 	autopilot->hover.Y.P = config_values[14];
 	autopilot->hover.Y.D = config_values[15];
@@ -110,7 +189,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		autopilot->y_angle_offset = autopilot->transition_y_angle_offset;
 		hover_control(autopilot, control_data_out, sensor_data, line_length, LINE_TENSION_EIGHT); return;
 	}else if(autopilot->mode == EIGHT_MODE){
-		if(autopilot->fm == 2.0){//landing mode request from VESC
+		if(autopilot->fm == 2.0 && fabs(getAngleErrorZAxisImproved(0.0, sensor_data.rotation_matrix, sensor_data.line_direction_vector)) < 0.2){//landing mode request from VESC
 			autopilot->mode = LANDING_MODE;
 		}
 		eight_control(autopilot, control_data_out, sensor_data, line_length, timestep_in_s); return;
@@ -131,85 +210,6 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	}else if(autopilot->mode == TEST_MODE){
 		return test_control(autopilot, control_data_out, sensor_data, line_length, line_tension);
 	}
-}
-
-// TODO. calculate the correct error even when offset is 180 degrees.
-float getAngleError(float offset, float controllable_axis[3], float axis_we_wish_horizontal[3]){
-	
-	// cross product with (1,0,0)
-	float where_axis_we_wish_horizontal_should_be[3];
-	where_axis_we_wish_horizontal_should_be[0] = 0;
-	where_axis_we_wish_horizontal_should_be[1] = controllable_axis[2];
-	where_axis_we_wish_horizontal_should_be[2] = -controllable_axis[1];
-	
-	float l_1_norm = fabs(where_axis_we_wish_horizontal_should_be[1]) + fabs(where_axis_we_wish_horizontal_should_be[2]);
-	
-	if(l_1_norm < 0.05){ // close to undefinedness
-		return 0;
-	}else{
-		normalize(where_axis_we_wish_horizontal_should_be, 3);
-		return sign(axis_we_wish_horizontal[0]) * angle(axis_we_wish_horizontal, where_axis_we_wish_horizontal_should_be) - offset;
-	}
-}
-
-float getAngleErrorRollInHorizontalFlight(float offset, float mat[9]){
-	float controllable_axis[3] = {-mat[0], -mat[1], -mat[2]};
-	float axis_we_wish_horizontal[3] = {mat[3], mat[4], mat[5]};
-	return -getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
-}
-
-float getAngleErrorZAxis(float offset, float mat[9]){
-	float controllable_axis[3] = {mat[6], mat[7], mat[8]};
-	float axis_we_wish_horizontal[3] = {mat[3], mat[4], mat[5]};
-	//printf("OLD: contr_axis = %f, %f, %f, awh = %f, %f, %f\n", controllable_axis[0], controllable_axis[1], controllable_axis[2], axis_we_wish_horizontal[0], axis_we_wish_horizontal[1], axis_we_wish_horizontal[2]);
-	return getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
-}
-
-float getAngleErrorZAxisImproved(float offset, float mat[9], float line_dir[3]){
-	// the controllable axis is not the z-axis, but the line direction in world coordinates.
-	float controllable_axis[3];
-	mat_transp_mult_vec(mat, -line_dir[0], -line_dir[1], -line_dir[2], controllable_axis);
-	
-	// The y-axis can lie horizontal as a result of yaw and roll. Thus this cannot be used as axis that needs to be made horizontal.
-	// Instead we use the vector orthogonal to nose-direction and line direction.
-	float axis_we_wish_horizontal[3];
-	crossProduct(controllable_axis[0], controllable_axis[1], controllable_axis[2], mat[0], mat[1], mat[2], axis_we_wish_horizontal);
-	
-	//printf("NEW: line = %f, %f, %f, contr_axis = %f, %f, %f, awh = %f, %f, %f, ", line_dir[0], line_dir[1], line_dir[2], controllable_axis[0], controllable_axis[1], controllable_axis[2], axis_we_wish_horizontal[0], axis_we_wish_horizontal[1], axis_we_wish_horizontal[2]);
-	
-	return getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
-}
-
-float getAngleErrorYAxis(float offset, float mat[9]){
-	float controllable_axis[3] = {mat[3], mat[4], mat[5]};
-	float axis_we_wish_horizontal[3] = {-mat[6], -mat[7], -mat[8]};
-	return getAngleError(offset, controllable_axis, axis_we_wish_horizontal);
-}
-
-float getLineAngle(float direction_of_neutral_angle, float direction_of_90_deg_angle){
-	float angle = 0;//signed_angle2(flight_direction, line_direction);//angle(new THREE.Vector3(mat[4], mat[5], 0), new THREE.Vector3(mat_line[7], mat_line[8], 0)) - Math.PI*0.5;
-	if(direction_of_neutral_angle == 0){
-		angle = PI/2*sign(direction_of_90_deg_angle);
-	}else if(direction_of_neutral_angle > 0){
-		angle = atan(direction_of_90_deg_angle/direction_of_neutral_angle);
-	}else if(direction_of_90_deg_angle < 0){
-		angle = -PI+atan(direction_of_90_deg_angle/direction_of_neutral_angle);
-	}else{
-		angle = PI+atan(direction_of_90_deg_angle/direction_of_neutral_angle);
-	}
-	return angle;
-}
-
-float getLineRollAngle(float* line_dir){
-	return getLineAngle(-line_dir[2], line_dir[1]);
-}
-
-float getLineYawAngle(float* line_dir){
-	return getLineAngle(line_dir[0], line_dir[1]);
-}
-
-float getLinePitchAngle(float* line_dir){
-	return getLineAngle(-line_dir[2], -line_dir[0]);
 }
 
 static float desired_dive_angle_smooth = 0;
