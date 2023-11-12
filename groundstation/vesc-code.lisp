@@ -115,12 +115,13 @@
                             (set-current 15)
                         )
                         ; flightmode = landing or final-landing
-                        (if (> line-length 53)
-                            (set-current 9)
+                        (if (> line-length 43)
+                            (set-current 6)
                             (if (> line-length 0)
                                 (progn
                                     (set-current (+ 1.7 (* 0.1 line-length)))
                                 )
+                                (set-current 0)
                             )
                         )
                     )

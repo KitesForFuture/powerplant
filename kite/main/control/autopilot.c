@@ -7,6 +7,9 @@
 #define AIRBRAKE_ON 90
 #define AIRBRAKE_OFF -90
 
+float old_line_length = 0;
+float powerInWatts = 0;
+
 void sendDebuggingData(float num1, float num2, float num3, float num4, float num5, float num6);
 
 
@@ -122,6 +125,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 			//autopilot->direction = 1;
 			autopilot->multiplier = FIRST_TURN_MULTIPLIER;
 			autopilot->mode = EIGHT_MODE;
+			old_line_length = 0;
 		}
 		return landing_control(autopilot, control_data_out, sensor_data, line_length, line_tension, true);
 	}else if(autopilot->mode == TEST_MODE){
@@ -314,6 +318,7 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 		airbrake, 0, LINE_TENSION_LANDING); return;
 }
 
+
 void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float timestep_in_s){
 	
 	// DIRECTION TIMER
@@ -357,7 +362,16 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	float airbrake = AIRBRAKE_OFF;
 	
-	sendDebuggingData(sensor_data.height, angleErrorZAxis, desired_roll_angle, slowly_changing_target_angle_local, target_angle_adjustment, line_length);
+	if(old_line_length == 0){
+		old_line_length = line_length;
+	}else{
+		float reel_out_speed = (line_length - old_line_length)/timestep_in_s;
+		float forceInNewtons = 60;
+		powerInWatts = 0.98 * powerInWatts + 0.02 * reel_out_speed * forceInNewtons;
+		old_line_length = line_length;
+	}
+	
+	sendDebuggingData(sensor_data.height, angleErrorZAxis, desired_roll_angle, slowly_changing_target_angle_local, target_angle_adjustment, powerInWatts);
 	//sendDebuggingData(angleErrorZAxis, getAngleErrorZAxis(0.0, mat), 0, 0, 0, 0);
 	initControlData(control_data_out, 0, 0,
 		y_axis_control - z_axis_control + abs(z_axis_control)*0.3,
