@@ -1,6 +1,0 @@
-source "/home/benjamin/esp/esp-idf_new/esp-idf/components/app_update/Kconfig.projbuild"
-source "/home/benjamin/esp/esp-idf_new/esp-idf/components/bootloader/Kconfig.projbuild"
-source "/home/benjamin/esp/esp-idf_new/esp-idf/components/esp_rom/Kconfig.projbuild"
-source "/home/benjamin/esp/esp-idf_new/esp-idf/components/esptool_py/Kconfig.projbuild"
-source "/home/benjamin/esp/esp-idf_new/esp-idf/components/partition_table/Kconfig.projbuild"
-source "/home/benjamin/KFF/powerplant/i2c_simple/main/Kconfig.projbuild"
