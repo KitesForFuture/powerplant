@@ -38,8 +38,8 @@
 #define MAX_BRAKE_DEFLECTION 80
 #define MAX_PROPELLER_SPEED 90 // AT MOST 90
 
-struct i2c_bus bus0 = {14, 25};
-struct i2c_bus bus1 = {18, 19};
+struct i2c_bus bus0 = {18, 19};
+struct i2c_bus bus1 = {25, 14};
 
 static Autopilot autopilot;
 

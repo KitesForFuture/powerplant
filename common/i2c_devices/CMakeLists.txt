@@ -2,7 +2,7 @@ add_library(i2c_devices
  interchip.c
  dps310.c
  cat24c256.c
- mpu9250.c)
+ icm20948.c)
  
 
 include_directories(../helpers)

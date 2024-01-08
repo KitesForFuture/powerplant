@@ -85,13 +85,13 @@
 
 //Time mpu_last_update_time = 0;
 
-float getAccelX(Mpu_raw_data_9250 mpu_raw_data){
+float getAccelX(raw_data_ICM20948 mpu_raw_data){
 	return accel_x;
 }
-float getAccelY(Mpu_raw_data_9250 mpu_raw_data){
+float getAccelY(raw_data_ICM20948 mpu_raw_data){
 	return accel_y;
 }
-float getAccelZ(Mpu_raw_data_9250 mpu_raw_data){
+float getAccelZ(raw_data_ICM20948 mpu_raw_data){
 	return accel_z;
 }
 
@@ -153,7 +153,7 @@ void FAKEupdateRotationMatrix(Orientation_Data* orientation_data){
 	orientation_data->rotation_matrix_transpose[8] = orientation_data->rotation_matrix[8];
 }
 
-void updateRotationMatrix(Orientation_Data* orientation_data, Mpu_raw_data_9250 mpu_raw_data){
+void updateRotationMatrix(Orientation_Data* orientation_data, raw_data_ICM20948 mpu_raw_data){
 	
 	if(orientation_data->mpu_last_update_time == 0){
 		orientation_data->mpu_last_update_time = start_timer();

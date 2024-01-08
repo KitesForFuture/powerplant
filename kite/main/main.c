@@ -6,7 +6,7 @@
 
 #include "../../common/i2c_devices/cat24c256.h"
 #include "../../common/i2c_devices/dps310.h"
-#include "../../common/i2c_devices/mpu9250.h"
+#include "../../common/i2c_devices/icm20948.h"
 
 #include "control/rotation_matrix.h"
 #include "../../common/pwm/motors.h"
@@ -38,8 +38,8 @@
 #define MAX_BRAKE_DEFLECTION 59
 #define MAX_PROPELLER_SPEED 90 // AT MOST 90
 
-struct i2c_bus bus0 = {14, 25};
-struct i2c_bus bus1 = {18, 19};
+struct i2c_bus bus0 = {18, 19};
+struct i2c_bus bus1 = {25, 14};
 
 static Autopilot autopilot;
 
@@ -134,11 +134,11 @@ void main_task(void* arg)
 	};
 	*/
 	
-	Mpu_raw_data_9250 kite_and_line_mpu_calibration = {
-		{0.132-0.135, 0.12, 0.135-0.31},
-		{readEEPROM(3), readEEPROM(4), readEEPROM(5)},
+	raw_data_ICM20948 kite_and_line_mpu_calibration = {
+		{0.132-0.135, 0.12, 0.135-0.31}, // accel
+		{0, 0, 0},//{readEEPROM(3), readEEPROM(4), readEEPROM(5)}, // gyro
 		//{52.76, 50.66, -50.33},//{1.74, 0.93, 0.08},
-		{65.6, 6.8, 22.5}
+		{65.6, 6.8, 22.5} // magnet
 	};
 	
 	
@@ -153,20 +153,20 @@ void main_task(void* arg)
 	setSpeed(4, 0);
 	//setSpeed(2, 90);
 	//setSpeed(4, 90);
-	MPU9250 kite_and_line_mpu;
+	ICM20948 kite_and_line_mpu;
 	
 	kite_and_line_mpu.bus = bus0;
-	kite_and_line_mpu.address = 105;
+	kite_and_line_mpu.address = 0x68;
 	kite_and_line_mpu.magnetometer_address = 12;
 	kite_and_line_mpu.calibration_data = kite_and_line_mpu_calibration;
-    initMPU9250(&kite_and_line_mpu);
+    initICM20948(&kite_and_line_mpu);
     
-    Mpu_raw_data_9250 kite_and_line_mpu_raw_data = {
+    raw_data_ICM20948 kite_and_line_mpu_raw_data = {
 		{0, 0, 0},
 		{0, 0, 0},
 		{0, 0, 0}
 	};
-	readMPUData9250(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
+	readDataICM20948(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
 	updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
 	
 	
@@ -191,7 +191,7 @@ void main_task(void* arg)
 	int numGyroCalibrationSteps = 100;
 	int gyroCalibrationStepsOutstanding = 0;
 	
-	if(getAccelX(kite_and_line_mpu_raw_data) < 0){
+	if(true || getAccelX(kite_and_line_mpu_raw_data) < 0){
 		printf("entering config mode\n");
 		readConfigValuesFromEEPROM(config_values);
 		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data);
@@ -213,7 +213,7 @@ void main_task(void* arg)
 			}
 			
 			if(gyroCalibrationStepsOutstanding > 0){
-				readMPURawData9250(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
+				readRawDataICM20948(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
 				avg_x += kite_and_line_mpu_raw_data.gyro[0];
 				avg_y += kite_and_line_mpu_raw_data.gyro[1];
 				avg_z += kite_and_line_mpu_raw_data.gyro[2];
@@ -243,7 +243,7 @@ void main_task(void* arg)
 				
 				gyroCalibrated = true;
 			}else{
-				readMPUData9250(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
+				readDataICM20948(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
 				updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
 			}
 			/*
@@ -302,7 +302,7 @@ void main_task(void* arg)
 		
 		update_dps310_if_necessary();
 		
-		readMPUData9250(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
+		readDataICM20948(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
 		updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
 		
 		if(propellerBootState < 0 && getAccelX(kite_and_line_mpu_raw_data) < 0){ // kite nose pointing down

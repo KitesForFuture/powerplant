@@ -972,7 +972,7 @@ static const httpd_uri_t kite_config_get_values = {
 
 static esp_err_t orientation_get_handler(httpd_req_t *req)
 {
-	ESP_LOGI(TAG, "Getting kite orientation");
+	//ESP_LOGI(TAG, "Getting kite orientation");
 	esp_err_t error;
     
     sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f",
