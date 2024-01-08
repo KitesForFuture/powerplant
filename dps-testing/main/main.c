@@ -174,6 +174,7 @@ void main_task(void* arg)
 	while(1) {
 		vTaskDelay(1);
 		update_dps310_if_necessary();
+		printf("height is %f.\n", getHeight());
 		
 		readMPUData9250(&line_mpu, &line_mpu_raw_data);
 		

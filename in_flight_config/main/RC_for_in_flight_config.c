@@ -287,7 +287,7 @@ static const httpd_uri_t kite_config_get_html = {
 						\n\
 						diagram.diagramLines[1].color[0] = 0.0;\n\
 						diagram.diagramLines[1].color[1] = 0.0;\n\
-						diagram.diagramLines[1].color[1] = 0.8;\n\
+						diagram.diagramLines[1].color[2] = 0.8;\n\
 						\n\
 						diagram.diagramLines[2].color[1] = 0.0;\n\
 						diagram.diagramLines[2].color[2] = 0.0;\n\
