@@ -136,7 +136,7 @@ void main_task(void* arg)
 	
 	raw_data_ICM20948 kite_and_line_mpu_calibration = {
 		{0.132-0.135, 0.12, 0.135-0.31}, // accel
-		{0, 0, 0},//{readEEPROM(3), readEEPROM(4), readEEPROM(5)}, // gyro
+		{readEEPROM(3), readEEPROM(4), readEEPROM(5)}, // gyro
 		//{52.76, 50.66, -50.33},//{1.74, 0.93, 0.08},
 		{65.6, 6.8, 22.5} // magnet
 	};
@@ -197,12 +197,16 @@ void main_task(void* arg)
 		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data);
 		
 		init_dps310(bus1);
-		
+		Time t = start_timer();
+		TickType_t xLastWakeTime;
+		xLastWakeTime = xTaskGetTickCount();
 		while(1){
-			vTaskDelay(1);
+			//vTaskDelay(0);
+			vTaskDelayUntil(&xLastWakeTime, 2);
+			float timestep = get_time_step(&t);
+			printf("timestep = %f\n", timestep);
+			
 			update_dps310_if_necessary();
-			
-			
 			
 			if(gyroCalibrationCommand){
 				gyroCalibrationCommand = false;

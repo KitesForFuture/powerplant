@@ -53,7 +53,7 @@ void enableMagnetometerICM20948(ICM20948 *mpu){
 }
 
 void readRawDataICM20948(ICM20948 *mpu, raw_data_ICM20948 *out){
-	
+	i2c_send(mpu->bus, mpu->address, 127, 0*16, 1); // select User Bank 0
 	//read acc/gyro data at register 59..., 67...
 	uint8_t data[12];
 	i2c_receiveByteArray(mpu->bus, mpu->address, 45, 12, data);
@@ -93,7 +93,7 @@ void readRawDataICM20948(ICM20948 *mpu, raw_data_ICM20948 *out){
 
 void readDataICM20948(ICM20948 *mpu, raw_data_ICM20948 *position){
 	readRawDataICM20948(mpu, position);
-	printf("%f, %f, %f\n", position->accel[0], position->accel[1], position->accel[2]);
+	//printf("%f, %f, %f, %f, %f, %f, %f, %f, %f\n", position->accel[0], position->accel[1], position->accel[2], position->gyro[0], position->gyro[1], position->gyro[2], position->magnet[0], position->magnet[1], position->magnet[2]);
 	position->accel[0] -= mpu->calibration_data.accel[0];
 	position->accel[1] -= mpu->calibration_data.accel[1];
 	position->accel[2] -= mpu->calibration_data.accel[2];
