@@ -14,7 +14,6 @@ struct i2c_bus bus1 = {25, 14};
 
 void main_task(void* arg)
 {
-	init_uptime();
 	
 	init_dps310(bus1);
 	
