@@ -22,8 +22,6 @@
 
 #include "mymath.c"
 
-
-#include "../../common/i2c_devices/cat24c256.h"
 #include "../../common/i2c_devices/dps310.h"
 
 #include "../../common/uart.c"
@@ -47,24 +45,12 @@
 #define LAND_COMMAND 0
 #define LAUNCH_COMMAND 1
 
-struct i2c_bus bus0 = {18, 19};//SDA, SCL
-
-float bmp_calib = 0;
+struct i2c_bus bus0 = {25, 14};//SDA, SCL
 
 int internet_connected = false;
 
 float currentServoAngle = SERVO_MIN_ANGLE;
 float direction = 1;
-
-void set_bmp_calibration(float value){
-	//printf("setting bmp_calibration(gs) to %f * 10**-5\n", value*100000);
-	float readValue = readEEPROM(0);
-	if(value != readValue){
-		write2EEPROM(value, 0);
-	}
-	bmp_calib = value;
-	//updateBMP280Config(value);
-}
 
 void controlServoAngle(float reel_in_speed){
 	currentServoAngle += direction*0.0045*reel_in_speed;
@@ -92,7 +78,7 @@ void processReceivedConfigValuesViaWiFi(float* config_values){
 		//forwarding config, while appending groundstation-bmp280-config
 		float config_values_kite_and_gs[NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS];
 		for(int i = 0; i < NUM_CONFIG_FLOAT_VARS; i++) config_values_kite_and_gs[i] = config_values[i];
-		config_values_kite_and_gs[NUM_CONFIG_FLOAT_VARS + 0] = bmp_calib;
+		config_values_kite_and_gs[NUM_CONFIG_FLOAT_VARS + 0] = 0; // not needed anymore
 		sendUARTArray100(config_values_kite_and_gs, NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS, ESP32_UART); // FORWARD config (appending groundstation config) to access point ESP32
 	}
 }
@@ -105,8 +91,6 @@ void processReceivedDebuggingDataViaWiFi(float* debugging_data){
 
 void init(){
 	
-	init_cat24(bus0);
-	//bmp_calib = readEEPROM(0);
     init_dps310(bus0);
 	
 	initMotors(); // servo (pwm) outputs
@@ -184,7 +168,7 @@ void app_main(void){
 		}else if(receive_array_length == NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS){ // received from in_flight_config CONFIG TOOL
 			printf("sending config to kite via ESP-NOW\n");
 			sendDataArrayLarge(CONFIG_MODE, receive_array, NUM_CONFIG_FLOAT_VARS); // *** FORWARD of CONFIG ARRAY from UART to ESP-NOW, stripping groundstation config
-			set_bmp_calibration(receive_array[NUM_CONFIG_FLOAT_VARS+0]);
+			//set_bmp_calibration(receive_array[NUM_CONFIG_FLOAT_VARS+0]); // we have no BMP anymore that needs calibrating
 		}
 		
 		// **************** MANUAL SWITCH ****************

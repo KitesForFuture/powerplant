@@ -160,6 +160,7 @@ void main_task(void* arg)
 	kite_and_line_mpu.magnetometer_address = 12;
 	kite_and_line_mpu.calibration_data = kite_and_line_mpu_calibration;
     initICM20948(&kite_and_line_mpu);
+    printf("initialized icm-20948");
     
     raw_data_ICM20948 kite_and_line_mpu_raw_data = {
 		{0, 0, 0},

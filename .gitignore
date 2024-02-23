@@ -1,5 +1,7 @@
 i2c_simple
 
+groundstation_old
+
 magnet-testing/build
 magnet-testing/sdkconfig
 

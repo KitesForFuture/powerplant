@@ -109,11 +109,11 @@ void initICM20948(ICM20948 *mpu){//struct i2c_bus bus_arg, Mpu_raw_data calibrat
 
 	//wake up ICM20948 from sleep mode
 	vTaskDelay(10);
-	i2c_send(mpu->bus, mpu->address, 127, 0, 1);
+	i2c_send(mpu->bus, mpu->address, 127, 0, 1); // select user bank 0
 	vTaskDelay(10);
-	i2c_send(mpu->bus, mpu->address, 6, 1, 1);
+	i2c_send(mpu->bus, mpu->address, 6, 1, 1); // auto select clock
 	vTaskDelay(10);
-	printf("%d\n", i2c_receive(mpu->bus, mpu->address, 45, 1));
+	printf("%d\n", i2c_receive(mpu->bus, mpu->address, 45, 1)); // accel_x_h
 
 	//mpu_pos_calibration = calibration_data;
 	
