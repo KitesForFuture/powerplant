@@ -41,6 +41,7 @@ struct _Autopilot {
 		} Z;
 		
 		struct {
+			float P;
 			float D;
 		} X;
 		

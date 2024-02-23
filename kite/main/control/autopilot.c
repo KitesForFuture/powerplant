@@ -99,6 +99,7 @@ void loadConfigVariables(Autopilot* autopilot, float* config_values){
 	autopilot->hover.Z.P = config_values[17];
 	autopilot->hover.Z.D = config_values[18];
 	
+	autopilot->hover.X.P = config_values[47];
 	autopilot->hover.X.D = config_values[19];
 	
 	autopilot->hover.H.P = config_values[20];

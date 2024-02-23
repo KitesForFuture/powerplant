@@ -645,6 +645,7 @@ static const httpd_uri_t kite_config_get_html = {
 						addDegrees(\"Pitch(Y) Offset\", 16)\n\
 						addPIDConstant(\"Hover Yaw(Z) Compensation\", 17);\n\
 						addPIDConstant(\"Hover Yaw(Z) Damping\", 18);\n\
+						addPIDConstant(\"Hover Roll(X) Compensation\", 47);\n\
 						addPIDConstant(\"Hover Roll(X) Damping\", 19);\n\
 						addPIDConstant(\"Hover Height Compensation\", 20);\n\
 						addPIDConstant(\"Hover Height Dampening\", 21);\n\
