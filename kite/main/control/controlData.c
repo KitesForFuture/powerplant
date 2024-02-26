@@ -1,8 +1,10 @@
 #include "controlData.h"
 
-void initControlData(ControlData* controlData, float left_prop, float right_prop, float left_elevon, float right_elevon, float brake, float rudder, float line_tension){
+void initControlData(ControlData* controlData, float left_prop, float right_prop, float left_aileron, float right_aileron, float left_elevon, float right_elevon, float brake, float rudder, float line_tension){
 	controlData->left_prop = left_prop;
 	controlData->right_prop = right_prop;
+	controlData->left_aileron = left_aileron;
+	controlData->right_aileron = right_aileron;
 	controlData->left_elevon = left_elevon;
 	controlData->right_elevon = right_elevon;
 	controlData->brake = brake;

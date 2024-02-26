@@ -236,7 +236,7 @@ void test_control(Autopilot* autopilot, ControlData* control_data_out, SensorDat
 	
 	float y_axis_control = autopilot->eight.elevator + autopilot->eight.Y.D * sensor_data.gyro[1];
 	sendDebuggingData(3, z_axis_control, autopilot->eight.Z.P, autopilot->eight.Z.D, autopilot->eight.roll.P, autopilot->eight.roll.D);
-	initControlData(control_data_out, 0, 0, y_axis_control - z_axis_control + abs(z_axis_control)*0.5, y_axis_control + z_axis_control + abs(z_axis_control)*0.5, 0, 0, LINE_TENSION_EIGHT); return;
+	initControlData(control_data_out, 0, 0, y_axis_control - z_axis_control + abs(z_axis_control)*0.5, y_axis_control + z_axis_control + abs(z_axis_control)*0.5, 0, 0, 0, 0, LINE_TENSION_EIGHT); return;
 }
 
 void notlandung(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data){
@@ -262,6 +262,8 @@ void notlandung(Autopilot* autopilot, ControlData* control_data_out, SensorData 
 	initControlData(control_data_out, 0, 0,
 		autopilot->brake*(90+airbrake)*0.005 + y_axis_control - x_axis_control + abs(x_axis_control)*0.3,
 		autopilot->brake*(90+airbrake)*0.005 + y_axis_control + x_axis_control + abs(x_axis_control)*0.3,
+		0,
+		0,
 		airbrake, 0, LINE_TENSION_LANDING); return;
 }
 
@@ -316,6 +318,8 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	initControlData(control_data_out, 0, 0,
 		autopilot->brake*(90+airbrake)*0.005 + y_axis_control - x_axis_control + abs(x_axis_control)*0.3,
 		autopilot->brake*(90+airbrake)*0.005 + y_axis_control + x_axis_control + abs(x_axis_control)*0.3,
+		0,
+		0,
 		airbrake, 0, LINE_TENSION_LANDING); return;
 }
 
@@ -377,6 +381,8 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	initControlData(control_data_out, 0, 0,
 		y_axis_control - z_axis_control + abs(z_axis_control)*0.3,
 		y_axis_control + z_axis_control + abs(z_axis_control)*0.3,
+		0,
+		0,
 		airbrake, 0, LINE_TENSION_EIGHT); return;
 }
 float groundstation_height;
@@ -446,6 +452,6 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	}
 	
 	//sendDebuggingData(sensor_data.height, x_axis_control, z_axis_control, groundstation_height, autopilot->RC_switch, autopilot->RC_target_angle);
-	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, /*y_axis_control*0.25*/-90, 0, line_tension); return;
+	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, left_elevon, right_elevon, /*y_axis_control*0.25*/-90, 0, line_tension); return;
 	
 }
