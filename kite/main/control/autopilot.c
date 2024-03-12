@@ -392,12 +392,14 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	float* line_dir = sensor_data.line_direction_vector;
 	// HEIGHT
 	
+	float height = sensor_data.height;
 	float d_height = sensor_data.d_height;
 	
-	float line_angle = safe_asin(sensor_data.height/(line_length == 0 ? 1.0 : line_length));
+	float desired_height = (line_length == 0 ? 1.0 : line_length) * 0.5; // * sin(PI/6.0)
+	float height_error = height - desired_height;
 	
 	//TODO: cleanup all those constants!
-	float height_control_normed = clamp(0.55 - 1.15*5.8*autopilot->hover.H.P * (line_angle-PI/6.0) - 1.15*autopilot->hover.H.D * clamp(d_height, -1.0, 1.0), 0.2, 1.5);
+	float height_control_normed = clamp(0.55 - autopilot->hover.H.P * height_error - autopilot->hover.H.D * clamp(d_height, -1.0, 1.0), 0.2, 1.5);
 	
 	
 	// autopilot is an approximation to the airflow seen by the elevons (propeller airflow + velocity in height direction)
@@ -422,9 +424,11 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	float z_axis_control = - autopilot->hover.Z.P * z_axis_offset * 0.195935*0.44 * 1.5 + autopilot->hover.Z.D * sensor_data.gyro[2]*0.017341*2;
 	z_axis_control *=100;
 	if(fabs(y_axis_offset) > 1.5) z_axis_control = 0;
+	
 	// X-AXIS
 	
-	float x_axis_control = (normed_airflow > 0.0001 ? 1.0/(normed_airflow*normed_airflow) : 1.0) * autopilot->hover.X.D * sensor_data.gyro[0]*0.75;
+	float roll_angle = getLineRollAngle(line_dir);
+	float x_axis_control = (normed_airflow > 0.0001 ? 1.0/(normed_airflow*normed_airflow) : 1.0) * (autopilot->hover.X.P * roll_angle + autopilot->hover.X.D * sensor_data.gyro[0]*0.75);
 	x_axis_control *= 100;
 	
 	// FOR DEBUGGING
@@ -452,6 +456,6 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	}
 	
 	//sendDebuggingData(sensor_data.height, x_axis_control, z_axis_control, groundstation_height, autopilot->RC_switch, autopilot->RC_target_angle);
-	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, left_elevon, right_elevon, /*y_axis_control*0.25*/-90, 0, line_tension); return;
+	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, left_elevon, right_elevon, AIRBRAKE_OFF, 0, line_tension); return;
 	
 }
