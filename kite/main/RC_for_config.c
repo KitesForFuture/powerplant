@@ -630,6 +630,8 @@ static const httpd_uri_t kite_config_get_html = {
 						addSwitch(\"Props\", 11);\n\
 						addDegrees(\"Left Elevon Trim\", 37);\n\
 						addDegrees(\"Right Elevon Trim\", 38);\n\
+						addDegrees(\"Left Aileron Trim\", 48);\n\
+						addDegrees(\"Right Aileron Trim\", 49);\n\
 						addDegrees(\"Brake Trim\", 39);\n\
 						addDegrees(\"Rudder Trim\", 41);\n\
 						\n\

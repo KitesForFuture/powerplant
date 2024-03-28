@@ -150,7 +150,8 @@ void main_task(void* arg)
 	};
 	
 	
-	int output_pins[] = {27,23, 2/*prop*/, 12, 15/*prop*/,13,17,16};
+	//int output_pins[] = {27,23, 2/*prop*/, 12, 15/*prop*/,13,17,16};
+	int output_pins[] = {23,17, 2/*prop*/, 27, 15/*prop*/,13,12,33};
 	initMotors(output_pins, 8);
 	
 	setAngle(0, 0);
