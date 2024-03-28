@@ -77,7 +77,7 @@ void setConfigValues(float* values){
 }
 
 void actuatorControl(float left_aileron, float right_aileron, float left_elevon, float right_elevon, float brake, float rudder, float left_propeller, float right_propeller, float propeller_safety_max){
-	
+	printf("right_aileron = %f\n", right_aileron);
 	if(config_values[52]){ // SWAPPED
 		setAngle(6, config_values[48] + config_values[50]*left_aileron); // left aileron
 		setAngle(7, config_values[49] + config_values[51]*right_aileron); // right aileron
@@ -150,8 +150,8 @@ void main_task(void* arg)
 	};
 	
 	
-	int output_pins[] = {27,26,12,13,5,15};
-	initMotors(output_pins, 6);
+	int output_pins[] = {27,23, 2/*prop*/, 12, 15/*prop*/,13,17,16};
+	initMotors(output_pins, 8);
 	
 	setAngle(0, 0);
 	setAngle(1, 0);
@@ -159,6 +159,8 @@ void main_task(void* arg)
 	setAngle(5, 0);
 	setSpeed(2, 0);
 	setSpeed(4, 0);
+	setAngle(6, 0);
+	setAngle(7, 0);
 	//setSpeed(2, 90);
 	//setSpeed(4, 90);
 	ICM20948 kite_and_line_mpu;
@@ -213,7 +215,7 @@ void main_task(void* arg)
 			//vTaskDelay(0);
 			vTaskDelayUntil(&xLastWakeTime, 2);
 			float timestep = get_time_step(&t);
-			printf("timestep = %f\n", timestep);
+			//printf("timestep = %f\n", timestep);
 			
 			update_dps310_if_necessary();
 			

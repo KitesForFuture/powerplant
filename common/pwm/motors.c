@@ -31,6 +31,8 @@ void initMotors(int pins[], int length){
     if(length > 3) mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM0B, pins[3]);
     if(length > 4) mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM1A, pins[4]);
     if(length > 5) mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM1B, pins[5]);
+    if(length > 6) mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM1A, pins[6]);
+    if(length > 7) mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM1B, pins[7]);
     
     mcpwm_config_t pwm_config;
     pwm_config.frequency = 50;
@@ -41,6 +43,7 @@ void initMotors(int pins[], int length){
     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config);
     mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_0, &pwm_config);
     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_1, &pwm_config);
+    mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_1, &pwm_config);
 }
 
 // angle: -90 ... 90
@@ -60,6 +63,8 @@ void setAngle(int motor, float degreeF){
 		case 3: unit = MCPWM_UNIT_1; gen = MCPWM_OPR_B; break;
 		case 4: unit = MCPWM_UNIT_0; gen = MCPWM_OPR_A; timer = MCPWM_TIMER_1; break;
 		case 5: unit = MCPWM_UNIT_0; gen = MCPWM_OPR_B; timer = MCPWM_TIMER_1; break;
+		case 6: unit = MCPWM_UNIT_1; gen = MCPWM_OPR_A; timer = MCPWM_TIMER_1; break;
+		case 7: unit = MCPWM_UNIT_1; gen = MCPWM_OPR_B; timer = MCPWM_TIMER_1; break;
 		default: break;
 	}
 	//MCPWM_TIMER_0 automatically sets the output to MCPWM0X?
@@ -82,6 +87,8 @@ void setSpeed(int motor, float degreeF){
 		case 3: unit = MCPWM_UNIT_1; gen = MCPWM_OPR_B; break;
 		case 4: unit = MCPWM_UNIT_0; gen = MCPWM_OPR_A; timer = MCPWM_TIMER_1; break;
 		case 5: unit = MCPWM_UNIT_0; gen = MCPWM_OPR_B; timer = MCPWM_TIMER_1; break;
+		case 6: unit = MCPWM_UNIT_1; gen = MCPWM_OPR_A; timer = MCPWM_TIMER_1; break;
+		case 7: unit = MCPWM_UNIT_1; gen = MCPWM_OPR_B; timer = MCPWM_TIMER_1; break;
 		default: break;
 	}
 	//MCPWM_TIMER_0 automatically sets the output to MCPWM0X?
