@@ -76,7 +76,15 @@ void setConfigValues(float* values){
 	loadConfigVariables(&autopilot, config_values);
 }
 
-void actuatorControl(float left_elevon, float right_elevon, float brake, float rudder, float left_propeller, float right_propeller, float propeller_safety_max){
+void actuatorControl(float left_aileron, float right_aileron, float left_elevon, float right_elevon, float brake, float rudder, float left_propeller, float right_propeller, float propeller_safety_max){
+	
+	if(config_values[52]){ // SWAPPED
+		setAngle(6, config_values[48] + config_values[50]*left_aileron); // left aileron
+		setAngle(7, config_values[49] + config_values[51]*right_aileron); // right aileron
+	}else{
+		setAngle(7, config_values[48] + config_values[50]*left_aileron); // left aileron
+		setAngle(6, config_values[49] + config_values[51]*right_aileron); // right aileron
+	}
 	
 	if(config_values[9]){ // SWAPPED
 		setAngle(3, config_values[37] + config_values[7]*left_elevon); // left elevon
@@ -343,7 +351,7 @@ void main_task(void* arg)
 		control_data.right_elevon = clamp(control_data.right_elevon, -MAX_SERVO_DEFLECTION, MAX_SERVO_DEFLECTION);
 		
 		//TODO: setAngle in radians ( * PI/180) and setSpeed from [0, 1] or so
-		actuatorControl(control_data.left_elevon, control_data.right_elevon, control_data.brake, control_data.rudder, propellerFactor*control_data.left_prop, propellerFactor*control_data.right_prop, MAX_PROPELLER_SPEED);
+		actuatorControl(control_data.left_aileron, control_data.right_aileron, control_data.left_elevon, control_data.right_elevon, control_data.brake, control_data.rudder, propellerFactor*control_data.left_prop, propellerFactor*control_data.right_prop, MAX_PROPELLER_SPEED);
 	}
 }
 

@@ -9,7 +9,7 @@
 static const char *TAG = "wifi softAP";
 static void (*read_callback)(float*);
 static void (*write_callback)(float*);
-static void (*actuator_control_callback)(float, float, float, float, float, float, float);
+static void (*actuator_control_callback)(float, float, float, float, float, float, float, float, float);
 
 
 Orientation_Data* orientation_data_kite;
@@ -249,10 +249,10 @@ static const httpd_uri_t kite_config_get_html = {
 							() => {  console.log('failed sending config'); downloadConfig(); }  );\n\
 						}\n\
 						\n\
-						function controlActuators(elevonLeft, elevonRight, brake, rudder, propellerLeft, propellerRight){\n\
+						function controlActuators(aileronLeft, aileronRight, elevonLeft, elevonRight, brake, rudder, propellerLeft, propellerRight){\n\
 							\n\
 							console.log(\"brake before sendData = \" + brake);\n\
-							sendData(\"\" + elevonLeft + \",\" + elevonRight + \",\" + brake + \",\" + rudder + \",\" + propellerLeft + \",\" + propellerRight + \",\", 'uploadControls',\n\
+							sendData(\"\" + aileronLeft + \",\" + aileronRight + \",\" + elevonLeft + \",\" + elevonRight + \",\" + brake + \",\" + rudder + \",\" + propellerLeft + \",\" + propellerRight + \",\", 'uploadControls',\n\
 							() => {  console.log('succeeded sending controls'); },\n\
 							() => {  console.log('failed sending controls'); }  );\n\
 						}\n\
@@ -290,6 +290,8 @@ static const httpd_uri_t kite_config_get_html = {
 						function uploadControls(){\n\
 							//console.log(\"window...innerHTML = \" + window[\"value\" + 10].innerHTML);\n\
 							controlActuators(\n\
+								  	window[\"value\" + 50].innerHTML,\n\
+								  	window[\"value\" + 51].innerHTML,\n\
 								  	window[\"value\" + 7].innerHTML,\n\
 								  	window[\"value\" + 8].innerHTML,\n\
 								  	window[\"value\" + 10].innerHTML,\n\
@@ -358,8 +360,18 @@ static const httpd_uri_t kite_config_get_html = {
 							configValues[45] = 1;\n\
 							configValues[46] = 1;\n\
 							configValues[47] = 1;\n\
-							configValues[48] = 1;\n\
-							configValues[49] = 1;\n\
+							configValues[48] = 0;\n\
+							configValues[49] = 0;\n\
+							configValues[50] = 1;\n\
+							configValues[51] = 0;\n\
+							configValues[52] = 0;\n\
+							configValues[53] = 1;\n\
+							configValues[54] = 1;\n\
+							configValues[55] = 1;\n\
+							configValues[56] = 1;\n\
+							configValues[57] = 1;\n\
+							configValues[58] = 1;\n\
+							configValues[59] = 1;\n\
 							uploadConfig();\n\
 						}\n\
 						function addFixedConfig(name, index){\n\
@@ -610,6 +622,9 @@ static const httpd_uri_t kite_config_get_html = {
 						addServo(\"Left Elevon\", 7);\n\
 						addServo(\"Right Elevon\", 8);\n\
 						addSwitch(\"Elevons\", 9);\n\
+						addServo(\"Left Aileron\", 50);\n\
+						addServo(\"Right Aileron\", 51);\n\
+						addSwitch(\"Ailerons\", 52);\n\
 						addPropeller(\"Left Prop\", numConfigValues + 0);\n\
 						addPropeller(\"Right Prop\", numConfigValues + 1);\n\
 						addSwitch(\"Props\", 11);\n\
@@ -903,7 +918,7 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     (*read_callback)(float_values);
     
 	//char response2[NUM_CONFIG_FLOAT_VARS*20];
-    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", 
+    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", 
     	float_values[0],
     	float_values[1],
     	float_values[2],
@@ -953,7 +968,17 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     	float_values[46],
     	float_values[47],
     	float_values[48],
-    	float_values[49]//...new
+    	float_values[49],//...new
+    	float_values[50],
+    	float_values[51],
+    	float_values[52],
+    	float_values[53],
+    	float_values[54],
+    	float_values[55],
+    	float_values[56],
+    	float_values[57],
+    	float_values[58],
+    	float_values[59]//...new
     );
     
     error = httpd_resp_send(req, response2, strlen(response2));
@@ -1079,7 +1104,7 @@ httpd_uri_t config_post = {
 // ****** POST ACTUATOR CONTROLS ******
 
 
-char content[20]; // 3(length of number, e.g. "-90") * 5 + 4(commata)
+char content[30]; // 3(length of number, e.g. "-90") * 5 + 4(commata)
 esp_err_t control_post_handler(httpd_req_t *req)
 {
 	ESP_LOGI(TAG, "Posting controls to kite");
@@ -1092,14 +1117,14 @@ esp_err_t control_post_handler(httpd_req_t *req)
     if (ret <= 0) return ESP_FAIL;
     
     int string_position = 0;
-    float controls[6];
-    for(int i = 0; i < 6; i++){
+    float controls[8];
+    for(int i = 0; i < 8; i++){
     	controls[i] = atof(content+string_position);
     	string_position = getIndexToNextNumber(content, string_position);
     }
-    printf("controls[0...5] = %f, %f, %f, %f, %f, %f\n", controls[0], controls[1], controls[2], controls[3], controls[4], controls[5]);
+    printf("controls[0...7] = %f, %f, %f, %f, %f, %f, %f, %f\n", controls[0], controls[1], controls[2], controls[3], controls[4], controls[5], controls[6], controls[7]);
     
-	(*actuator_control_callback)(controls[0], controls[1], controls[2], controls[3], controls[4], controls[5], 50);
+	(*actuator_control_callback)(controls[0], controls[1], controls[2], controls[3], controls[4], controls[5], controls[6], controls[7], 50);
 	
 	
     /* Send a simple response */
@@ -1245,7 +1270,7 @@ void wifi_init_softap(void)
 
 // init wifi on the esp
 // register callbacks
-void network_setup_configuring(void (*read_callback_arg)(float*), void (*write_callback_arg)(float*), void (*actuator_control_callback_arg)(float, float, float, float, float, float, float), Orientation_Data* orientation_data_arg_kite)
+void network_setup_configuring(void (*read_callback_arg)(float*), void (*write_callback_arg)(float*), void (*actuator_control_callback_arg)(float, float, float, float, float, float, float, float, float), Orientation_Data* orientation_data_arg_kite)
 {
 	orientation_data_kite = orientation_data_arg_kite;
 	read_callback = read_callback_arg;
