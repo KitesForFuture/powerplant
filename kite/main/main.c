@@ -33,10 +33,10 @@
 
 #include "control/autopilot.h"
 
-#define MAX_SERVO_DEFLECTION 60//50
-#define MIN_BRAKE_DEFLECTION -59//-64
-#define MAX_BRAKE_DEFLECTION 59
-#define MAX_PROPELLER_SPEED 90 // AT MOST 90
+#define MAX_SERVO_DEFLECTION 60.0//50
+#define MIN_BRAKE_DEFLECTION -59.0//-64
+#define MAX_BRAKE_DEFLECTION 59.0
+#define MAX_PROPELLER_SPEED 90.0 // AT MOST 90
 
 struct i2c_bus bus0 = {18, 19};
 struct i2c_bus bus1 = {25, 14};
@@ -77,7 +77,7 @@ void setConfigValues(float* values){
 }
 
 void actuatorControl(float left_aileron, float right_aileron, float left_elevon, float right_elevon, float brake, float rudder, float left_propeller, float right_propeller, float propeller_safety_max){
-	printf("right_aileron = %f\n", right_aileron);
+	
 	if(config_values[52]){ // SWAPPED
 		setAngle(6, config_values[48] + config_values[50]*left_aileron); // left aileron
 		setAngle(7, config_values[49] + config_values[51]*right_aileron); // right aileron
@@ -85,7 +85,9 @@ void actuatorControl(float left_aileron, float right_aileron, float left_elevon,
 		setAngle(7, config_values[48] + config_values[50]*left_aileron); // left aileron
 		setAngle(6, config_values[49] + config_values[51]*right_aileron); // right aileron
 	}
-	
+	//setAngle(7, -5 + left_aileron); // left aileron
+	//setAngle(6, 5 + -right_aileron); // right aileron
+	printf("%f, %f,%f, %f,%f\n", config_values[50], config_values[51], config_values[52], config_values[48], config_values[49]);
 	if(config_values[9]){ // SWAPPED
 		setAngle(3, config_values[37] + config_values[7]*left_elevon); // left elevon
 		setAngle(0, config_values[38] + config_values[8]*right_elevon); // right elevon
@@ -130,40 +132,15 @@ void main_task(void* arg)
 	
 	init_cat24(bus1);
 	
-	/*
-	Mpu_raw_data kite_mpu_calibration = {
-		{readEEPROM(0), readEEPROM(1), readEEPROM(2)},
-		{readEEPROM(3), readEEPROM(4), readEEPROM(5)}
-	};
-	
-	Mpu_raw_data line_mpu_calibration = {
-		{readEEPROM(1024+0), readEEPROM(1024+1), readEEPROM(1024+2)},
-		{readEEPROM(1024+3), readEEPROM(1024+4), readEEPROM(1024+5)}
-	};
-	*/
-	
 	raw_data_ICM20948 kite_and_line_mpu_calibration = {
-		{0.132-0.135, 0.12, 0.135-0.31}, // accel
+		{0.0, 0.0, 0.0}, // accel
 		{readEEPROM(3), readEEPROM(4), readEEPROM(5)}, // gyro
-		//{52.76, 50.66, -50.33},//{1.74, 0.93, 0.08},
-		{65.6, 6.8, 22.5} // magnet
+		{0.0, 0.0, 0.0} // magnet
 	};
 	
-	
-	//int output_pins[] = {27,23, 2/*prop*/, 12, 15/*prop*/,13,17,16};
 	int output_pins[] = {23,17, 2/*prop*/, 27, 15/*prop*/,13,12,33};
 	initMotors(output_pins, 8);
 	
-	setAngle(0, 0);
-	setAngle(1, 0);
-	setAngle(3, 0);
-	setAngle(5, 0);
-	setSpeed(2, 0);
-	setSpeed(4, 0);
-	setAngle(6, 0);
-	setAngle(7, 0);
-	//setSpeed(2, 90);
-	//setSpeed(4, 90);
 	ICM20948 kite_and_line_mpu;
 	
 	kite_and_line_mpu.bus = bus0;
@@ -182,18 +159,16 @@ void main_task(void* arg)
 	updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
 	
 	
-	// ************************ KITE WING TIP POINTING UP -> ESC CALIBRATION MODE (TODO: get it right) ************************
-	/*
-	if(getAccelY() < -7 || getAccelY() > 7){ // m/s**2
-		printf("entering ESC calibration mode:\n");
-		for(int i = 0; i < 500; i++){
-			setSpeed(2, 90);
-			setSpeed(4, 90);
-			//vTaskDelay(1000);
-			vTaskDelay(1);
-		}
-		printf(" ESCs calibrated\n");
-	}*/
+	readConfigValuesFromEEPROM(config_values);
+	
+	setAngle(0, 0);
+	setAngle(1, config_values[10]*MIN_BRAKE_DEFLECTION);
+	setAngle(3, 0);
+	setAngle(5, 0);
+	setSpeed(2, 0);
+	setSpeed(4, 0);
+	setAngle(6, 0);
+	setAngle(7, 0);
 	
 	// ************************ KITE NOSE POINTING DOWN -> CONFIG MODE ************************
 	
@@ -203,9 +178,8 @@ void main_task(void* arg)
 	int numGyroCalibrationSteps = 100;
 	int gyroCalibrationStepsOutstanding = 0;
 	
-	if(true || getAccelX(kite_and_line_mpu_raw_data) < 0){
+	if(getAccelX(kite_and_line_mpu_raw_data) < 0){
 		printf("entering config mode\n");
-		readConfigValuesFromEEPROM(config_values);
 		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data);
 		
 		init_dps310(bus1);
@@ -214,6 +188,9 @@ void main_task(void* arg)
 		xLastWakeTime = xTaskGetTickCount();
 		while(1){
 			//vTaskDelay(0);
+			//printf("roll angle = %f\n", getLineRollAngle(kite_orientation_data.line_vector_normed));
+			//printf("yaw angle = %f\n", getLineYawAngle(kite_orientation_data.line_vector_normed));
+			
 			vTaskDelayUntil(&xLastWakeTime, 2);
 			float timestep = get_time_step(&t);
 			//printf("timestep = %f\n", timestep);
@@ -262,15 +239,6 @@ void main_task(void* arg)
 				readDataICM20948(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
 				updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
 			}
-			/*
-			avg_x = avg_x*0.95+kite_and_line_mpu_raw_data.gyro[0]*0.05;
-			avg_y = avg_y*0.95+kite_and_line_mpu_raw_data.gyro[1]*0.05;
-			avg_z = avg_z*0.95+kite_and_line_mpu_raw_data.gyro[2]*0.05;
-			printf("gyro = %f, %f, %f\n", avg_x, avg_y, avg_z);
-			*/
-			//printf("z-comp of mag = %f\n", kite_and_line_mpu_raw_data.magnet[2]);
-			
-			//printf("z-axis up? = %f\n", -kite_orientation_data.rotation_matrix_transpose[3]);
 			if(data_needs_being_written_to_EEPROM == 1){
 				writeConfigValuesToEEPROM(config_values);
 				data_needs_being_written_to_EEPROM = 0;
@@ -284,7 +252,7 @@ void main_task(void* arg)
 	network_setup_kite_flying(&setConfigValues);
 	
     printf("reading config values from eeprom\n");
-    readConfigValuesFromEEPROM(config_values);
+    readConfigValuesFromEEPROM(config_values); // TODO: obsolete???
     
     // **** WAITING for GROUNDSTATION to ECHO the config array ****
     

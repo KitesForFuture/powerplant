@@ -118,6 +118,9 @@ struct _Autopilot {
 };
 typedef struct _Autopilot Autopilot;
 
+float getLineRollAngle(float* line_dir);
+float getLineYawAngle(float* line_dir);
+
 void loadConfigVariables(Autopilot* autopilot, float* config_values);
 
 void initAutopilot(Autopilot* autopilot, float* config_values);

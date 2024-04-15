@@ -320,12 +320,12 @@ static const httpd_uri_t kite_config_get_html = {
 							configValues[6] = 0.000024;\n\
 							\n\
 							configValues[7] = 1;\n\
-							configValues[8] = 1;\n\
-							configValues[9] = 0;\n\
-							configValues[10] = 1;\n\
+							configValues[8] = -1;\n\
+							configValues[9] = 1;\n\
+							configValues[10] = -1;\n\
 							configValues[11] = 0;\n\
 							configValues[12] = 7;\n\
-							configValues[13] = 90;\n\
+							configValues[13] = 45;\n\
 							configValues[14] = 1;\n\
 							configValues[15] = 1;\n\
 							configValues[16] = 9;\n\
@@ -334,36 +334,36 @@ static const httpd_uri_t kite_config_get_html = {
 							configValues[19] = 1;\n\
 							configValues[20] = 1;\n\
 							configValues[21] = 1;\n\
-							configValues[22] = 45;\n\
+							configValues[22] = 5;\n\
 							configValues[23] = 1;\n\
-							configValues[24] = 1;\n\
-							configValues[25] = 1;\n\
-							configValues[26] = 0.5;\n\
-							configValues[27] = 1;\n\
-							configValues[28] = 1;\n\
+							configValues[24] = 2.593743;\n\
+							configValues[25] = 17.449404;\n\
+							configValues[26] = 1.5;\n\
+							configValues[27] = 2.853117;\n\
+							configValues[28] = 7.400251;\n\
 							configValues[29] = 1;\n\
 							configValues[30] = 0;\n\
 							configValues[31] = -9;\n\
-							configValues[32] = 45;\n\
+							configValues[32] = 36;\n\
 							configValues[33] = 0.9;\n\
-							configValues[34] = 6;\n\
+							configValues[34] = 0.981048;\n\
 							configValues[35] = 0.85;\n\
-							configValues[36] = 1;\n\
-							configValues[37] = 0;\n\
-							configValues[38] = 0;\n\
+							configValues[36] = 0.620922;\n\
+							configValues[37] = 5;\n\
+							configValues[38] = -4;\n\
 							configValues[39] = 0;\n\
 							configValues[40] = 1;\n\
 							configValues[41] = 0;\n\
 							configValues[42] = 1;\n\
-							configValues[43] = 1;\n\
-							configValues[44] = 1;\n\
+							configValues[43] = 0.318632;\n\
+							configValues[44] = 0.000488;\n\
 							configValues[45] = 1;\n\
-							configValues[46] = 1;\n\
+							configValues[46] = 0.004808;\n\
 							configValues[47] = 1;\n\
-							configValues[48] = 0;\n\
-							configValues[49] = 0;\n\
+							configValues[48] = -5;\n\
+							configValues[49] = 5;\n\
 							configValues[50] = 1;\n\
-							configValues[51] = 1;\n\
+							configValues[51] = -1;\n\
 							configValues[52] = 0;\n\
 							configValues[53] = 1;\n\
 							configValues[54] = 1;\n\
@@ -409,12 +409,12 @@ static const httpd_uri_t kite_config_get_html = {
 								}\n\
 							};\n\
 						}\n\
-						function addServo(name, index){\n\
+						function addServo(name, index, defaultvalue = 0){\n\
 							UIstring += \"\\\n\
 								<tr>\\\n\
 									<td><p>\" + name + \"=<br><span id=\\\"value\" + index + \"\\\"></span></p></td>\\\n\
 									<td><div class=\\\"slidecontainer\\\">\\\n\
-								  		<input type=\\\"range\\\" min=\\\"-90\\\" max=\\\"90\\\" value=\\\"0\\\" class=\\\"slider\\\" id=\\\"slider\" + index + \"\\\">\\\n\
+								  		<input type=\\\"range\\\" min=\\\"-90\\\" max=\\\"90\\\" value=\\\"\" + defaultvalue + \"\\\" class=\\\"slider\\\" id=\\\"slider\" + index + \"\\\">\\\n\
 									</div></td>\\\
 									<td><button id=\\\"invert\" + index + \"Button\\\" class=\\\"button button1\\\">Invert</button><button id=\\\"zero\" + index + \"Button\\\" class=\\\"button button1\\\">0</button></td>\\\n\
 								</tr>\\\n\
@@ -617,7 +617,7 @@ static const httpd_uri_t kite_config_get_html = {
 						UIstring += tableBegin;\n\
 								\n\
 						addVariableConfig(\"BMP280 Calibration\", 6)\n\
-						addServo(\"Brake\", 10);\n\
+						addServo(\"Brake\", 10, -59);\n\
 						addServo(\"Rudder\", 40);\n\
 						addServo(\"Left Elevon\", 7);\n\
 						addServo(\"Right Elevon\", 8);\n\

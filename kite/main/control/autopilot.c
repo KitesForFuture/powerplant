@@ -81,7 +81,7 @@ float getLineAngle(float direction_of_neutral_angle, float direction_of_90_deg_a
 }
 
 float getLineRollAngle(float* line_dir){
-	return getLineAngle(-line_dir[2], line_dir[1]);
+	return 0.75*getLineAngle(-line_dir[2], line_dir[1]);
 }
 
 float getLineYawAngle(float* line_dir){
@@ -89,7 +89,7 @@ float getLineYawAngle(float* line_dir){
 }
 
 float getLinePitchAngle(float* line_dir){
-	return getLineAngle(-line_dir[2], -line_dir[0]);
+	return 0.75*getLineAngle(-line_dir[2], -line_dir[0]);
 }
 
 void loadConfigVariables(Autopilot* autopilot, float* config_values){
@@ -385,7 +385,7 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		0,
 		airbrake, 0, LINE_TENSION_EIGHT); return;
 }
-float groundstation_height;
+
 void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension){
 	
 	float* mat = sensor_data.rotation_matrix;
@@ -420,14 +420,14 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	// Z-AXIS
 	
-	float z_axis_offset = getAngleErrorZAxisImproved(0.0, mat, line_dir); // could use getAngleErrorZAxis(), if pitch stays near horizontal.
+	float z_axis_offset = getAngleErrorZAxis(0, mat);//getAngleErrorZAxisImproved(0.0, mat, line_dir); // could use getAngleErrorZAxis(), if pitch stays near horizontal.
 	float z_axis_control = - autopilot->hover.Z.P * z_axis_offset * 0.195935*0.44 * 1.5 + autopilot->hover.Z.D * sensor_data.gyro[2]*0.017341*2;
 	z_axis_control *=100;
 	if(fabs(y_axis_offset) > 1.5) z_axis_control = 0;
 	
 	// X-AXIS
 	
-	float roll_angle = getLineRollAngle(line_dir);
+	float roll_angle = -getLineRollAngle(line_dir);
 	float x_axis_control = (normed_airflow > 0.0001 ? 1.0/(normed_airflow*normed_airflow) : 1.0) * (autopilot->hover.X.P * roll_angle + autopilot->hover.X.D * sensor_data.gyro[0]*0.75);
 	x_axis_control *= 100;
 	

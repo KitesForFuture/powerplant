@@ -53,6 +53,10 @@
 #define gyro_y -mpu_raw_data.gyro[1]
 #define gyro_z mpu_raw_data.gyro[2]
 
+#define magnet_x mpu_raw_data.magnet[1]
+#define magnet_y -mpu_raw_data.magnet[0]
+#define magnet_z mpu_raw_data.magnet[2]
+
 //Zweiter EPP-Flügel (1,80m), längs eingebaut, USB-Anschluss hinten, ESP32 richtung Bauch
 /*
 #define accel_x mpu_raw_data.accel[0]
@@ -223,7 +227,10 @@ void updateRotationMatrix(Orientation_Data* orientation_data, raw_data_ICM20948 
 		norm_squared += mpu_raw_data.magnet[i]*mpu_raw_data.magnet[i];
 	}
 	float factor = 1/sqrt(norm_squared);
-	for(int i = 0; i < 3; i++){
+	/*for(int i = 0; i < 3; i++){
 		orientation_data->line_vector_normed[i] = factor*mpu_raw_data.magnet[i];
-	}
+	}*/
+	orientation_data->line_vector_normed[0] = factor*magnet_x;
+	orientation_data->line_vector_normed[1] = factor*magnet_y;
+	orientation_data->line_vector_normed[2] = factor*magnet_z;
 }
