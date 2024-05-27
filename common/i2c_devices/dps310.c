@@ -12,6 +12,7 @@ static Time last_update = 0;
 int dps_address = 0x77;
 
 float current_height = 0;
+float height_medium_smooth = 0;
 
 float p_comp_init = 0;
 int p_init_counter = 0;
@@ -28,6 +29,10 @@ uint8_t low_byte;
 
 float p_raw = -0.35135;
 float t_raw = 0.287;
+
+static float lastHeight = 0;
+static Time derivativeTimeStep = 0;
+static float dH = 0;
 
 int update_dps310_if_necessary() {
 	
@@ -71,6 +76,17 @@ int update_dps310_if_necessary() {
 	}
 	//flush FIFO
 	//i2c_send(dps310_bus, dps_address, 0x0c, 0x80, 1);
+	
+	//height_medium_smooth = 0.9* height_medium_smooth + 0.1 * current_height;
+	
+	float dT = query_timer_seconds(derivativeTimeStep);
+	derivativeTimeStep = start_timer();
+	if(dT < 0.01) return 0; // DON'T RECALCULATE IF LAST READING IS TOO RECENT / TIME STEP TOO SMALL
+	
+	dH = (current_height - lastHeight)/dT; // MEDIUM SMOOTHING
+	
+	lastHeight = current_height;
+	
 	return 0;
 }
 
@@ -173,17 +189,8 @@ float getHeight() {
 	return current_height;
 }
 
-static float lastHeight = 0;
-static Time derivativeTimeStep = 0;
-static float dH = 0;
+
+// DON'T USE. NEED GROUNDSTATION HEIGHT TO DO THIS.
 float getHeightDerivative(){
-	
-	float dT = query_timer_seconds(derivativeTimeStep);
-	if(dT < 0.01) return dH; // DON'T RECALCULATE IF LAST READING IS TOO RECENT / TIME STEP TOO SMALL
-	
-	dH = 0.6*dH + (0.4* (getHeight() - lastHeight)/dT); // SLIGHT SMOOTHING
-	
-	lastHeight = getHeight();
-	derivativeTimeStep = start_timer();
 	return dH;
 }

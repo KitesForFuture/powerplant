@@ -95,7 +95,7 @@ void app_main(void)
 		}else if (length == 6){
 			for(int i = 0; i < 6; i++) debuggingData[i] = receive_array[i];
 			debuggingDataInitialized = true;
-			printf("received debugging data\n");
+			//printf("received debugging data\n");
 		}
 		
 		vTaskDelay(1);

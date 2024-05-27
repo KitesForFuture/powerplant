@@ -138,7 +138,8 @@ void app_main(void){
 			printf("received UART from VESC\n");
 			line_length_raw = receive_array[0];
 			flight_mode = receive_array[1];
-		
+			if(flight_mode != 2.0 && flight_mode != 3.0){tension_request = 0;};
+			
 			line_length = line_length_raw;// - line_length_offset;
 			//printf("received %f, %f\n", line_length_raw, flight_mode);
 			printf("sending flight_mode %f and line_length %f to kite\n", flight_mode, line_length);
@@ -176,13 +177,15 @@ void app_main(void){
 		if(!internet_connected){
 			if(get_level_GPIO_0() != 0){
 				printf("SWITCH request final landing\n");
-				sendUART(1, 0, VESC_UART); // request final-landing from VESC
+				sendUART(2, 0, VESC_UART); // request final-landing from VESC
 			}else{
-				sendUART(0, 0, VESC_UART);
+				//sendUART(0, 0, VESC_UART);
 			}
 		}
 		
-	    //sendUART(1, 0, VESC_UART); // request final-landing from VESC
+	    if(tension_request == 1.0){		// kite is in landing mode, thus ...
+	    	sendUART(1, 0, VESC_UART);	// ... agree to landing with VESC
+	    }
 	    vTaskDelay(5.0);
     }
     

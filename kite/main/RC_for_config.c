@@ -1126,7 +1126,7 @@ esp_err_t control_post_handler(httpd_req_t *req)
     }
     printf("controls[0...7] = %f, %f, %f, %f, %f, %f, %f, %f\n", controls[0], controls[1], controls[2], controls[3], controls[4], controls[5], controls[6], controls[7]);
     
-	(*actuator_control_callback)(controls[0], controls[1], controls[2], controls[3], controls[4], controls[5], controls[6], controls[7], 50);
+	(*actuator_control_callback)(controls[0], controls[1], controls[2], controls[3], controls[4], controls[5], controls[6], controls[7], 60);
 	
 	
     /* Send a simple response */

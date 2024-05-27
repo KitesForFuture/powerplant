@@ -1,15 +1,23 @@
-(define launch-line-length 200)
-(define min-eight-line-length 150)
-(define max-eight-line-length 250)
+(define launch-line-length 50)
+(define min-eight-line-length 100)
+(define max-eight-line-length 150)
+
+;(define launch-line-length 1)
+;(define min-eight-line-length 2)
+;(define max-eight-line-length 3)
 
 (define launch-command 0.0)
 (define land-command 1.0)
+(define final-land-command 2.0)
 
 (define launch 0)
 (define eight 1)
 (define landing 2)
 (define final-landing 3)
 (define flightmode launch)
+
+(define undefined 100)
+(define flightmode-request launch)
 
 (define generatormode 0)
 (define motormode 1)
@@ -41,10 +49,10 @@
             (progn
                 (define uart-send-counter 20)
                 (define line-length (- 0 (- (get-dist) offset) ) )
-                ; SEND line-length AND line tension(current)
+                ; SEND line-length AND flight-mode request
                 (bufset-f32 arr 0 1234567.0)
                 (bufset-f32 arr 4 line-length)
-                (bufset-f32 arr 8 flightmode)
+                (bufset-f32 arr 8 flightmode-request)
                 (bufset-f32 arr 12 -1234567.0)
                 (uart-write arr)
             )
@@ -60,10 +68,18 @@
                 ; received something
                 (progn
                     ;(print (bufget-f32 array 4))
-                    (if (= (bufget-f32 array 4) land-command)
+                    (if (and (= (bufget-f32 array 4) land-command) (= flightmode-request landing))
                         (progn
-                		(define flightmode final-landing)
-                		(define mode motormode)
+		            		(define flightmode landing)
+		            		(define flightmode-request undefined)
+		            		(define mode motormode)
+                        )
+                    )
+                    (if (= (bufget-f32 array 4) final-land-command)
+                        (progn
+		            		(define flightmode final-landing)
+		            		(define flightmode-request final-landing)
+		            		(define mode motormode)
                         )
                     )
                     ;(if (= (bufget-f32 array 4) launch-command)
@@ -81,8 +97,9 @@
                 (if (= flightmode launch)
                     (set-brake 0.1) ; LAUNCHING
                     (progn
-                        (print "generating") 
+                        ;(print "generating") 
                         (set-brake 12) ; GENERATING max-reel-out-tension
+                        ;(set-brake 3) ; GENERATING max-reel-out-tension
                     )
                 )
                 
@@ -95,14 +112,14 @@
                 )
                 
                 (if (and (= flightmode launch) (> line-length launch-line-length))
-                    (define flightmode eight)
+                    (progn
+                    	(define flightmode eight)
+                    	(define flightmode-request eight)
+                    )
                 )
                 
                 (if (and (= flightmode eight) (> line-length max-eight-line-length))
-                	(progn
-                		(define flightmode landing)
-                		(define mode motormode)
-                	)
+                	(define flightmode-request landing)
                 )
             )
             
@@ -111,8 +128,9 @@
                     ; REEL-IN WITH LOW TENSION
                     (if (= flightmode eight)
                         (progn
-                            (print "REEL IN while Eight")
+                            ;(print "REEL IN while Eight")
                             (set-current 15)
+                            ;(set-current 6)
                         )
                         ; flightmode = landing or final-landing
                         (if (> line-length 43)
@@ -127,7 +145,10 @@
                     )
                     
                     (if (and (= flightmode landing) (< line-length min-eight-line-length))
-                    	(define flightmode eight)
+                    	(progn
+                    		(define flightmode eight)
+                    		(define flightmode-request eight)
+                    	)
                     )
                     
                     ; SWITCHING TO REEL-OUT

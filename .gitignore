@@ -4,6 +4,9 @@ groundstation_old
 
 jan_test
 
+kite_wifi/build
+kite_wifi/sdkconfig
+
 magnet-testing/build
 magnet-testing/sdkconfig
 

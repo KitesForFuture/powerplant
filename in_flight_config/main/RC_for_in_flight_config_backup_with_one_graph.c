@@ -94,9 +94,7 @@ static const httpd_uri_t kite_config_get_html = {
 </head>\
 <body>\
 					\n\
-					<canvas width = \"1800\" height = \"700\" id = \"my_Canvas_hover\"></canvas>\n\
-					<canvas width = \"1800\" height = \"700\" id = \"my_Canvas_eights\"></canvas>\n\
-					<canvas width = \"1800\" height = \"700\" id = \"my_Canvas_landing\"></canvas>\n\
+					<canvas width = \"1800\" height = \"700\" id = \"my_Canvas\"></canvas>\n\
 					<label for=\"fnameDiagram\">Save Diagram As: </label>\n\
 					<input type=\"text\" id=\"filenameDiagram\" name=\"filename\">\n\
 					<button type=\"button\" id=\"saveButtonDiagram\">Save Diagram</button><br><br>\n\
@@ -114,12 +112,8 @@ static const httpd_uri_t kite_config_get_html = {
 					<script>\n\
 						\n\
 						/*============= Creating a canvas =================*/\n\
-						var canvas_hover = document.getElementById('my_Canvas_hover');\n\
-						gl_hover = canvas_hover.getContext('experimental-webgl');\n\
-						var canvas_eights = document.getElementById('my_Canvas_eights');\n\
-						gl_eights = canvas_eights.getContext('experimental-webgl');\n\
-						var canvas_landing = document.getElementById('my_Canvas_landing');\n\
-						gl_landing = canvas_landing.getContext('experimental-webgl');\n\
+						var canvas = document.getElementById('my_Canvas');\n\
+						gl = canvas.getContext('experimental-webgl');\n\
 						\n\
 						var UIstringDiagram = \"\";\n\
 						 /*============ Defining and storing the geometry =========*/\n\
@@ -140,17 +134,16 @@ static const httpd_uri_t kite_config_get_html = {
 						}\n\
 						\n\
 						class DiagramLine{\n\
-							constructor(gl){\n\
-								this.gl = gl;\n\
+							constructor(){\n\
 								this.index = diagramLineCurrentIndex;\n\
 								this.vertices = [];\n\
 								//500 lines, 1000 vertices, 2000 coordinates\n\
 								for (let i = 0; i < 4*max_line_segments; i++){\n\
 									this.vertices[i] = 0.0;\n\
 								}\n\
-								this.vertex_buffer = this.gl.createBuffer();\n\
-								this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);\n\
-								this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.DYNAMIC_DRAW);\n\
+								this.vertex_buffer = gl.createBuffer();\n\
+								gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);\n\
+								gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.DYNAMIC_DRAW);\n\
 								\n\
 								this.color = [1.0, 1.0, 1.0];\n\
 								this.line_index = 0;\n\
@@ -209,8 +202,8 @@ static const httpd_uri_t kite_config_get_html = {
 								let n = -this.minX/(this.maxX-this.minX);\n\
 								this.transform(a, b, m, n);\n\
 								\n\
-								this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);\n\
-								this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 4*4*this.line_index, new Float32Array([this.lastPoint[0], this.lastPoint[1], x, y]));\n\
+								gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);\n\
+								gl.bufferSubData(gl.ARRAY_BUFFER, 4*4*this.line_index, new Float32Array([this.lastPoint[0], this.lastPoint[1], x, y]));\n\
 								this.vertices[4*this.line_index] = this.lastPoint[0];\n\
 								this.vertices[4*this.line_index + 1] = this.lastPoint[1]\n\
 								this.vertices[4*this.line_index + 2] = x;\n\
@@ -228,11 +221,10 @@ static const httpd_uri_t kite_config_get_html = {
 						}\n\
 						\n\
 						class Diagram{\n\
-							constructor(numLines, gl){\n\
-								this.gl = gl;\n\
+							constructor(numLines){\n\
 								this.diagramLines = [];\n\
 								for(let i = 0; i < numLines; i++){\n\
-									this.diagramLines[i] = new DiagramLine(this.gl);\n\
+									this.diagramLines[i] = new DiagramLine();\n\
 								}\n\
 								\n\
 								let vertCode_lines =\n\
@@ -251,68 +243,63 @@ static const httpd_uri_t kite_config_get_html = {
 								' gl_FragColor = vec4(vColor, 1.0);' +\n\
 								'}';\n\
 								\n\
-								let vertShader_lines = this.gl.createShader(this.gl.VERTEX_SHADER);\n\
-								this.gl.shaderSource(vertShader_lines, vertCode_lines);\n\
-								this.gl.compileShader(vertShader_lines);\n\
+								let vertShader_lines = gl.createShader(gl.VERTEX_SHADER);\n\
+								gl.shaderSource(vertShader_lines, vertCode_lines);\n\
+								gl.compileShader(vertShader_lines);\n\
 								\n\
-								let fragShader_lines = this.gl.createShader(this.gl.FRAGMENT_SHADER);\n\
-								this.gl.shaderSource(fragShader_lines, fragCode_lines);\n\
-								this.gl.compileShader(fragShader_lines);\n\
+								let fragShader_lines = gl.createShader(gl.FRAGMENT_SHADER);\n\
+								gl.shaderSource(fragShader_lines, fragCode_lines);\n\
+								gl.compileShader(fragShader_lines);\n\
 								\n\
-								this.shaderProgram_lines = this.gl.createProgram();\n\
-								this.gl.attachShader(this.shaderProgram_lines, vertShader_lines);\n\
-								this.gl.attachShader(this.shaderProgram_lines, fragShader_lines);\n\
-								this.gl.linkProgram(this.shaderProgram_lines);\n\
+								this.shaderProgram_lines = gl.createProgram();\n\
+								gl.attachShader(this.shaderProgram_lines, vertShader_lines);\n\
+								gl.attachShader(this.shaderProgram_lines, fragShader_lines);\n\
+								gl.linkProgram(this.shaderProgram_lines);\n\
 								\n\
-								this.coord_lines = this.gl.getAttribLocation(this.shaderProgram_lines, \"coordinates\");\n\
-								this.color = this.gl.getUniformLocation(this.shaderProgram_lines, \"color\");\n\
-								this.linearTrafo = this.gl.getUniformLocation(this.shaderProgram_lines, \"linearTrafo\");\n\
+								this.coord_lines = gl.getAttribLocation(this.shaderProgram_lines, \"coordinates\");\n\
+								this.color = gl.getUniformLocation(this.shaderProgram_lines, \"color\");\n\
+								this.linearTrafo = gl.getUniformLocation(this.shaderProgram_lines, \"linearTrafo\");\n\
 							}\n\
 							\n\
 							render(){\n\
-								this.gl.lineWidth(lineWidth);\n\
-								this.gl.enableVertexAttribArray(this.coord_lines);\n\
-								this.gl.useProgram(this.shaderProgram_lines);\n\
+								gl.lineWidth(lineWidth);\n\
+								gl.enableVertexAttribArray(this.coord_lines);\n\
+								gl.useProgram(this.shaderProgram_lines);\n\
 								\n\
 								for(let i = 0; i < this.diagramLines.length; i++){\n\
-									this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.diagramLines[i].vertex_buffer);\n\
-									this.gl.vertexAttribPointer(this.coord_lines, 2, this.gl.FLOAT, false, 0, 0);\n\
-									this.gl.uniform3f(this.color, this.diagramLines[i].color[0], this.diagramLines[i].color[1], this.diagramLines[i].color[2]);\n\
-									this.gl.uniform4f(this.linearTrafo, this.diagramLines[i].linearTrafo[0], this.diagramLines[i].linearTrafo[1], this.diagramLines[i].linearTrafo[2], this.diagramLines[i].linearTrafo[3]);\n\
-									this.gl.drawArrays(this.gl.LINES, 0, 2*max_line_segments);\n\
+									gl.bindBuffer(gl.ARRAY_BUFFER, this.diagramLines[i].vertex_buffer);\n\
+									gl.vertexAttribPointer(this.coord_lines, 2, gl.FLOAT, false, 0, 0);\n\
+									gl.uniform3f(this.color, this.diagramLines[i].color[0], this.diagramLines[i].color[1], this.diagramLines[i].color[2]);\n\
+									gl.uniform4f(this.linearTrafo, this.diagramLines[i].linearTrafo[0], this.diagramLines[i].linearTrafo[1], this.diagramLines[i].linearTrafo[2], this.diagramLines[i].linearTrafo[3]);\n\
+									gl.drawArrays(gl.LINES, 0, 2*max_line_segments);\n\
 								}\n\
 								\n\
-								this.gl.disableVertexAttribArray(this.coord_lines);\n\
+								gl.disableVertexAttribArray(this.coord_lines);\n\
 							}\n\
 						}\n\
 						\n\
 						//DIAGRAM\n\
 						\n\
-						var diagram_hover = new Diagram(6, gl_hover);\n\
-						var diagram_eights = new Diagram(6, gl_eights);\n\
-						var diagram_landing = new Diagram(6, gl_landing);\n\
-						var diagrams = [diagram_hover, diagram_eights, diagram_landing];\n\
-						for(let i = 0; i < 3; i++){\n\
-							diagrams[i].diagramLines[0].color[0] = 0.0;\n\
-							diagrams[i].diagramLines[0].color[1] = 0.0;\n\
-							diagrams[i].diagramLines[0].color[2] = 0.0;\n\
-							\n\
-							diagrams[i].diagramLines[1].color[0] = 0.0;\n\
-							diagrams[i].diagramLines[1].color[1] = 0.0;\n\
-							diagrams[i].diagramLines[1].color[2] = 0.8;\n\
-							\n\
-							diagrams[i].diagramLines[2].color[1] = 0.0;\n\
-							diagrams[i].diagramLines[2].color[2] = 0.0;\n\
-							\n\
-							diagrams[i].diagramLines[3].color[0] = 0.0;\n\
-							diagrams[i].diagramLines[3].color[2] = 0.0;\n\
-							\n\
-							diagrams[i].diagramLines[4].color[2] = 0.0;\n\
-							\n\
-							diagrams[i].diagramLines[5].color[0] = 0.5;\n\
-							diagrams[i].diagramLines[5].color[1] = 0;\n\
-							diagrams[i].diagramLines[5].color[2] = 0;\n\
-						}\n\
+						var diagram = new Diagram(6);\n\
+						diagram.diagramLines[0].color[0] = 0.0;\n\
+						diagram.diagramLines[0].color[1] = 0.0;\n\
+						diagram.diagramLines[0].color[2] = 0.0;\n\
+						\n\
+						diagram.diagramLines[1].color[0] = 0.0;\n\
+						diagram.diagramLines[1].color[1] = 0.0;\n\
+						diagram.diagramLines[1].color[2] = 0.8;\n\
+						\n\
+						diagram.diagramLines[2].color[1] = 0.0;\n\
+						diagram.diagramLines[2].color[2] = 0.0;\n\
+						\n\
+						diagram.diagramLines[3].color[0] = 0.0;\n\
+						diagram.diagramLines[3].color[2] = 0.0;\n\
+						\n\
+						diagram.diagramLines[4].color[2] = 0.0;\n\
+						\n\
+						diagram.diagramLines[5].color[0] = 0.5;\n\
+						diagram.diagramLines[5].color[1] = 0;\n\
+						diagram.diagramLines[5].color[2] = 0;\n\
 						\n\
 						\n\
 						\n\
@@ -333,7 +320,7 @@ static const httpd_uri_t kite_config_get_html = {
 							}\n\
 						}\n\
 						document.getElementById('saveButtonDiagram').onclick = function(){\n\
-							saveFile(\"\" + document.getElementById('filenameDiagram').value + \".kitediagram\", JSON.stringify(diagrams));\n\
+							saveFile(\"\" + document.getElementById('filenameDiagram').value + \".kitediagram\", JSON.stringify(diagram));\n\
 						};\n\
 						\n\
 						document.getElementById('saveButton').onclick = function(){\n\
@@ -640,39 +627,34 @@ static const httpd_uri_t kite_config_get_html = {
 							}\n\
 						}\n\
 						\n\
-						//var time_index = 0;\n\
-						const d = new Date();\n\
-						let startTime = d.getTime();\n\
+						var time_index = 0;\n\
 						function updateDebuggingDataGraph(){\n\
-							const d = new Date();\n\
-							//console.log(d.getTime()-startTime);\n\
-							for(let i = 0; i < 5; i++){\n\
-								diagrams[debuggingData[5]].diagramLines[i].addPoint(d.getTime()-startTime, debuggingData[i]);\n\
+							for(let i = 0; i < 6; i++){\n\
+								//if(i == 2)\n\
+								//	diagram.diagramLines[i].addPoint(time_index, debuggingData[0] - debuggingData[1]);\n\
+								//else\n\
+									diagram.diagramLines[i].addPoint(time_index, debuggingData[i]);\n\
 							}\n\
-							diagrams[debuggingData[5]].diagramLines[5].addPoint(d.getTime()-startTime, 0)\n\
 							//diagram.diagramLines[0].fakeAddPoint(time_index, debuggingData[1]);\n\
 							//diagram.diagramLines[1].fakeAddPoint(time_index, debuggingData[0]);\n\
 							//console.log(\"updating graph\");\n\
 							//console.log(diagram.diagramLines)\n\
-							//if(!receiving_data_points_paused)time_index++;\n\
+							if(!receiving_data_points_paused)time_index++;\n\
 						}\n\
 						\n\
-						var gls = [gl_hover, gl_eights, gl_landing];\n\
 						var animate = function(time) {\n\
 							\n\
 							if(ready_to_download_debugging_data){\n\
 								downloadDebuggingData();\n\
 						  		ready_to_download_debugging_data = false;\n\
 						  	}\n\
-						  	for(let i = 0; i < 3; i++){\n\
-			  					gls[i].disable(gls[i].DEPTH_TEST);\n\
-								gls[i].depthFunc(gls[i].LEQUAL);\n\
-								gls[i].clearColor(1.0, 1.0, 1.0, 1.0);\n\
-								gls[i].clearDepth(1.0);\n\
-								\n\
-								gls[i].viewport(0.0, 0.0, canvas_hover.width, canvas_hover.height);\n\
-								gls[i].clear(gls[i].COLOR_BUFFER_BIT | gls[i].DEPTH_BUFFER_BIT);\n\
-							}\n\
+		  					gl.disable(gl.DEPTH_TEST);\n\
+							gl.depthFunc(gl.LEQUAL);\n\
+							gl.clearColor(1.0, 1.0, 1.0, 1.0);\n\
+							gl.clearDepth(1.0);\n\
+							\n\
+							gl.viewport(0.0, 0.0, canvas.width, canvas.height);\n\
+							gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);\n\
 							\n\
 							//DRAW LINES\n\
 							//diagram.diagramLines[0].addPoint(time_index, time_index*time_index*0.05);\n\
@@ -682,9 +664,7 @@ static const httpd_uri_t kite_config_get_html = {
 							//diagram.diagramLines[4].addPoint(time_index, Math.cos(time_index*0.05)*Math.cos(time_index*0.05));\n\
 							//diagram.diagramLines[5].addPoint(time_index, Math.sin(time_index*0.05)*Math.sin(time_index*0.05));\n\
 							//if(!receiving_data_points_paused)time_index++;\n\
-							for(let i = 0; i < 3; i++){\n\
-								diagrams[i].render();\n\
-							}\n\
+							diagram.render();\n\
 							\n\
             				setTimeout(() => {  window.requestAnimationFrame(animate); }, 100);\n\
 						 }\n\

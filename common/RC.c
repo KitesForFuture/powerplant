@@ -17,6 +17,8 @@ float line_length_in_meters = 1;
 float flight_mode = 0;
 float groundstation_height = 0;
 
+int newWiFidata = false;
+
 float tension_request = 0;
 
 static void (*write_config_callback_kite)(float*);
@@ -55,6 +57,7 @@ static void msg_recv_cb_kite(const uint8_t *mac_addr, const uint8_t *data, int l
 			line_length_in_meters = msg.data[0];
 			flight_mode = msg.data[1];
 			groundstation_height = msg.data[2];
+			newWiFidata = true;
 		}
 	}
 	
@@ -78,7 +81,7 @@ static void msg_recv_cb_groundstation(const uint8_t *mac_addr, const uint8_t *da
 		esp_now_msg_t msg;
 		memcpy(&msg, data, len);
 		if(msg.mode == LINE_TENSION_REQUEST_MODE){
-			tension_request = msg.data[0];
+			tension_request = 1.0; // kite is in landing mode
 		}
 	}
 	
@@ -235,4 +238,6 @@ void sendDataArrayLarge(uint32_t mode, float* data, int length){
 	esp_now_send(broadcast_mac, msg_data, packet_size);
 }
 
-
+void processRC(){
+	// placeholder for thread-free proxy version RC_proxy.c
+}

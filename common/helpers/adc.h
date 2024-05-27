@@ -1,0 +1,30 @@
+#ifndef HELPERS_ADC
+#define HELPERS_ADC
+
+
+#include "esp_log.h"
+
+#include "driver/adc.h"
+
+
+//ADC Attenuation
+#define ADC_EXAMPLE_ATTEN           ADC_ATTEN_DB_11
+
+//ADC Calibration
+#if CONFIG_IDF_TARGET_ESP32
+#define ADC_EXAMPLE_CALI_SCHEME     ESP_ADC_CAL_VAL_EFUSE_VREF
+#elif CONFIG_IDF_TARGET_ESP32S2
+#define ADC_EXAMPLE_CALI_SCHEME     ESP_ADC_CAL_VAL_EFUSE_TP
+#elif CONFIG_IDF_TARGET_ESP32C3
+#define ADC_EXAMPLE_CALI_SCHEME     ESP_ADC_CAL_VAL_EFUSE_TP
+#elif CONFIG_IDF_TARGET_ESP32S3
+#define ADC_EXAMPLE_CALI_SCHEME     ESP_ADC_CAL_VAL_EFUSE_TP_FIT
+#endif
+
+
+void initADC();
+
+int getVoltageInMilliVolt();
+
+
+#endif

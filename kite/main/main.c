@@ -14,7 +14,9 @@
 #include "nvs_flash.h"
 #include "esp_wifi.h"
 #include "esp_now.h"
+#include "driver/uart.h"
 #include "../../common/RC.c"
+//#include "../../common/RC_proxy.c"
 
 // for Access Point
 #include <string.h>
@@ -33,10 +35,14 @@
 
 #include "control/autopilot.h"
 
+#include "../../common/helpers/adc.h"
+
 #define MAX_SERVO_DEFLECTION 60.0//50
 #define MIN_BRAKE_DEFLECTION -59.0//-64
 #define MAX_BRAKE_DEFLECTION 59.0
 #define MAX_PROPELLER_SPEED 90.0 // AT MOST 90
+
+#define HEIGHT_CALIBRATION_OFFSET 1.0
 
 struct i2c_bus bus0 = {18, 19};
 struct i2c_bus bus1 = {25, 14};
@@ -44,14 +50,18 @@ struct i2c_bus bus1 = {25, 14};
 static Autopilot autopilot;
 
 float config_values[NUM_CONFIG_FLOAT_VARS];
+int config_values_changed_mask[NUM_CONFIG_FLOAT_VARS];
+
 int data_needs_being_written_to_EEPROM = 0;
 
 void writeConfigValuesToEEPROM(float* values){
 	for (int i = 6; i < NUM_CONFIG_FLOAT_VARS; i++){
-		float readValue = readEEPROM(i);
-		if(readValue != values[i]) write2EEPROM(values[i], i);
+		if(config_values_changed_mask[i]){
+			write2EEPROM(values[i], i);
+			config_values_changed_mask[i] = false;
+		}
 	}
-	printf("values[6] to write = %f\n", values[6]);
+	//printf("values[6] to write = %f\n", values[6]);
 }
 
 void readConfigValuesFromEEPROM(float* values){
@@ -68,7 +78,10 @@ void getConfigValues(float* values){
 int groundstation_has_config_values_initialized_from_kite_EEPROM = false;
 void setConfigValues(float* values){
 	for (int i = 6; i < NUM_CONFIG_FLOAT_VARS; i++){
-		config_values[i] = values[i];
+		if(config_values[i] != values[i]){
+			config_values[i] = values[i];
+			config_values_changed_mask[i] = true;
+		}
 	}
 	
 	data_needs_being_written_to_EEPROM = 1;
@@ -127,6 +140,8 @@ void main_task(void* arg)
 {
 	init_uptime();
 	
+	initADC();
+	
 	Orientation_Data kite_orientation_data;
 	initRotationMatrix(&kite_orientation_data);
 	
@@ -160,6 +175,9 @@ void main_task(void* arg)
 	
 	
 	readConfigValuesFromEEPROM(config_values);
+	for(int i = 0; i < NUM_CONFIG_FLOAT_VARS; i++){
+		config_values_changed_mask[i] = false;
+	}
 	
 	setAngle(0, 0);
 	setAngle(1, config_values[10]*MIN_BRAKE_DEFLECTION);
@@ -186,7 +204,11 @@ void main_task(void* arg)
 		Time t = start_timer();
 		TickType_t xLastWakeTime;
 		xLastWakeTime = xTaskGetTickCount();
+		float voltage = 0;
 		while(1){
+			float U = 15.08 + 0.007062 * (getVoltageInMilliVolt() - 1909);
+			voltage = 0.05 * U + 0.95 * voltage;
+			printf("Raw Voltage sensing value: %f\n", voltage);
 			//vTaskDelay(0);
 			//printf("roll angle = %f\n", getLineRollAngle(kite_orientation_data.line_vector_normed));
 			//printf("yaw angle = %f\n", getLineYawAngle(kite_orientation_data.line_vector_normed));
@@ -258,6 +280,7 @@ void main_task(void* arg)
     
     while(!groundstation_has_config_values_initialized_from_kite_EEPROM){
     	sendDataArrayLarge(CONFIG_MODE, config_values, NUM_CONFIG_FLOAT_VARS); // *** SENDING of CONFIG ARRAY via ESP-NOW
+    	processRC();
     	printf("Sending config array\n");
     	vTaskDelay(100);
     }
@@ -275,11 +298,22 @@ void main_task(void* arg)
 	int propellerBootState = -200;
 	float propellerFactor = 0;
 	
+	TickType_t xLastWakeTime;
+	xLastWakeTime = xTaskGetTickCount();
+	
+	Time t = start_timer();
+	float timestep = 0;
 	while(1) {
-		vTaskDelay(1);
+		
+		vTaskDelayUntil(&xLastWakeTime, 2);
+		
+		float new_timestep = 1024*get_time_step(&t);
+		timestep = 0.9*timestep + 0.1 * new_timestep * new_timestep;
+		//sendDebuggingData(timestep, getHeight(), groundstation_height, getHeight()-groundstation_height+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative(), 0);
+		processRC();
 		//printf("mode = %d\n", autopilot.mode);
 		if(data_needs_being_written_to_EEPROM == 1){
-			printf("writing config to eeprom");
+			//printf("writing config to eeprom");
 			writeConfigValuesToEEPROM(config_values);
 			data_needs_being_written_to_EEPROM = 0;
 		}
@@ -300,20 +334,21 @@ void main_task(void* arg)
 			propellerBootState = 2;
 		}
 		if(propellerBootState == 2 && propellerFactor < 1){
-			propellerFactor = clamp(propellerFactor+0.001, 0, 1);
+			propellerFactor = clamp(propellerFactor+0.004, 0, 1); //4 seconds for propellerFactor from 0.2 to 1 at 50Hz, TOOD: danger of overflow. But is float, might take very long time.
 		}
 		
 		float line_length = clamp(line_length_in_meters, 0, 1000000); // global var defined in RC.c, should default to 1 when no signal received, TODO: revert line length in VESC LISP code
 		autopilot.fm = flight_mode;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
 		SensorData sensorData;
-		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.line_vector_normed, kite_orientation_data.gyro_in_kite_coords, getHeight()-groundstation_height, getHeightDerivative());
+		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.line_vector_normed, kite_orientation_data.gyro_in_kite_coords, getHeight()-groundstation_height+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative());
 		
 		//TODO: decide size of timestep_in_s in main.c and pass to stepAutopilot(), or use same method as used in updateRotationMatrix
 		ControlData control_data;
 		
 		//autopilot.mode = EIGHT_MODE;
-		//DEBUGGING
+		//DEBUGGING, TODO: remove
+		//line_length = 3;
 		stepAutopilot(&autopilot, &control_data, sensorData, line_length, 3/*line tension*/);
 		
 		// DON'T LET SERVOS BREAK THE KITE
