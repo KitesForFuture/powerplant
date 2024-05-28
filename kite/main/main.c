@@ -100,7 +100,7 @@ void actuatorControl(float left_aileron, float right_aileron, float left_elevon,
 	}
 	//setAngle(7, -5 + left_aileron); // left aileron
 	//setAngle(6, 5 + -right_aileron); // right aileron
-	printf("%f, %f,%f, %f,%f\n", config_values[50], config_values[51], config_values[52], config_values[48], config_values[49]);
+	//printf("%f, %f,%f, %f,%f\n", config_values[50], config_values[51], config_values[52], config_values[48], config_values[49]);
 	if(config_values[9]){ // SWAPPED
 		setAngle(3, config_values[37] + config_values[7]*left_elevon); // left elevon
 		setAngle(0, config_values[38] + config_values[8]*right_elevon); // right elevon

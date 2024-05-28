@@ -158,7 +158,7 @@ void initAutopilot(Autopilot* autopilot, float* config_values){
 }
 
 void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension){
-	
+	//printf("ap-mode = %d\n", autopilot->mode);
 	/*if(autopilot->fm == 3.0){ // 3.0 is VESC final landing mode
 		autopilot->mode = LANDING_MODE;
 	}*/
@@ -176,9 +176,12 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	}
 	
 	if(autopilot->mode == HOVER_MODE){
-		if(autopilot->fm == 0.0 || autopilot->fm == 3.0){ // 0.0 is VESC launch mode, 3.0 is VESC final landing mode
+		if(autopilot->fm != 0.0 && autopilot->fm != 3.0){ // 0.0 is VESC launch mode, 3.0 is VESC final landing mode
 			autopilot->mode = HOVER_EIGHT_TRANSITION;
 			autopilot->timer = start_timer();
+		}
+		if(autopilot->fm == 3.0){ // 0.0 is VESC launch mode, 3.0 is VESC final landing mode
+			autopilot->mode = LANDING_MODE;
 		}
 		autopilot->y_angle_offset = autopilot->hover.y_angle_offset;
 		
