@@ -1,6 +1,6 @@
-(define launch-line-length 50)
-(define min-eight-line-length 100)
-(define max-eight-line-length 150)
+(define launch-line-length 75)
+(define min-eight-line-length 120)
+(define max-eight-line-length 180)
 
 ;(define launch-line-length 1)
 ;(define min-eight-line-length 2)
@@ -133,11 +133,11 @@
                             ;(set-current 6)
                         )
                         ; flightmode = landing or final-landing
-                        (if (> line-length 43)
-                            (set-current 6)
+                        (if (> line-length 10)
+                            (set-current 7.5)
                             (if (> line-length 0)
                                 (progn
-                                    (set-current (+ 1.7 (* 0.1 line-length)))
+                                    (set-current (+ 1.7 (* 0.58 line-length)))
                                 )
                                 (set-current 0)
                             )

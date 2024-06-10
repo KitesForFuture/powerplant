@@ -150,7 +150,7 @@ void initAutopilot(Autopilot* autopilot, float* config_values){
 	autopilot->multiplier = FIRST_TURN_MULTIPLIER;
 	
 	initActuator(&(autopilot->slowly_changing_target_angle), autopilot->turning_speed, -3.14, 3.14);
-	
+	autopilot->slowly_changing_target_angle.currentValue = 0.75;
 	autopilot->timer = 0;
 
 	autopilot->RC_target_angle = 0;
@@ -273,8 +273,8 @@ void notlandung(Autopilot* autopilot, ControlData* control_data_out, SensorData 
 	// AIRBRAKE EXTENDED
 	float airbrake = AIRBRAKE_ON;
 	initControlData(control_data_out, 0, 0,
-		autopilot->brake*(90+airbrake)*0.005 + y_axis_control - x_axis_control + abs(x_axis_control)*0.3,
-		autopilot->brake*(90+airbrake)*0.005 + y_axis_control + x_axis_control + abs(x_axis_control)*0.3,
+		autopilot->brake*(90+airbrake)*0.005 + y_axis_control - x_axis_control + abs(x_axis_control)*0.1,
+		autopilot->brake*(90+airbrake)*0.005 + y_axis_control + x_axis_control + abs(x_axis_control)*0.1,
 		0,
 		0,
 		airbrake, 0, LINE_TENSION_LANDING); return;
@@ -331,8 +331,8 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control, 2); // UP-DOWN control
 	
 	initControlData(control_data_out, 0, 0,
-		autopilot->brake*(90+airbrake)*0.005 + y_axis_control - x_axis_control + abs(x_axis_control)*0.3,
-		autopilot->brake*(90+airbrake)*0.005 + y_axis_control + x_axis_control + abs(x_axis_control)*0.3,
+		autopilot->brake*(90+airbrake)*0.005 + y_axis_control - x_axis_control + abs(x_axis_control)*0.1,
+		autopilot->brake*(90+airbrake)*0.005 + y_axis_control + x_axis_control + abs(x_axis_control)*0.1,
 		0,
 		0,
 		airbrake, 0, LINE_TENSION_LANDING); return;
@@ -370,7 +370,7 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	// 2. STAGE P(I)D: flight direction -> neccessary roll angle
 	float angleErrorZAxis = getAngleErrorZAxisImproved(0.0, mat, line_dir);
 	float z_axis_offset = angleErrorZAxis - slowly_changing_target_angle_local;
-	float desired_roll_angle = clamp(autopilot->eight.roll.P * z_axis_offset - autopilot->eight.roll.D * sensor_data.gyro[2], -45*PI/180, 45*PI/180);
+	float desired_roll_angle = clamp(autopilot->eight.roll.P * z_axis_offset - autopilot->eight.roll.D * sensor_data.gyro[2], -30*PI/180, 30*PI/180);
 	
 	
 	// 3. STAGE P(I)D: neccessary roll angle -> aileron deflection
@@ -394,8 +394,8 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	sendDebuggingData(powerInWatts, angleErrorZAxis, desired_roll_angle, slowly_changing_target_angle_local, target_angle_adjustment, 1);
 	//sendDebuggingData(angleErrorZAxis, getAngleErrorZAxis(0.0, mat), 0, 0, 0, 0);
 	initControlData(control_data_out, 0, 0,
-		y_axis_control - z_axis_control + abs(z_axis_control)*0.3,
-		y_axis_control + z_axis_control + abs(z_axis_control)*0.3,
+		y_axis_control - z_axis_control + abs(z_axis_control)*0.1,
+		y_axis_control + z_axis_control + abs(z_axis_control)*0.1,
 		0,
 		0,
 		airbrake, 0, LINE_TENSION_EIGHT); return;
@@ -424,7 +424,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	d_h_smooth = 0.8*d_h_smooth + 0.2 * d_height;
 	
 	
-	float desired_height = (line_length == 0 ? 1.0 : line_length) * 0.5; // * sin(PI/6.0)
+	float desired_height = (line_length == 0 ? 1.0 : line_length) * 0.65; // * sin(PI/6.0)
 	float height_error = height - desired_height;
 	
 	//TODO: cleanup all those constants!
@@ -454,20 +454,23 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	//y_axis_control -= 20;
 	
 	// Z-AXIS
-	
-	float z_axis_offset = getAngleErrorZAxis(0, mat);//getAngleErrorZAxisImproved(0.0, mat, line_dir); // could use getAngleErrorZAxis(), if pitch stays near horizontal.
+	float desired_z_axis_angle = 0;
+	if(line_tension == LINE_TENSION_EIGHT){
+		desired_z_axis_angle = 0.75; // 45 degrees to the left
+	}
+	float z_axis_offset = getAngleErrorZAxis(desired_z_axis_angle, mat);//getAngleErrorZAxisImproved(0.0, mat, line_dir); // could use getAngleErrorZAxis(), if pitch stays near horizontal.
 	float z_axis_control = - autopilot->hover.Z.P * z_axis_offset * 0.195935*0.44 * 1.5 + autopilot->hover.Z.D * sensor_data.gyro[2]*0.017341*2;
-	z_axis_I -= sign(z_axis_offset) * 0.005;
-	z_axis_I = clamp(z_axis_I, -3, 3);
+	z_axis_I -= sign(z_axis_offset) * 0.01;
+	z_axis_I = clamp(z_axis_I, -6, 6);
 	
 	z_axis_control *=100;
 	z_axis_control += z_axis_I;
 	
-	if(fabs(y_axis_offset) > 1.5) z_axis_control = 0;
+	//if(fabs(y_axis_offset) > 1.5) z_axis_control = 0;
 	
 	// X-AXIS
 	
-	float roll_angle = -getLineRollAngle(line_dir);
+	float roll_angle = -getLineRollAngle(line_dir) + 0.1;
 	float x_axis_control = (normed_airflow > 0.0001 ? 1.0/(normed_airflow*normed_airflow) : 1.0) * (autopilot->hover.X.P * roll_angle + autopilot->hover.X.D * sensor_data.gyro[0]*0.75);
 	x_axis_control *= 100;
 	
@@ -488,15 +491,15 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	float right_elevon = clamp(y_axis_control - x_axis_control, -50, 50);
 	float left_prop = height_control_smooth + z_axis_control;
 	float right_prop = height_control_smooth - z_axis_control;
-	
+	/*
 	if(line_tension == LINE_TENSION_EIGHT){
-		left_prop = 70;
-		right_prop = 70;
-		left_elevon = 10;
-		right_elevon = 10;
-		y_axis_control = -10;
+		left_prop = 90;
+		right_prop = 90;
+		//left_elevon = 10;
+		//right_elevon = 10;
+		//y_axis_control = -10;
 	}
-	
+	*/
 	sendDebuggingData(sensor_data.height, line_length, height_control_smooth, d_h_smooth, h_I, 0);
 	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, left_elevon, right_elevon, AIRBRAKE_OFF, 0, line_tension); return;
 	
