@@ -112,7 +112,8 @@ void init(){
 }
 
 float line_length = 0;
-float line_speed = 0;
+//float line_speed = 0;
+//float line_speed = 0;
 float line_length_offset = NOT_INITIALIZED;
 float last_line_length = 0;
 
@@ -134,21 +135,22 @@ void app_main(void){
 		
 		// pass line length and line tension from UART to WIFI
 		receive_array_length = processUART(VESC_UART, receive_array);
-		if(receive_array_length == 2){
+		if(receive_array_length == 3){
 			printf("received UART from VESC\n");
 			line_length_raw = receive_array[0];
 			flight_mode = receive_array[1];
+			line_speed = receive_array[2];
 			if(flight_mode != 2.0 && flight_mode != 3.0){tension_request = 0;};
 			
 			line_length = line_length_raw;// - line_length_offset;
 			//printf("received %f, %f\n", line_length_raw, flight_mode);
 			printf("sending flight_mode %f and line_length %f to kite\n", flight_mode, line_length);
-			sendData(LINE_LENGTH_MODE, line_length, flight_mode, getHeight()); // send line_length, flight_mode to kite
+			sendData(LINE_LENGTH_MODE, line_length, flight_mode, getHeight(), line_speed); // send line_length, flight_mode to kite
 			printf("sending flight_mode %f and line_length %f to communication ESP32\n", flight_mode, line_length);
 			if(internet_connected){
 				sendUART(flight_mode, line_length, ESP32_UART); // send flight_mode to attached ESP32, which forwards it to the internet
 			}
-			line_speed = (1-0.125) * line_speed + 0.125 * 50/*frequency*/ * (line_length - last_line_length);
+			//line_speed = (1-0.125) * line_speed + 0.125 * 50/*frequency*/ * (line_length - last_line_length);
 			last_line_length = line_length;
 			//printf("line_speed = %f, line_length = %f\n", line_speed, line_length);
 			if(-line_speed > 0.5){

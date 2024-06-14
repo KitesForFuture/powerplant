@@ -31,7 +31,7 @@
 
 (define offset (get-dist))
 
-(define arr (array-create 16))
+(define arr (array-create 20))
 (define array (array-create 16))
 
 (define uart-send-counter 0)
@@ -53,7 +53,8 @@
                 (bufset-f32 arr 0 1234567.0)
                 (bufset-f32 arr 4 line-length)
                 (bufset-f32 arr 8 flightmode-request)
-                (bufset-f32 arr 12 -1234567.0)
+                (bufset-f32 arr 12 (- 0 (get-speed)))
+                (bufset-f32 arr 16 -1234567.0)
                 (uart-write arr)
             )
         )
@@ -134,12 +135,12 @@
                         )
                         ; flightmode = landing or final-landing
                         (if (> line-length 10)
-                            (set-current 7.5)
+                            (set-current 4);(set-current 7.5)
                             (if (> line-length 0)
                                 (progn
-                                    (set-current (+ 1.7 (* 0.58 line-length)))
+                                    (set-current 4);(set-current (+ 1.7 (* 0.58 line-length)))
                                 )
-                                (set-current 0)
+                                (set-current 4);(set-current 0)
                             )
                         )
                     )

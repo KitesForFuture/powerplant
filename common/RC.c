@@ -7,13 +7,14 @@
 #define CONFIG_MODE 4
 #define DEBUG_DATA_MODE 5
 
-#define DATALENGTH 3
+#define DATALENGTH 4
 
 
 static uint8_t broadcast_mac[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 const uint8_t WIFI_CHANNEL = 0;
 
 float line_length_in_meters = 1;
+float line_speed = 0;
 float flight_mode = 0;
 float groundstation_height = 0;
 
@@ -57,6 +58,7 @@ static void msg_recv_cb_kite(const uint8_t *mac_addr, const uint8_t *data, int l
 			line_length_in_meters = msg.data[0];
 			flight_mode = msg.data[1];
 			groundstation_height = msg.data[2];
+			line_speed = msg.data[3];
 			newWiFidata = true;
 		}
 	}
@@ -205,7 +207,7 @@ void sendDataArray(float data[DATALENGTH], uint32_t mode){
 }
 */
 
-void sendData(uint32_t mode, float data0, float data1, float data2){
+void sendData(uint32_t mode, float data0, float data1, float data2, float data3){
 	
 	esp_now_msg_t msg;
 	
@@ -213,6 +215,7 @@ void sendData(uint32_t mode, float data0, float data1, float data2){
 	msg.data[0] = data0;
 	msg.data[1] = data1;
 	msg.data[2] = data2;
+	msg.data[3] = data3;
 	
 	// Pack
 	uint16_t packet_size = sizeof(esp_now_msg_t);
