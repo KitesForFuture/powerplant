@@ -337,7 +337,7 @@ void main_task(void* arg)
 			propellerFactor = clamp(propellerFactor+0.004, 0, 1); //4 seconds for propellerFactor from 0.2 to 1 at 50Hz, TOOD: danger of overflow. But is float, might take very long time.
 		}
 		
-		float line_length = line_length_in_meters;//clamp(line_length_in_meters, 0, 1000000); // global var defined in RC.c, should default to 1 when no signal received, TODO: revert line length in VESC LISP code
+		float line_length = clamp(line_length_in_meters, 0, 1000000); // global var defined in RC.c, should default to 1 when no signal received, TODO: revert line length in VESC LISP code
 		autopilot.fm = flight_mode;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
 		SensorData sensorData;

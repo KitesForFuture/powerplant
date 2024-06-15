@@ -334,17 +334,10 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	y_axis_control = clamp(y_axis_control, -50, 50);
 	
 	// LINE SPEED CONTROL VIA AIR BRAKE
-	//line_length_derivative_counter ++;
-	//if(line_length_derivative_counter > 3){
-		//line_length_derivative_counter = 0;
-		
-		//line_length_derivative = 0.8*line_length_derivative + 0.2 * (line_length - old_line_length)*15; //15Hz, i.e. division by timestep delta_t=1/50
-		//old_line_length = line_length;
-		float line_speed_error = -line_speed - 5;
-		airbrake = line_speed_error * 60/2.5;
-		airbrake_compensation_by_elevons = 60 * fmax(0, 1-fabs((line_speed_error-0.5)*0.4));//0.4 = 1/2.5, *25% because airbrake servo has very little effect at first.
-		printf("line_speed = %f, d_line = %f, lse = %f, ab = %f, abc = %f\n", line_speed, line_length_derivative, line_speed_error, airbrake, airbrake_compensation_by_elevons);
-	//}
+	float line_speed_error = -line_speed - 5;
+	airbrake = line_speed_error * 60/2.5;
+	airbrake_compensation_by_elevons = 60 * fmax(0, 1-fabs((line_speed_error-0.5)*0.4));//0.4 = 1/2.5, -0.5 because airbrake servo has very little effect at first, and because airbrake doesn't fully extend
+	//printf("line_speed = %f, d_line = %f, lse = %f, ab = %f, abc = %f\n", line_speed, line_length_derivative, line_speed_error, airbrake, airbrake_compensation_by_elevons);
 	
 	//float airbrake = AIRBRAKE_ON;
 	//if (height_error < -5) airbrake = AIRBRAKE_OFF;
