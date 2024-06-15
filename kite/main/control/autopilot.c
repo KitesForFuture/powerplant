@@ -344,9 +344,10 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	
 	sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control, 2); // UP-DOWN control
 	
+	//printf("airbrake->brake = %f\n", autopilot->brake);
 	initControlData(control_data_out, 0, 0,
-		/*autopilot->brake*(90+airbrake)*0.005 +*/ y_axis_control - x_axis_control + abs(x_axis_control)*0.1,
-		/*autopilot->brake*(90+airbrake)*0.005 +*/ y_axis_control + x_axis_control + abs(x_axis_control)*0.1,
+		/*autopilot->brake*(90+airbrake)*0.005 +*/ autopilot->brake + y_axis_control - x_axis_control + abs(x_axis_control)*0.1,
+		/*autopilot->brake*(90+airbrake)*0.005 +*/ autopilot->brake + y_axis_control + x_axis_control + abs(x_axis_control)*0.1,
 		airbrake_compensation_by_elevons,
 		airbrake_compensation_by_elevons,
 		airbrake, 0, LINE_TENSION_LANDING); return;
