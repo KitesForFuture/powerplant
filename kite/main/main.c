@@ -37,12 +37,27 @@
 
 #include "../../common/helpers/adc.h"
 
+#include "my_gpio.c"
+#include "driver/ledc.h"
+
 #define MAX_SERVO_DEFLECTION 60.0//50
 #define MIN_BRAKE_DEFLECTION -59.0//-64
 #define MAX_BRAKE_DEFLECTION 59.0
 #define MAX_PROPELLER_SPEED 90.0 // AT MOST 90
 
 #define HEIGHT_CALIBRATION_OFFSET 1.0
+
+
+#define LEDC_TIMER              LEDC_TIMER_0
+#define LEDC_MODE               LEDC_LOW_SPEED_MODE
+#define LEDC_OUTPUT_IO_0        (16) // Define the output GPIO
+#define LEDC_OUTPUT_IO_1        (32) // Define the output GPIO
+#define LEDC_CHANNEL_0          LEDC_CHANNEL_0
+#define LEDC_CHANNEL_1          LEDC_CHANNEL_1
+#define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
+#define LEDC_DUTY               (4096) // Set duty to 50%. (2 ** 13) * 50% = 4096
+#define LEDC_FREQUENCY          (4000) // Frequency in Hertz. Set frequency at 4 kHz
+
 
 struct i2c_bus bus0 = {18, 19};
 struct i2c_bus bus1 = {25, 14};
@@ -58,6 +73,7 @@ void writeConfigValuesToEEPROM(float* values){
 	for (int i = 6; i < NUM_CONFIG_FLOAT_VARS; i++){
 		if(config_values_changed_mask[i]){
 			write2EEPROM(values[i], i);
+			printf("writing %f to memory location [%d]\n", values[i], i);
 			config_values_changed_mask[i] = false;
 		}
 	}
@@ -136,6 +152,42 @@ void testConfigWriting(){
 	printf("after writing to and reading from EEPROM, config[6]*1000000000 = %f\n", (test_config[6]*1000000000));
 }
 
+static void example_ledc_init(void)
+{
+    // Prepare and then apply the LEDC PWM timer configuration
+    ledc_timer_config_t ledc_timer = {
+        .speed_mode       = LEDC_MODE,
+        .timer_num        = LEDC_TIMER,
+        .duty_resolution  = LEDC_DUTY_RES,
+        .freq_hz          = LEDC_FREQUENCY,  // Set output frequency at 4 kHz
+        .clk_cfg          = LEDC_AUTO_CLK
+    };
+    ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
+
+    // Prepare and then apply the LEDC PWM channel configuration
+    ledc_channel_config_t ledc_channel = {
+        .speed_mode     = LEDC_MODE,
+        .channel        = LEDC_CHANNEL_0,
+        .timer_sel      = LEDC_TIMER,
+        .intr_type      = LEDC_INTR_DISABLE,
+        .gpio_num       = LEDC_OUTPUT_IO_0,
+        .duty           = 0, // Set duty to 0%
+        .hpoint         = 0
+    };
+    ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
+    
+    ledc_channel_config_t ledc_channel2 = {
+        .speed_mode     = LEDC_MODE,
+        .channel        = LEDC_CHANNEL_1,
+        .timer_sel      = LEDC_TIMER,
+        .intr_type      = LEDC_INTR_DISABLE,
+        .gpio_num       = LEDC_OUTPUT_IO_1,
+        .duty           = 0, // Set duty to 0%
+        .hpoint         = 0
+    };
+    ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel2));
+}
+
 void main_task(void* arg)
 {
 	init_uptime();
@@ -155,6 +207,8 @@ void main_task(void* arg)
 	
 	int output_pins[] = {23,17, 2/*prop*/, 27, 15/*prop*/,13,12,33};
 	initMotors(output_pins, 8);
+	
+	//initGPIO();
 	
 	ICM20948 kite_and_line_mpu;
 	
@@ -200,6 +254,8 @@ void main_task(void* arg)
 		printf("entering config mode\n");
 		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data);
 		
+		
+		dps_address = 0x76;
 		init_dps310(bus1);
 		Time t = start_timer();
 		TickType_t xLastWakeTime;
@@ -259,6 +315,7 @@ void main_task(void* arg)
 				gyroCalibrated = true;
 			}else{
 				readDataICM20948(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
+				//printf("accel raw: %f, %f, %f, gyro raw: %f, %f, %f, mag raw: %f, %f, %f\n", kite_and_line_mpu_raw_data.accel[0], kite_and_line_mpu_raw_data.accel[1], kite_and_line_mpu_raw_data.accel[2], kite_and_line_mpu_raw_data.gyro[0], kite_and_line_mpu_raw_data.gyro[1], kite_and_line_mpu_raw_data.gyro[2], kite_and_line_mpu_raw_data.magnet[0], kite_and_line_mpu_raw_data.magnet[1], kite_and_line_mpu_raw_data.magnet[2]);
 				updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
 			}
 			if(data_needs_being_written_to_EEPROM == 1){
@@ -288,6 +345,7 @@ void main_task(void* arg)
     printf("initializing dps310\n");
     
     vTaskDelay(10);
+	dps_address = 0x76;
     init_dps310(bus1);
     vTaskDelay(10);
     
@@ -303,9 +361,29 @@ void main_task(void* arg)
 	
 	Time t = start_timer();
 	float timestep = 0;
+	
+	example_ledc_init();
+	ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_0, 0);
+	ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_0);
+	ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_1, 0);
+	ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_1);
+	
+	int loop_running_state = 0;
 	while(1) {
 		
 		vTaskDelayUntil(&xLastWakeTime, 2);
+		
+		//set_level_GPIO_16(rec_led_state);
+		ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_0, rec_led_state*LEDC_DUTY);
+		ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_0);
+		if(loop_running_state == 0){
+			loop_running_state = 1;
+		}else{
+			loop_running_state = 0;
+		}
+		//set_level_GPIO_32(loop_running_state);
+		ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_1, loop_running_state*LEDC_DUTY);
+		ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_1);
 		
 		float new_timestep = 1024*get_time_step(&t);
 		timestep = 0.9*timestep + 0.1 * new_timestep * new_timestep;
@@ -357,7 +435,7 @@ void main_task(void* arg)
 		control_data.right_elevon = clamp(control_data.right_elevon, -MAX_SERVO_DEFLECTION, MAX_SERVO_DEFLECTION);
 		
 		//TODO: setAngle in radians ( * PI/180) and setSpeed from [0, 1] or so
-		actuatorControl(control_data.left_aileron, control_data.right_aileron, control_data.left_elevon, control_data.right_elevon, control_data.brake, control_data.rudder, propellerFactor*control_data.left_prop, propellerFactor*control_data.right_prop, MAX_PROPELLER_SPEED);
+		actuatorControl(control_data.left_aileron, control_data.right_aileron, control_data.left_elevon, control_data.right_elevon, control_data.brake, control_data.rudder, propellerFactor*control_data.left_prop, propellerFactor*control_data.right_prop, 0/*MAX_PROPELLER_SPEED*/);
 	}
 }
 

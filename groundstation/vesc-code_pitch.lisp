@@ -8,6 +8,9 @@
 
 (define offset (get-dist))
 
+(define current 0)
+(define oldcurrent 0)
+
 
 (loopwhile t
     (progn
@@ -19,12 +22,18 @@
             (progn
                 (progn
                     (print "generating") 
-                    (set-brake 40) ; GENERATING max-reel-out-tension
+                    (if (< line-length 200)
+                    	(set-brake 20) ; GENERATING max-reel-out-tension
+                    	(set-brake 50)
+                    )
                 )
                 
                 ; SWITCHING TO REEL-IN
-                (if (and (> (get-current) -0.05) (= counter 0))
+                (define oldcurrent current)
+                (define current (get-current))
+                (if (and (and (> current -0.05) (> oldcurrent -0.05)) (= counter 0))
                     (progn
+                        (print current) 
                         (define mode motormode)
                         (define counter 50)
                     )
@@ -36,7 +45,7 @@
                     ; REEL-IN WITH LOW TENSION
                     
                     (if (< line-length 0)
-                        (set-current 0)
+                        (set-brake 40)
                         (set-current 3.5)
                     )
                     

@@ -6,7 +6,7 @@
 #define EXAMPLE_MAX_STA_CONN       1
 
 
-static const char *TAG = "wifi softAP";
+//static const char *TAG = "wifi softAP";
 static void (*write_callback)(float*);
 static void (*init_callback)(float*);
 static void (*debugging_data_callback)(float*);
@@ -15,7 +15,7 @@ static void (*debugging_data_callback)(float*);
 
 static esp_err_t kite_config_html_handler(httpd_req_t *req)
 {
-	ESP_LOGI(TAG, "Getting html config page");
+	//ESP_LOGI(TAG, "Getting html config page");
 	
 	esp_err_t error;
     const char* response = (const char*) req->user_ctx;
@@ -698,7 +698,7 @@ static const httpd_uri_t kite_config_get_html = {
 
 static esp_err_t debugging_data_get_handler(httpd_req_t *req)
 {
-	ESP_LOGI(TAG, "Getting debuggind data");
+	//ESP_LOGI(TAG, "Getting debuggind data");
 	esp_err_t error;
 	
     float float_values[6];
@@ -732,7 +732,7 @@ static const httpd_uri_t kite_debugging_data_get_values = {
 
 static esp_err_t config_get_handler(httpd_req_t *req)
 {
-	ESP_LOGI(TAG, "Getting config values (initialization)");
+	//ESP_LOGI(TAG, "Getting config values (initialization)");
 	esp_err_t error;
 	
     float float_values[NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS];
@@ -828,7 +828,7 @@ int getIndexToNextNumber(char* string_arg, int current_index){
 
 esp_err_t config_post_handler(httpd_req_t *req)
 {
-	ESP_LOGI(TAG, "Posting config to kite");
+	//ESP_LOGI(TAG, "Posting config to kite");
     char content[(NUM_CONFIG_FLOAT_VARS+NUM_GS_CONFIG_FLOAT_VARS)*20];
 
     size_t recv_size = MIN(req->content_len, sizeof(content));
@@ -886,10 +886,10 @@ static httpd_handle_t start_webserver(void)
     config.lru_purge_enable = true;
 
     // Start the httpd server
-    ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
+    //ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
     if (httpd_start(&server, &config) == ESP_OK) {
         // Set URI handlers
-        ESP_LOGI(TAG, "Registering URI handlers");
+        //ESP_LOGI(TAG, "Registering URI handlers");
         httpd_register_uri_handler(server, &kite_config_get_html);
         httpd_register_uri_handler(server, &kite_config_get_values);
         httpd_register_uri_handler(server, &kite_debugging_data_get_values);
@@ -900,7 +900,7 @@ static httpd_handle_t start_webserver(void)
         return server;
     }
 
-    ESP_LOGI(TAG, "Error starting server!");
+    //ESP_LOGI(TAG, "Error starting server!");
     return NULL;
 }
 
@@ -915,7 +915,7 @@ static void disconnect_handler(void* arg, esp_event_base_t event_base,
 {
     httpd_handle_t* server = (httpd_handle_t*) arg;
     if (*server) {
-        ESP_LOGI(TAG, "Stopping webserver");
+        //ESP_LOGI(TAG, "Stopping webserver");
         stop_webserver(*server);
         *server = NULL;
     }
@@ -926,7 +926,7 @@ static void connect_handler(void* arg, esp_event_base_t event_base,
 {
     httpd_handle_t* server = (httpd_handle_t*) arg;
     if (*server == NULL) {
-        ESP_LOGI(TAG, "Starting webserver");
+        //ESP_LOGI(TAG, "Starting webserver");
         *server = start_webserver();
     }
 }
@@ -938,12 +938,12 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
 {
     if (event_id == WIFI_EVENT_AP_STACONNECTED) {
         wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-        ESP_LOGI(TAG, "station "MACSTR" join, AID=%d",
-                 MAC2STR(event->mac), event->aid);
+        //ESP_LOGI(TAG, "station "MACSTR" join, AID=%d",
+        //         MAC2STR(event->mac), event->aid);
     } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-        ESP_LOGI(TAG, "station "MACSTR" leave, AID=%d",
-                 MAC2STR(event->mac), event->aid);
+        //ESP_LOGI(TAG, "station "MACSTR" leave, AID=%d",
+        //         MAC2STR(event->mac), event->aid);
     }
 }
 
@@ -979,9 +979,10 @@ void wifi_init_softap(void)
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
+    esp_wifi_set_ps(WIFI_PS_NONE);
 
-    ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d",
-             EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);
+    //ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d",
+             //EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);
 }
 
 // init wifi on the esp
@@ -1000,7 +1001,7 @@ void network_setup_configuring(void (*write_callback_arg)(float*), void (*init_c
       ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_AP");
+    //ESP_LOGI(TAG, "ESP_WIFI_MODE_AP");
     wifi_init_softap();
     
     

@@ -46,6 +46,7 @@ typedef struct __attribute__((packed)) esp_now_msg_t_medium
 	float data[6];
 } esp_now_msg_t_medium;
 
+int rec_led_state = 0;
 // gets called when incoming data is received
 static void msg_recv_cb_kite(const uint8_t *mac_addr, const uint8_t *data, int len)
 {
@@ -55,6 +56,13 @@ static void msg_recv_cb_kite(const uint8_t *mac_addr, const uint8_t *data, int l
 		memcpy(&msg, data, len);
 		
 		if(msg.mode == LINE_LENGTH_MODE){
+			
+			if(rec_led_state == 0){
+				rec_led_state = 1;
+			}else{
+				rec_led_state = 0;
+			}
+			
 			line_length_in_meters = msg.data[0];
 			flight_mode = msg.data[1];
 			groundstation_height = msg.data[2];

@@ -2,6 +2,8 @@
 (define min-eight-line-length 120)
 (define max-eight-line-length 180)
 
+(define safety-distance-for-landing-debug 10)
+
 ;(define launch-line-length 1)
 ;(define min-eight-line-length 2)
 ;(define max-eight-line-length 3)
@@ -36,6 +38,10 @@
 
 (define uart-send-counter 0)
 
+(gpio-configure 'pin-adc1 'pin-mode-out)
+(define led-state 0)
+(gpio-write 'pin-adc1 led-state)
+
 (loopwhile t
     (progn
         
@@ -47,7 +53,7 @@
         (if (< uart-send-counter 0) (define uart-send-counter 0) 0)
         (if (= uart-send-counter 0)
             (progn
-                (define uart-send-counter 20)
+                (define uart-send-counter 10)
                 (define line-length (- 0 (- (get-dist) offset) ) )
                 ; SEND line-length AND flight-mode request
                 (bufset-f32 arr 0 1234567.0)
@@ -56,6 +62,11 @@
                 (bufset-f32 arr 12 (- 0 (get-speed)))
                 (bufset-f32 arr 16 -1234567.0)
                 (uart-write arr)
+                (if (= led-state 0)
+                	(define led-state 1)
+                	(define led-state 0)
+                )
+                (gpio-write 'pin-adc1 led-state)
             )
         )
         
@@ -96,7 +107,7 @@
         (if (= mode generatormode)
             (progn
                 (if (= flightmode launch)
-                    (set-brake 0.1) ; LAUNCHING
+                    (set-current -0.3) ; LAUNCHING
                     (progn
                         ;(print "generating") 
                         (set-brake 12) ; GENERATING max-reel-out-tension
@@ -134,13 +145,14 @@
                             ;(set-current 6)
                         )
                         ; flightmode = landing or final-landing
-                        (if (> line-length 10)
-                            (set-current 7.5)
-                            (if (> line-length 0)
+                        (if (> line-length (+ 12.6 safety-distance-for-landing-debug))
+                            (set-current 8)
+                            (if (> line-length safety-distance-for-landing-debug)
                                 (progn
-                                    (set-current (+ 1.7 (* 0.58 line-length)))
+                                    (set-current (+ 1.7 (* 0.5 (- line-length safety-distance-for-landing-debug))))
                                 )
-                                (set-current 0)
+                                ;(set-current 8)
+                                (set-current 1.7)
                             )
                         )
                     )

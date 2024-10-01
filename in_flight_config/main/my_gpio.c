@@ -38,7 +38,7 @@ void initGPIO()
     gpio_config(&io_conf);
 	
 	
-	
+	/*
     // INPUT
     //gpio_config_t io_conf;
     //interrupt disabled
@@ -51,5 +51,6 @@ void initGPIO()
     io_conf.pull_down_en = 0;
     io_conf.pull_up_en = 1;
     gpio_config(&io_conf);
+    */
 }
 

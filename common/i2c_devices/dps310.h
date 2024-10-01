@@ -3,6 +3,8 @@
 
 #include "interchip.h"
 
+int dps_address;
+
 int update_dps310_if_necessary();
 
 void init_dps310(struct i2c_bus bus_arg);

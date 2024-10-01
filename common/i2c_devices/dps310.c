@@ -9,8 +9,6 @@
 struct i2c_bus dps310_bus;
 static Time last_update = 0;
 
-int dps_address = 0x77;
-
 float current_height = 0;
 float height_medium_smooth = 0;
 

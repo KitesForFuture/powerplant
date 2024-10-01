@@ -91,6 +91,24 @@ float getLineYawAngle(float* line_dir){
 	return getLineAngle(line_dir[0], line_dir[1]);
 }
 
+float getLineYawAngleImprovedForLanding(float* line_dir, float* mat){
+	
+	// projecting kite flight direction to horizontal y,z-plane
+	float nose_dir_y = mat[1];
+	float nose_dir_z = mat[2];
+	
+	// transforming line direction back to global coordinates mat^(-1)*line_dir, then projecting to the horizontal y,z-plane
+	float line_dir_y_global_coords = mat[1] * line_dir[0] + mat[4] * line_dir[1] + mat[7] * line_dir[2];
+	float line_dir_z_global_coords = mat[2] * line_dir[0] + mat[5] * line_dir[1] + mat[8] * line_dir[2];
+	
+	// dividing one by the other (complex arithmetic) ignoring the correct length of the result
+	float x = nose_dir_y * line_dir_y_global_coords + nose_dir_z * line_dir_z_global_coords;
+	float y = nose_dir_y * line_dir_z_global_coords - nose_dir_z * line_dir_y_global_coords;
+	
+	// calculate signed angle
+	return getLineAngle(x, y);
+}
+
 float getLinePitchAngle(float* line_dir){
 	return 0.75*getLineAngle(-line_dir[2], -line_dir[0]);
 }
@@ -157,12 +175,14 @@ void initAutopilot(Autopilot* autopilot, float* config_values){
 	autopilot->RC_switch = 0;
 }
 
+static int landing_propeller_counter = -1;
+
 void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float line_tension){
 	//printf("ap-mode = %d\n", autopilot->mode);
 	/*if(autopilot->fm == 3.0){ // 3.0 is VESC final landing mode
 		autopilot->mode = LANDING_MODE;
 	}*/
-	if (sensor_data.height > 10 && 1.4*sensor_data.height > line_length){
+	if (sensor_data.height > 10 && sensor_data.height > 1.5*line_length){
 		autopilot->mode = NOTLANDUNG;
 	}
 	if(autopilot->mode == NOTLANDUNG){
@@ -182,6 +202,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		}
 		if(autopilot->fm == 3.0){ // 0.0 is VESC launch mode, 3.0 is VESC final landing mode
 			autopilot->mode = LANDING_MODE;
+			landing_propeller_counter = 0;
 			old_line_length = line_length;
 		}
 		autopilot->y_angle_offset = autopilot->hover.y_angle_offset;
@@ -229,6 +250,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 }
 
 static float desired_dive_angle_smooth = 0;
+static float old_prop_speed = 0;
 
 void test_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension){
 	float* mat = sensor_data.rotation_matrix;
@@ -291,65 +313,87 @@ static float airbrake_compensation_by_elevons = 0;
 
 
 void landing_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float line_tension, int transition){
+	
 	float* mat = sensor_data.rotation_matrix;
 	float* line_dir = sensor_data.line_direction_vector;
+	//printf("roll = %f, pitch = %f\n", getLineRollAngle(line_dir), getLinePitchAngle(line_dir));
 	
 	// HEIGHT CONTROL: STAGE 1
 	float height = sensor_data.height-autopilot->landing.desired_height;
-	float height_error = clamp(height - line_length*0.2 /* 20 percent descent slope*/, -10, 10);//clamp(height, -3, 10);//ONLY FOR TESTING!, clamp(height - line_length*0.2 /* 20 percent descent slope*/, -3, 10);
+	float height_error = clamp(height - (1+clamp((line_length-10)*0.2, 0, 1000))/*line_length*0.3*/ /* 20 percent descent slope*/, -10, 10);//clamp(height, -3, 10);//ONLY FOR TESTING!, clamp(height - line_length*0.2 /* 20 percent descent slope*/, -3, 10);
 	
-	float desired_dive_angle = 0.1 + 0.15*autopilot->landing.dive_angle_P*height_error;//-desired_line_angle - 2.0 * line_angle_error;
-	desired_dive_angle_smooth = 0.8 * desired_dive_angle_smooth + 0.2 * desired_dive_angle;
-	desired_dive_angle_smooth = clamp( desired_dive_angle_smooth, -PI/10, PI/6 );
+	float desired_dive_angle = 0.15*autopilot->landing.dive_angle_P*height_error;//-desired_line_angle - 2.0 * line_angle_error;
+	desired_dive_angle_smooth = desired_dive_angle;//0.8 * desired_dive_angle_smooth + 0.2 * desired_dive_angle;
+	desired_dive_angle_smooth = clamp( desired_dive_angle_smooth, -PI/12, PI/6 );
 	
 	if(transition){
 		desired_dive_angle_smooth = -PI/6;
 	}
-	
+	//desired_dive_angle_smooth = 0.0;
 	// HEIGHT CONTROL: STAGE 2
 	float y_axis_offset = -getAngleErrorYAxis(-desired_dive_angle_smooth - PI/2, mat);
 	float y_axis_control = 45.0 * autopilot->landing.Y.P * y_axis_offset + 2.31 * autopilot->landing.Y.D * sensor_data.gyro[1];
 	
 	
 	// LEFT-RIGHT CONTROL
-	float angle_error = getLineYawAngle(line_dir);
+	//float angle_error_old = getLineYawAngle(line_dir);
+	float angle_error = getLineYawAngleImprovedForLanding(line_dir, mat);
+	//printf("old angle = %f, new angle = %f\n", angle_error_old, angle_error_old);
 	
 	//for TESTING HAND LAUNCH:
-	if(mat[0] > 0.12){
+	/*if(mat[0] > 0.12){
 		angle_error = getAngleErrorZAxisImproved(0.0, mat, line_dir);
-	}
+	}*/
 	
 	float desired_roll_angle = clamp(autopilot->landing.roll.P * angle_error - autopilot->landing.roll.D * sensor_data.gyro[2], -60*PI/180, 60*PI/180);
 	
 	float roll_angle = getAngleErrorRollInHorizontalFlight(0.0, mat); // good in horizontal flight, but better at higher climb/sink rates
 	
 	//for TESTING HAND LAUNCH
-	if(mat[0] > 0.12){
+	/*if(mat[0] > 0.12){
 		roll_angle = getLineRollAngle(line_dir); // good if high line tension nearly perpendicular to wing
 		//roll_angle = getAngleErrorRollInHorizontalFlight(0.0, mat); // good in horizontal flight with line tension not perpendicular to wing, but better at higher climb/sink rates
-	}
+	}*/
 	
 	float x_axis_control = - 28 * autopilot->landing.X.P * (desired_roll_angle-roll_angle) - 11 * autopilot->landing.X.D * sensor_data.gyro[0];
-	x_axis_control = clamp(x_axis_control, -30, 30);
+	x_axis_control = clamp(x_axis_control, -45, 45);
 	y_axis_control = clamp(y_axis_control, -50, 50);
 	
 	// LINE SPEED CONTROL VIA AIR BRAKE
-	float line_speed_error = -line_speed - 5;
-	airbrake = line_speed_error * 60/2.5;
-	airbrake_compensation_by_elevons = 60 * fmax(0, 1-fabs((line_speed_error-0.5)*0.4));//0.4 = 1/2.5, -0.5 because airbrake servo has very little effect at first, and because airbrake doesn't fully extend
+	float line_speed_error = /*-3.75;//*/0.5*(-line_speed - 7.5);
+	airbrake = clamp(line_speed_error * 60/2.5, -60, 60);
+	airbrake_compensation_by_elevons = 0.5*60 * fmax(0, 1-fabs((line_speed_error-0.5)*0.4));//0.4 = 1/2.5, -0.5 because airbrake servo has very little effect at first, and because airbrake doesn't fully extend
 	//printf("line_speed = %f, d_line = %f, lse = %f, ab = %f, abc = %f\n", line_speed, line_length_derivative, line_speed_error, airbrake, airbrake_compensation_by_elevons);
+	/*if(line_length < 20){
+		airbrake = AIRBRAKE_ON;
+		airbrake_compensation_by_elevons = 0;
+	}*/
+	
 	
 	//float airbrake = AIRBRAKE_ON;
 	//if (height_error < -5) airbrake = AIRBRAKE_OFF;
 	
-	sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control, 2); // UP-DOWN control
+	sendDebuggingData(line_length, airbrake, airbrake_compensation_by_elevons, sensor_data.height, y_axis_control, 2);
+	//sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, sensor_data.height, y_axis_control, 2); // UP-DOWN control
+	//sendDebuggingData(line_length, angle_error, roll_angle, roll_angle-desired_roll_angle, x_axis_control, 2); // UP-DOWN control
+	//sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control, 2); // UP-DOWN control
 	
+	float prop_speed = 0;
+	/*if( landing_propeller_counter != -1){
+		prop_speed = old_prop_speed;
+		landing_propeller_counter ++;
+		if(landing_propeller_counter > 100){
+			landing_propeller_counter = -1;
+			prop_speed = 0;
+		}
+	}*/
+	//printf("prop_speed = %f, landing_propeller_counter = %d\n", prop_speed, landing_propeller_counter);
 	//printf("airbrake->brake = %f\n", autopilot->brake);
-	initControlData(control_data_out, 0, 0,
-		/*autopilot->brake*(90+airbrake)*0.005 +*/ autopilot->brake + y_axis_control - x_axis_control + abs(x_axis_control)*0.1,
-		/*autopilot->brake*(90+airbrake)*0.005 +*/ autopilot->brake + y_axis_control + x_axis_control + abs(x_axis_control)*0.1,
-		airbrake_compensation_by_elevons,
-		airbrake_compensation_by_elevons,
+	initControlData(control_data_out, prop_speed, prop_speed,
+		- x_axis_control + abs(x_axis_control)*0.1,
+		+ x_axis_control + abs(x_axis_control)*0.1,
+		airbrake_compensation_by_elevons + y_axis_control -2 + autopilot->brake - x_axis_control*0.2,
+		airbrake_compensation_by_elevons + y_axis_control -2 + autopilot->brake + x_axis_control*0.2,
 		airbrake, 0, LINE_TENSION_LANDING); return;
 }
 
@@ -466,7 +510,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	line_length_derivative = 0.9*line_length_derivative + 0.1 * (line_length - old_line_length)*50; //50Hz, i.e. division by timestep delta_t=1/50
 	old_line_length = line_length;
-	float line_speed_control = clamp((5-line_length_derivative)*0.03, 0, 0.15);// 10 degrees pitch-up when line-speed = 0, 0 degrees pitch-up when line-speed = 5m/s
+	float line_speed_control = clamp((5-line_length_derivative*2.0)*0.03, 0, 0.15);// 10 degrees pitch-up when line-speed = 0, 0 degrees pitch-up when line-speed = 5m/s
 	
 	// Y-AXIS
 	float y_axis_offset = getAngleErrorYAxis(autopilot->y_angle_offset + line_speed_control, mat);
@@ -482,7 +526,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	float desired_z_axis_angle = 0;
 	if(line_tension == LINE_TENSION_EIGHT){
 		//desired_z_axis_angle = 0.75; // 45 degrees to the left
-		desired_z_axis_angle = 1; // 57 degrees to the left
+		desired_z_axis_angle = 0.75; // 45 degrees to the left
 	}
 	float z_axis_offset = getAngleErrorZAxis(desired_z_axis_angle, mat);//getAngleErrorZAxisImproved(0.0, mat, line_dir); // could use getAngleErrorZAxis(), if pitch stays near horizontal.
 	float z_axis_control = - autopilot->hover.Z.P * z_axis_offset * 0.195935*0.44 * 1.5 + autopilot->hover.Z.D * sensor_data.gyro[2]*0.017341*2;
@@ -508,7 +552,7 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	}else{
 		z_axis_control += 45 * autopilot->RC_target_angle; // differentiate propeller thrust
 	}*/
-	
+	old_prop_speed = height_control_smooth;
 	// MIXING
 	
 	height_control_smooth = clamp(height_control_smooth, 0, 60);

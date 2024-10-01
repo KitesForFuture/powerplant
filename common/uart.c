@@ -64,7 +64,7 @@ void sendUARTArray100(float* array, int length, int uart_number){
 	}
 	d[length+1] = -1234567;
 	if(uart[uart_number].byteOrderReversed){
-		printf("!!!Not implemented byte order reversing yet in the function sendUARTArray100!!!\n");
+		//printf("!!!Not implemented byte order reversing yet in the function sendUARTArray100!!!\n");
 	}
 	uint8_t to_be_sent[102*4];
 	memcpy(to_be_sent, d, 102*4);

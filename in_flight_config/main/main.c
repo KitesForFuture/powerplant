@@ -1,6 +1,6 @@
 
 #include <math.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "sdkconfig.h"
@@ -24,8 +24,48 @@
 #include "driver/gpio.h"
 #include "driver/uart.h"
 #include "../../common/uart.c"
+#include "timer.c"
+
+#include "driver/ledc.h"
+
+#include "my_gpio.c"
+
+#define LEDC_TIMER              LEDC_TIMER_0
+#define LEDC_MODE               LEDC_LOW_SPEED_MODE
+#define LEDC_OUTPUT_IO          (33) // Define the output GPIO
+#define LEDC_CHANNEL            LEDC_CHANNEL_0
+#define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
+#define LEDC_DUTY               (4096) // Set duty to 50%. (2 ** 13) * 50% = 4096
+#define LEDC_FREQUENCY          (4000) // Frequency in Hertz. Set frequency at 4 kHz
+
 
 #define ESP32_UART 0
+
+float led_state = 0;
+static void example_ledc_init(void)
+{
+    // Prepare and then apply the LEDC PWM timer configuration
+    ledc_timer_config_t ledc_timer = {
+        .speed_mode       = LEDC_MODE,
+        .timer_num        = LEDC_TIMER,
+        .duty_resolution  = LEDC_DUTY_RES,
+        .freq_hz          = LEDC_FREQUENCY,  // Set output frequency at 4 kHz
+        .clk_cfg          = LEDC_AUTO_CLK
+    };
+    ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
+
+    // Prepare and then apply the LEDC PWM channel configuration
+    ledc_channel_config_t ledc_channel = {
+        .speed_mode     = LEDC_MODE,
+        .channel        = LEDC_CHANNEL,
+        .timer_sel      = LEDC_TIMER,
+        .intr_type      = LEDC_INTR_DISABLE,
+        .gpio_num       = LEDC_OUTPUT_IO,
+        .duty           = 0, // Set duty to 0%
+        .hpoint         = 0
+    };
+    ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
+}
 
 float config_values[NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS];
 
@@ -35,9 +75,22 @@ float debuggingData[6];
 int debuggingDataInitialized = false;
 
 void getDebuggingData(float* values){
+	//ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY);
+	//ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
 	for(int i = 0; i < 6; i++){
 		values[i] = debuggingDataInitialized? debuggingData[i] : 1000000;
 	}
+	//vTaskDelay(1);
+	//ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, 0);
+	//ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+	/*if(led_state == 0){
+		ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY);
+		led_state = 1;
+	}else{
+		ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, 0);
+		led_state = 0;
+	}*/
+	//ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
 }
 
 void getConfigValues(float* values){
@@ -55,14 +108,38 @@ void setConfigValues(float* values){
 
 void app_main(void)
 {
+	//network_setup_configuring(&setConfigValues, &getConfigValues, &getDebuggingData);//FOR DEBUGGING ONLY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//printf("network setup finished\n");
+	initGPIO();
+	
+	example_ledc_init();
+	ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, 0);
+	ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+	
+	
 	initUART(ESP32_UART, GPIO_NUM_17, GPIO_NUM_16, false);
 	//initializeConfigValues(config_values);
 	
 	int length = 0;
 	float receive_array[200];
 	int network_initialized = false;
-	printf("waiting for config data from kite...\n");
+	//printf("waiting for config data from kite...\n");
+	vTaskDelay(100);
+	//int64_t starttime = esp_timer_get_time();
 	while(1){
+		if(((int)(get_uptime_seconds()))%2 == 0){
+			set_level_GPIO_22(0);
+			set_level_GPIO_23(1);
+		}else{
+			set_level_GPIO_22(1);
+			set_level_GPIO_23(0);
+		}
+		
+		/*int64_t current_time = esp_timer_get_time();
+		float timeSinceBoot = 0.000001*(float)(current_time - starttime);
+		if(!network_initialized && timeSinceBoot > 10){
+			esp_restart();
+		}*/
 		//printf("looping\n");
 		//sendUART(1,2, ESP32_UART);//DEBUGGING
 		//sendUARTArray100(config_values, NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS, ESP32_UART);//DEBUGGING
@@ -98,6 +175,6 @@ void app_main(void)
 			//printf("received debugging data\n");
 		}
 		
-		vTaskDelay(1);
+		vTaskDelay(10);
 	}
 }
