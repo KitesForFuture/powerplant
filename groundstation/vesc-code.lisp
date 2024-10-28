@@ -53,7 +53,7 @@
         (if (< uart-send-counter 0) (define uart-send-counter 0) 0)
         (if (= uart-send-counter 0)
             (progn
-                (define uart-send-counter 10)
+                (define uart-send-counter 20)
                 (define line-length (- 0 (- (get-dist) offset) ) )
                 ; SEND line-length AND flight-mode request
                 (bufset-f32 arr 0 1234567.0)

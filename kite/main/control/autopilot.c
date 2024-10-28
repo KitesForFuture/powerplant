@@ -311,6 +311,8 @@ static float line_length_derivative = 0;
 static float airbrake = -60;
 static float airbrake_compensation_by_elevons = 0;
 
+static int sendCounter = 0;
+static int frequencyDivider = 2;
 
 void landing_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float line_tension, int transition){
 	
@@ -373,10 +375,15 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	//float airbrake = AIRBRAKE_ON;
 	//if (height_error < -5) airbrake = AIRBRAKE_OFF;
 	
-	sendDebuggingData(line_length, airbrake, airbrake_compensation_by_elevons, sensor_data.height, y_axis_control, 2);
-	//sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, sensor_data.height, y_axis_control, 2); // UP-DOWN control
-	//sendDebuggingData(line_length, angle_error, roll_angle, roll_angle-desired_roll_angle, x_axis_control, 2); // UP-DOWN control
-	//sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control, 2); // UP-DOWN control
+	if(sendCounter == 0){
+		sendCounter = (frequencyDivider - 1); // 
+		sendDebuggingData(line_length, airbrake, airbrake_compensation_by_elevons, sensor_data.height, y_axis_control, 2);
+		//sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, sensor_data.height, y_axis_control, 2); // UP-DOWN control
+		//sendDebuggingData(line_length, angle_error, roll_angle, roll_angle-desired_roll_angle, x_axis_control, 2); // UP-DOWN control
+		//sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control, 2); // UP-DOWN control
+	}else{
+		sendCounter--;
+	}
 	
 	float prop_speed = 0;
 	/*if( landing_propeller_counter != -1){
