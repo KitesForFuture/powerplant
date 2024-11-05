@@ -230,7 +230,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		}
 		eight_control(autopilot, control_data_out, sensor_data, line_length, timestep_in_s); return;
 	}else if(autopilot->mode == LANDING_MODE){
-		sendData(LINE_TENSION_REQUEST_MODE, 0.0, 0.0, 0.0);
+		//sendData(LINE_TENSION_REQUEST_MODE, 0.0, 0.0, 0.0);
 		if(autopilot->fm == 1.0){ // 1.0 is VESC eight mode
 			autopilot->mode = LANDING_EIGHT_TRANSITION;
 		}

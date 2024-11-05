@@ -37,8 +37,14 @@
 
 #include "../../common/helpers/adc.h"
 
-#include "my_gpio.c"
-#include "driver/ledc.h"
+
+#include "driver/spi_master.h"
+#include "driver/gpio.h"
+#include "lora_minimum.h"
+#include "lora_minimum.c"
+
+//#include "my_gpio.c"
+//#include "driver/ledc.h"
 
 #define MAX_SERVO_DEFLECTION 60.0//50
 #define MIN_BRAKE_DEFLECTION -59.0//-64
@@ -151,7 +157,7 @@ void testConfigWriting(){
 	getConfigValues(test_config);
 	printf("after writing to and reading from EEPROM, config[6]*1000000000 = %f\n", (test_config[6]*1000000000));
 }
-
+/*
 static void example_ledc_init(void)
 {
     // Prepare and then apply the LEDC PWM timer configuration
@@ -186,6 +192,10 @@ static void example_ledc_init(void)
         .hpoint         = 0
     };
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel2));
+}*/
+
+int truemod2(int a, int b){
+	return (a%b + b)%b;
 }
 
 void main_task(void* arg)
@@ -361,34 +371,64 @@ void main_task(void* arg)
 	
 	Time t = start_timer();
 	float timestep = 0;
-	
+	/*
 	example_ledc_init();
 	ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_0, 0);
 	ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_0);
 	ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_1, 0);
 	ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_1);
-	
+	*/
 	int loop_running_state = 0;
+	
+	// LORA INITIALIZATION
+	lora_init();
+	lora_implicit_header_mode(2);
+	lora_enable_crc();
+	lora_set_bandwidth(9);
+	lora_set_spreading_factor(7);
+	int last_gs_height_offset_times_32 = 0;
+	float line_speed_lora = 0;
+	float line_length_lora = 0;
+	float gs_height_offset_lora = 0;
+	char flight_mode_lora = 0;
+	
+	lora_receive();
+	
 	while(1) {
 		
 		vTaskDelayUntil(&xLastWakeTime, 2);
 		
-		//set_level_GPIO_16(rec_led_state);
-		ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_0, rec_led_state*LEDC_DUTY);
-		ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_0);
-		if(loop_running_state == 0){
-			loop_running_state = 1;
-		}else{
-			loop_running_state = 0;
-		}
-		//set_level_GPIO_32(loop_running_state);
-		ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_1, loop_running_state*LEDC_DUTY);
-		ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_1);
 		
 		float new_timestep = 1024*get_time_step(&t);
 		timestep = 0.9*timestep + 0.1 * new_timestep * new_timestep;
 		//sendDebuggingData(timestep, getHeight(), groundstation_height, getHeight()-groundstation_height+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative(), 0);
 		processRC();
+		
+		if(lora_received()){
+			uint8_t buf[4];
+			int return_value = lora_receive_packet(buf, 4);
+			if(return_value != 0){
+			
+				line_length_lora = ((((int)buf[0]) << 8) + buf[1]) / 8.0;
+				
+				flight_mode_lora = (buf[2] & 0xE0) >> 5;
+				
+				last_gs_height_offset_times_32 = truemod2(( (buf[2] & 0x1F) - last_gs_height_offset_times_32  + 32), 32) - 16 + last_gs_height_offset_times_32;
+				gs_height_offset_lora = last_gs_height_offset_times_32 / 32.0;
+				
+				line_speed_lora = buf[3] / 8.0;
+				
+				//printf("received line_length_lora = %f, line_speed_lora = %f, gs_height_offset_lora = %f, fm_lora = %d, ret = %d\n", line_length_lora, line_speed_lora, gs_height_offset_lora, flight_mode_lora, return_value);
+			}
+			//buf[1] = 5;
+			if(autopilot.mode == LANDING_MODE){
+				lora_send_packet_and_forget(buf, 4);
+			}
+			lora_receive();
+			//counter = 0;
+		}
+		
+		
 		//printf("mode = %d\n", autopilot.mode);
 		if(data_needs_being_written_to_EEPROM == 1){
 			//printf("writing config to eeprom");
@@ -419,7 +459,7 @@ void main_task(void* arg)
 		autopilot.fm = flight_mode;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
 		SensorData sensorData;
-		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.line_vector_normed, kite_orientation_data.gyro_in_kite_coords, getHeight()-groundstation_height+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative());
+		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.line_vector_normed, kite_orientation_data.gyro_in_kite_coords, getHeight()-gs_height_offset_lora+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative());
 		
 		//TODO: decide size of timestep_in_s in main.c and pass to stepAutopilot(), or use same method as used in updateRotationMatrix
 		ControlData control_data;
@@ -427,7 +467,7 @@ void main_task(void* arg)
 		//autopilot.mode = EIGHT_MODE;
 		//DEBUGGING, TODO: remove
 		//line_length = 3;
-		stepAutopilot(&autopilot, &control_data, sensorData, line_length, line_speed, 3/*line tension*/);
+		stepAutopilot(&autopilot, &control_data, sensorData, line_length_lora, line_speed_lora, 3/*line tension*/);
 		
 		// DON'T LET SERVOS BREAK THE KITE
 		control_data.brake = clamp(control_data.brake, MIN_BRAKE_DEFLECTION, MAX_BRAKE_DEFLECTION);

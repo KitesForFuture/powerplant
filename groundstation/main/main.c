@@ -34,6 +34,12 @@
 
 #include "driver/ledc.h"
 
+
+#include "esp_system.h"
+#include "driver/spi_master.h"
+#include "lora_minimum.h"
+#include "lora_minimum.c"
+
 #define SERVO_MIN_ANGLE -45
 #define SERVO_MAX_ANGLE 54
 
@@ -156,6 +162,12 @@ void init(){
 	
 	init_uptime();
 	
+	lora_init();
+	lora_implicit_header_mode(2);
+	lora_enable_crc();
+	lora_set_bandwidth(9);
+	lora_set_spreading_factor(7);
+	
 }
 
 float line_length = 0;
@@ -171,9 +183,39 @@ void app_main(void){
 	//float landing_request = 0.0;
 	float receive_array[100];
 	int receive_array_length = 0;
-	float line_length_raw, flight_mode;
+	float line_length_raw;
+	float flight_mode = 0;
 	printf("waiting for UART...\n");
+	
+	uint8_t counter = 0;
 	while(1){
+		counter++;
+		uint8_t buf[4];
+		if(counter%4 == 0){
+			
+			int ll_times_8 = (int)(line_length * 8);
+			buf[0] = (ll_times_8 >> 8) & 0xFF;
+			buf[1] = ll_times_8 & 0xFF;
+			
+			int gsho_times_4 = ((int)((getHeight()+0.5) * 32)) % 32;
+			buf[2] = (char)flight_mode + (gsho_times_4 & 0x1F);
+			
+			int ls_times_8 = (int)(line_speed * 8);
+			buf[3] = ls_times_8 & 0xFF;
+			
+			lora_send_packet_and_forget(buf, 4);
+			lora_receive();
+		}
+		if(lora_received()){
+			int return_value = lora_receive_packet(buf, 4);
+			if(return_value != 0){
+				tension_request = 1.0; // kite is in landing mode
+				printf("received %d, %d, ret = %d, setting tension_request=1.0 -> kite in landing mode\n", buf[0], buf[1], return_value);
+			}
+		}
+		
+		
+		
 		if(((int)(get_uptime_seconds()))%2 == 0){
 			set_level_GPIO_22(0);
 			set_level_GPIO_23(1);
@@ -217,8 +259,12 @@ void app_main(void){
 				set_level_GPIO_23(0);
 				wifi_send_led_state = 0;
 			}
+			
+			/*
 			sendData(LINE_LENGTH_MODE, line_length, flight_mode, getHeight(), line_speed); // send line_length, flight_mode to kite
 			printf("sending flight_mode %f and line_length %f to communication ESP32\n", flight_mode, line_length);
+			*/
+			
 			if(internet_connected){
 				sendUART(flight_mode, line_length, ESP32_UART); // send flight_mode to attached ESP32, which forwards it to the internet
 			}
