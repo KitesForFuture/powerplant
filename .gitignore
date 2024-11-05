@@ -6,6 +6,10 @@ jan_test
 
 kite_hayden_test
 
+
+kite_hayden/build
+kite_hayden/sdkconfig
+
 kite_wifi/build
 kite_wifi/sdkconfig
 
