@@ -260,8 +260,9 @@ lora_sleep(void)
  * Incoming packets will be received.
  */
 void 
-lora_receive(void)
+lora_receive(int size)
 {
+   lora_write_reg(REG_PAYLOAD_LENGTH, size);
    lora_write_reg(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS);
 }
 

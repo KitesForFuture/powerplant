@@ -165,8 +165,8 @@ void init(){
 	lora_init();
 	lora_implicit_header_mode(2);
 	lora_enable_crc();
-	lora_set_bandwidth(9);
-	lora_set_spreading_factor(7);
+	lora_set_bandwidth(7);
+	lora_set_spreading_factor(6);
 	
 }
 
@@ -186,25 +186,29 @@ void app_main(void){
 	float line_length_raw;
 	float flight_mode = 0;
 	printf("waiting for UART...\n");
-	
 	uint8_t counter = 0;
+	//float line_length_test = 0;
 	while(1){
 		counter++;
 		uint8_t buf[4];
 		if(counter%4 == 0){
-			
-			int ll_times_8 = (int)(line_length * 8);
-			buf[0] = (ll_times_8 >> 8) & 0xFF;
-			buf[1] = ll_times_8 & 0xFF;
+			/*if(line_length_test < 2000)
+				line_length_test ++;
+			else
+				line_length_test = 0;*/
+			int ll_times_16 = (int)(clamp(line_length, 0, 4000) * 16);
+			buf[0] = (ll_times_16 >> 8) & 0xFF;
+			buf[1] = ll_times_16 & 0xFF;
 			
 			int gsho_times_4 = ((int)((getHeight()+0.5) * 32)) % 32;
-			buf[2] = (char)flight_mode + (gsho_times_4 & 0x1F);
+			buf[2] = (((char)flight_mode)<<5) + (gsho_times_4 & 0x1F);
 			
-			int ls_times_8 = (int)(line_speed * 8);
+			int ls_times_8 = (int)(clamp(-line_speed, 0, 30) * 8);
 			buf[3] = ls_times_8 & 0xFF;
 			
+			printf("sending fm=%d, line_length=%f, line_speed=%f to kite\n", (char)flight_mode, line_length, line_speed);
 			lora_send_packet_and_forget(buf, 4);
-			lora_receive();
+			lora_receive(4);
 		}
 		if(lora_received()){
 			int return_value = lora_receive_packet(buf, 4);
@@ -213,7 +217,6 @@ void app_main(void){
 				printf("received %d, %d, ret = %d, setting tension_request=1.0 -> kite in landing mode\n", buf[0], buf[1], return_value);
 			}
 		}
-		
 		
 		
 		if(((int)(get_uptime_seconds()))%2 == 0){
@@ -246,12 +249,13 @@ void app_main(void){
 			
 			line_length_raw = receive_array[0];
 			flight_mode = receive_array[1];
+			printf("received flight_mode_request = %f\n", flight_mode);
 			line_speed = receive_array[2];
 			if(flight_mode != 2.0 && flight_mode != 3.0){tension_request = 0;};
 			
 			line_length = line_length_raw;// - line_length_offset;
 			//printf("received %f, %f\n", line_length_raw, flight_mode);
-			printf("sending flight_mode %f and line_length %f to kite\n", flight_mode, line_length);
+			//printf("sending flight_mode %f and line_length %f to kite\n", flight_mode, line_length);
 			if(wifi_send_led_state == 0){
 				//set_level_GPIO_23(1);
 				wifi_send_led_state = 1;
@@ -296,7 +300,7 @@ void app_main(void){
 		
 		if(!internet_connected){
 			if(get_level_GPIO_0() != 0){
-				printf("SWITCH request final landing\n");
+				//printf("SWITCH request final landing\n");
 				sendUART(2, 0, VESC_UART); // request final-landing from VESC
 			}else{
 				//sendUART(0, 0, VESC_UART);

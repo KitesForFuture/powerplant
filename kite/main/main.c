@@ -198,6 +198,19 @@ int truemod2(int a, int b){
 	return (a%b + b)%b;
 }
 
+int servoDegree = 0;
+int servoIncrement = 10;
+
+void incrementServo(){
+	servoDegree += servoIncrement;
+	if(servoDegree < -45){
+		servoIncrement = 10;
+	}
+	if(servoDegree > 45){
+		servoIncrement = -10;
+	}
+}
+
 void main_task(void* arg)
 {
 	init_uptime();
@@ -384,18 +397,23 @@ void main_task(void* arg)
 	lora_init();
 	lora_implicit_header_mode(2);
 	lora_enable_crc();
-	lora_set_bandwidth(9);
-	lora_set_spreading_factor(7);
+	lora_set_bandwidth(7);
+	lora_set_spreading_factor(6);
+	
+	//long preamble_length = lora_get_preamble_length();
+	//printf("preamble length = %d\n", (int)preamble_length);
+	//lora_dump_registers();
+	
 	int last_gs_height_offset_times_32 = 0;
 	float line_speed_lora = 0;
 	float line_length_lora = 0;
 	float gs_height_offset_lora = 0;
 	char flight_mode_lora = 0;
 	
-	lora_receive();
+	lora_receive(4);
 	
 	while(1) {
-		
+		//printf("running loop\n");
 		vTaskDelayUntil(&xLastWakeTime, 2);
 		
 		
@@ -405,26 +423,29 @@ void main_task(void* arg)
 		processRC();
 		
 		if(lora_received()){
+			printf("lora received\n");
 			uint8_t buf[4];
 			int return_value = lora_receive_packet(buf, 4);
 			if(return_value != 0){
 			
-				line_length_lora = ((((int)buf[0]) << 8) + buf[1]) / 8.0;
+				line_length_lora = ((((int)buf[0]) << 8) + buf[1]) / 16.0;
+				incrementServo();
+				
 				
 				flight_mode_lora = (buf[2] & 0xE0) >> 5;
 				
 				last_gs_height_offset_times_32 = truemod2(( (buf[2] & 0x1F) - last_gs_height_offset_times_32  + 32), 32) - 16 + last_gs_height_offset_times_32;
 				gs_height_offset_lora = last_gs_height_offset_times_32 / 32.0;
 				
-				line_speed_lora = buf[3] / 8.0;
+				line_speed_lora = -(buf[3] / 8.0);
 				
-				//printf("received line_length_lora = %f, line_speed_lora = %f, gs_height_offset_lora = %f, fm_lora = %d, ret = %d\n", line_length_lora, line_speed_lora, gs_height_offset_lora, flight_mode_lora, return_value);
+				printf("received line_length_lora = %f, line_speed_lora = %f, gs_height_offset_lora = %f, fm_lora = %d, ret = %d\n", line_length_lora, line_speed_lora, gs_height_offset_lora, flight_mode_lora, return_value);
 			}
 			//buf[1] = 5;
 			if(autopilot.mode == LANDING_MODE){
 				lora_send_packet_and_forget(buf, 4);
 			}
-			lora_receive();
+			lora_receive(4);
 			//counter = 0;
 		}
 		
@@ -456,7 +477,7 @@ void main_task(void* arg)
 		}
 		
 		float line_length = clamp(line_length_in_meters, 0, 1000000); // global var defined in RC.c, should default to 1 when no signal received, TODO: revert line length in VESC LISP code
-		autopilot.fm = flight_mode;// global var flight_mode defined in RC.c, 
+		autopilot.fm = flight_mode_lora;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
 		SensorData sensorData;
 		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.line_vector_normed, kite_orientation_data.gyro_in_kite_coords, getHeight()-gs_height_offset_lora+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative());

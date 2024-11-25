@@ -73,11 +73,11 @@
 //#endif
 
 
-#define CONFIG_RST_GPIO					13
-#define CONFIG_CS_GPIO					26
-#define CONFIG_MISO_GPIO				32
-#define CONFIG_MOSI_GPIO				22
-#define CONFIG_SCK_GPIO					16
+#define CONFIG_RST_GPIO					32
+#define CONFIG_CS_GPIO					5
+#define CONFIG_MISO_GPIO				19
+#define CONFIG_MOSI_GPIO				21
+#define CONFIG_SCK_GPIO					18
 
 #define TAG "LORA"
 
@@ -260,8 +260,9 @@ lora_sleep(void)
  * Incoming packets will be received.
  */
 void 
-lora_receive(void)
+lora_receive(int size)
 {
+   lora_write_reg(REG_PAYLOAD_LENGTH, size);
    lora_write_reg(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS);
 }
 

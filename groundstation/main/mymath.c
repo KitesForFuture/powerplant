@@ -215,3 +215,7 @@ void subtractMatrices(float A[], float B[], float destination[], int length){
 float myrandom(){
 	return ((float)rand())/((float)RAND_MAX);
 }
+float clamp(float d, float min, float max) {
+  const float t = d < min ? min : d;
+  return t > max ? max : t;
+}

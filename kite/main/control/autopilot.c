@@ -195,6 +195,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		landing_control(autopilot, control_data_out, sensor_data, line_length, line_speed, line_tension, false); return;
 	}
 	//autopilot->mode = EIGHT_MODE;
+	//printf("mode = %d, fm = %f, line_length = %f\n", autopilot->mode, autopilot->fm, line_length);
 	if(autopilot->mode == HOVER_MODE){
 		if(autopilot->fm != 0.0 && autopilot->fm != 3.0){ // 0.0 is VESC launch mode, 3.0 is VESC final landing mode
 			autopilot->mode = HOVER_EIGHT_TRANSITION;
@@ -377,8 +378,8 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	
 	if(sendCounter == 0){
 		sendCounter = (frequencyDivider - 1); // 
-		sendDebuggingData(line_length, airbrake, airbrake_compensation_by_elevons, sensor_data.height, y_axis_control, 2);
-		//sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, sensor_data.height, y_axis_control, 2); // UP-DOWN control
+		//sendDebuggingData(line_length, airbrake, airbrake_compensation_by_elevons, sensor_data.height, y_axis_control, 2);
+		sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, sensor_data.height, y_axis_control, 2); // UP-DOWN control
 		//sendDebuggingData(line_length, angle_error, roll_angle, roll_angle-desired_roll_angle, x_axis_control, 2); // UP-DOWN control
 		//sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control, 2); // UP-DOWN control
 	}else{

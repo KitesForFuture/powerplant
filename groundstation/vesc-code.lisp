@@ -2,7 +2,7 @@
 (define min-eight-line-length 120)
 (define max-eight-line-length 180)
 
-(define safety-distance-for-landing-debug 10)
+(define safety-distance-for-landing-debug 0)
 
 ;(define launch-line-length 1)
 ;(define min-eight-line-length 2)
@@ -53,7 +53,7 @@
         (if (< uart-send-counter 0) (define uart-send-counter 0) 0)
         (if (= uart-send-counter 0)
             (progn
-                (define uart-send-counter 20)
+                (define uart-send-counter 10)
                 (define line-length (- 0 (- (get-dist) offset) ) )
                 ; SEND line-length AND flight-mode request
                 (bufset-f32 arr 0 1234567.0)
@@ -61,6 +61,7 @@
                 (bufset-f32 arr 8 flightmode-request)
                 (bufset-f32 arr 12 (- 0 (get-speed)))
                 (bufset-f32 arr 16 -1234567.0)
+                (print "sending UART") 
                 (uart-write arr)
                 (if (= led-state 0)
                 	(define led-state 1)
@@ -145,11 +146,11 @@
                             ;(set-current 6)
                         )
                         ; flightmode = landing or final-landing
-                        (if (> line-length (+ 12.6 safety-distance-for-landing-debug))
+                        (if (> line-length (+ 6.3 safety-distance-for-landing-debug))
                             (set-current 8)
                             (if (> line-length safety-distance-for-landing-debug)
                                 (progn
-                                    (set-current (+ 1.7 (* 0.5 (- line-length safety-distance-for-landing-debug))))
+                                    (set-current (+ 1.7 (* 1.0 (- line-length safety-distance-for-landing-debug))))
                                 )
                                 ;(set-current 8)
                                 (set-current 1.7)
