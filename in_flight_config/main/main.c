@@ -71,13 +71,13 @@ float config_values[NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS];
 
 int data_needs_being_send_via_UART = 0;
 
-float debuggingData[6];
+float debuggingData[10];
 int debuggingDataInitialized = false;
 
 void getDebuggingData(float* values){
 	//ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY);
 	//ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
-	for(int i = 0; i < 6; i++){
+	for(int i = 0; i < 10; i++){
 		values[i] = debuggingDataInitialized? debuggingData[i] : 1000000;
 	}
 	//vTaskDelay(1);
@@ -169,8 +169,8 @@ void app_main(void)
 			sendUARTArray100(config_values, NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS, ESP32_UART);
 		}else if (length == 2){
 			//ignore, this is status message for internet
-		}else if (length == 6){
-			for(int i = 0; i < 6; i++) debuggingData[i] = receive_array[i];
+		}else if (length == 10){
+			for(int i = 0; i < 10; i++) debuggingData[i] = receive_array[i];
 			debuggingDataInitialized = true;
 			//printf("received debugging data\n");
 		}

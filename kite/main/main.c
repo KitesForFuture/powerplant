@@ -441,10 +441,16 @@ void main_task(void* arg)
 				
 				printf("received line_length_lora = %f, line_speed_lora = %f, gs_height_offset_lora = %f, fm_lora = %d, ret = %d\n", line_length_lora, line_speed_lora, gs_height_offset_lora, flight_mode_lora, return_value);
 			}
-			//buf[1] = 5;
-			if(autopilot.mode == LANDING_MODE){
-				lora_send_packet_and_forget(buf, 4);
-			}
+			// reply to the packet:
+			int ll_times_16 = (int)(clamp(line_length_lora, 0, 4000) * 16);
+			buf[0] = (ll_times_16 >> 8) & 0xFF;
+			buf[1] = ll_times_16 & 0xFF;
+			
+			buf[2] = (uint8_t)autopilot.mode;
+			
+			lora_send_packet_and_forget(buf, 4);
+			
+			
 			lora_receive(4);
 			//counter = 0;
 		}

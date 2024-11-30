@@ -139,9 +139,11 @@ static const httpd_uri_t kite_config_get_html = {
 							if(receiving_data_points_paused) this.value = \"paused\"; else this.value = \"receiving\";\n\
 						}\n\
 						\n\
+						var num_diagram_lines = 10;\n\
 						class DiagramLine{\n\
 							constructor(gl){\n\
 								this.gl = gl;\n\
+								this.visible = true;\n\
 								this.index = diagramLineCurrentIndex;\n\
 								this.vertices = [];\n\
 								//500 lines, 1000 vertices, 2000 coordinates\n\
@@ -152,7 +154,7 @@ static const httpd_uri_t kite_config_get_html = {
 								this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);\n\
 								this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.DYNAMIC_DRAW);\n\
 								\n\
-								this.color = [1.0, 1.0, 1.0];\n\
+								this.color = [0.5, 0.5, 0.5];\n\
 								this.line_index = 0;\n\
 								\n\
 								this.lastPoint = [1000000.0, 1000000.0];\n\
@@ -219,6 +221,20 @@ static const httpd_uri_t kite_config_get_html = {
 								if(this.line_index < max_line_segments-1) this.line_index++;\n\
 							}\n\
 							\n\
+							zoom_in(){\n\
+								this.linearTrafo[2] *= 1.2;\n\
+								this.linearTrafo[3] = (this.linearTrafo[3] - 0.0833) * 1.2;\n\
+							}\n\
+							zoom_out(){\n\
+								this.linearTrafo[2] /= 1.2;\n\
+								this.linearTrafo[3] = (this.linearTrafo[3] + 0.1) / 1.2;\n\
+							}\n\
+							left(){\n\
+								this.linearTrafo[3] += 0.1;\n\
+							}\n\
+							right(){\n\
+								this.linearTrafo[3] -= 0.1;\n\
+							}\n\
 							transform(a, b, m, n){\n\
 								this.linearTrafo[0] = a;\n\
 								this.linearTrafo[1] = b;\n\
@@ -275,11 +291,13 @@ static const httpd_uri_t kite_config_get_html = {
 								this.gl.useProgram(this.shaderProgram_lines);\n\
 								\n\
 								for(let i = 0; i < this.diagramLines.length; i++){\n\
-									this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.diagramLines[i].vertex_buffer);\n\
-									this.gl.vertexAttribPointer(this.coord_lines, 2, this.gl.FLOAT, false, 0, 0);\n\
-									this.gl.uniform3f(this.color, this.diagramLines[i].color[0], this.diagramLines[i].color[1], this.diagramLines[i].color[2]);\n\
-									this.gl.uniform4f(this.linearTrafo, this.diagramLines[i].linearTrafo[0], this.diagramLines[i].linearTrafo[1], this.diagramLines[i].linearTrafo[2], this.diagramLines[i].linearTrafo[3]);\n\
-									this.gl.drawArrays(this.gl.LINES, 0, 2*max_line_segments);\n\
+									if(this.diagramLines[i].visible){\n\
+										this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.diagramLines[i].vertex_buffer);\n\
+										this.gl.vertexAttribPointer(this.coord_lines, 2, this.gl.FLOAT, false, 0, 0);\n\
+										this.gl.uniform3f(this.color, this.diagramLines[i].color[0], this.diagramLines[i].color[1], this.diagramLines[i].color[2]);\n\
+										this.gl.uniform4f(this.linearTrafo, this.diagramLines[i].linearTrafo[0], this.diagramLines[i].linearTrafo[1], this.diagramLines[i].linearTrafo[2], this.diagramLines[i].linearTrafo[3]);\n\
+										this.gl.drawArrays(this.gl.LINES, 0, 2*max_line_segments);\n\
+									}\n\
 								}\n\
 								\n\
 								this.gl.disableVertexAttribArray(this.coord_lines);\n\
@@ -288,9 +306,9 @@ static const httpd_uri_t kite_config_get_html = {
 						\n\
 						//DIAGRAM\n\
 						\n\
-						var diagram_hover = new Diagram(6, gl_hover);\n\
-						var diagram_eights = new Diagram(6, gl_eights);\n\
-						var diagram_landing = new Diagram(6, gl_landing);\n\
+						var diagram_hover = new Diagram(num_diagram_lines, gl_hover);\n\
+						var diagram_eights = new Diagram(num_diagram_lines, gl_eights);\n\
+						var diagram_landing = new Diagram(num_diagram_lines, gl_landing);\n\
 						var diagrams = [diagram_hover, diagram_eights, diagram_landing];\n\
 						for(let i = 0; i < 3; i++){\n\
 							diagrams[i].diagramLines[0].color[0] = 0.0;\n\
@@ -301,17 +319,33 @@ static const httpd_uri_t kite_config_get_html = {
 							diagrams[i].diagramLines[1].color[1] = 0.0;\n\
 							diagrams[i].diagramLines[1].color[2] = 0.8;\n\
 							\n\
+							diagrams[i].diagramLines[2].color[0] = 1.0;\n\
 							diagrams[i].diagramLines[2].color[1] = 0.0;\n\
 							diagrams[i].diagramLines[2].color[2] = 0.0;\n\
 							\n\
 							diagrams[i].diagramLines[3].color[0] = 0.0;\n\
+							diagrams[i].diagramLines[3].color[1] = 1.0;\n\
 							diagrams[i].diagramLines[3].color[2] = 0.0;\n\
 							\n\
+							diagrams[i].diagramLines[4].color[0] = 1.0;\n\
+							diagrams[i].diagramLines[4].color[1] = 1.0;\n\
 							diagrams[i].diagramLines[4].color[2] = 0.0;\n\
 							\n\
 							diagrams[i].diagramLines[5].color[0] = 0.5;\n\
 							diagrams[i].diagramLines[5].color[1] = 0;\n\
 							diagrams[i].diagramLines[5].color[2] = 0;\n\
+							\n\
+							diagrams[i].diagramLines[6].color[0] = 1;\n\
+							diagrams[i].diagramLines[6].color[1] = 0.5;\n\
+							diagrams[i].diagramLines[6].color[2] = 0;\n\
+							\n\
+							diagrams[i].diagramLines[7].color[0] = 0.13;\n\
+							diagrams[i].diagramLines[7].color[1] = 0.6;\n\
+							diagrams[i].diagramLines[7].color[2] = 0.6;\n\
+							\n\
+							diagrams[i].diagramLines[8].color[0] = 0.94;\n\
+							diagrams[i].diagramLines[8].color[1] = 0.35;\n\
+							diagrams[i].diagramLines[8].color[2] = 0.5;\n\
 						}\n\
 						\n\
 						\n\
@@ -373,7 +407,7 @@ static const httpd_uri_t kite_config_get_html = {
 							xhr.send();\n\
 						}\n\
 						\n\
-						var debuggingData = [0, 0, 0, 0, 0, 0];\n\
+						var debuggingData = new Array(num_diagram_lines).fill(0);;\n\
 						var debuggingDataInitialized = false;\n\
 						ready_to_download_debugging_data = true;\n\
 						function downloadDebuggingData(){\n\
@@ -382,7 +416,7 @@ static const httpd_uri_t kite_config_get_html = {
 							xhr.responseType = 'text';\n\
 							xhr.onload = function(e){\n\
 								const myArray = xhr.response.split(\",\");\n\
-								for(let i = 0; i < 6; i++){\n\
+								for(let i = 0; i < num_diagram_lines; i++){\n\
 									debuggingData[i] = parseFloat(myArray[i]);\n\
 									if(debuggingData[i] != 1000000) debuggingDataInitialized = true;\n\
 								}\n\
@@ -646,16 +680,43 @@ static const httpd_uri_t kite_config_get_html = {
 						function updateDebuggingDataGraph(){\n\
 							const d = new Date();\n\
 							//console.log(d.getTime()-startTime);\n\
-							for(let i = 0; i < 5; i++){\n\
-								diagrams[debuggingData[5]].diagramLines[i].addPoint(d.getTime()-startTime, debuggingData[i]);\n\
+							for(let i = 0; i < num_diagram_lines-1; i++){\n\
+								diagrams[debuggingData[num_diagram_lines-1]].diagramLines[i].addPoint(d.getTime()-startTime, debuggingData[i]);\n\
 							}\n\
-							diagrams[debuggingData[5]].diagramLines[5].addPoint(d.getTime()-startTime, 0)\n\
+							diagrams[debuggingData[num_diagram_lines-1]].diagramLines[num_diagram_lines-1].addPoint(d.getTime()-startTime, 0)\n\
 							//diagram.diagramLines[0].fakeAddPoint(time_index, debuggingData[1]);\n\
 							//diagram.diagramLines[1].fakeAddPoint(time_index, debuggingData[0]);\n\
 							//console.log(\"updating graph\");\n\
 							//console.log(diagram.diagramLines)\n\
 							//if(!receiving_data_points_paused)time_index++;\n\
 						}\n\
+						\n\
+						document.addEventListener(\"keydown\", function(event){\n\
+							if(event.keyCode == 171){ // key c\n\
+								//event.preventDefault();\n\
+								for(let i = 0; i < num_diagram_lines-1; i++){\n\
+									diagrams[debuggingData[num_diagram_lines-1]].diagramLines[i].zoom_in();\n\
+								}\n\
+							}\n\
+							if(event.keyCode == 173){ // key c\n\
+								//event.preventDefault();\n\
+								for(let i = 0; i < num_diagram_lines-1; i++){\n\
+									diagrams[debuggingData[num_diagram_lines-1]].diagramLines[i].zoom_out();\n\
+								}\n\
+							}\n\
+							if(event.keyCode == 37){ // key c\n\
+								//event.preventDefault();\n\
+								for(let i = 0; i < num_diagram_lines-1; i++){\n\
+									diagrams[debuggingData[num_diagram_lines-1]].diagramLines[i].left();\n\
+								}\n\
+							}\n\
+							if(event.keyCode == 39){ // key c\n\
+								//event.preventDefault();\n\
+								for(let i = 0; i < num_diagram_lines-1; i++){\n\
+									diagrams[debuggingData[num_diagram_lines-1]].diagramLines[i].right();\n\
+								}\n\
+							}\n\
+						}, false);\n\
 						\n\
 						var gls = [gl_hover, gl_eights, gl_landing];\n\
 						var animate = function(time) {\n\
@@ -701,17 +762,21 @@ static esp_err_t debugging_data_get_handler(httpd_req_t *req)
 	//ESP_LOGI(TAG, "Getting debuggind data");
 	esp_err_t error;
 	
-    float float_values[6];
+    float float_values[10];
     (*debugging_data_callback)(float_values);
     
-	char response2[6*20];
-    sprintf(response2, "%f,%f,%f,%f,%f,%f", 
+	char response2[10*20];
+    sprintf(response2, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", 
     	float_values[0],
     	float_values[1],
     	float_values[2],
     	float_values[3],
     	float_values[4],
-    	float_values[5]
+    	float_values[5],
+    	float_values[6],
+    	float_values[7],
+    	float_values[8],
+    	float_values[9]
     );
     
     error = httpd_resp_send(req, response2, strlen(response2));

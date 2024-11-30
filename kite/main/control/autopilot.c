@@ -323,7 +323,8 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	
 	// HEIGHT CONTROL: STAGE 1
 	float height = sensor_data.height-autopilot->landing.desired_height;
-	float height_error = clamp(height - (1+clamp((line_length-10)*0.2, 0, 1000))/*line_length*0.3*/ /* 20 percent descent slope*/, -10, 10);//clamp(height, -3, 10);//ONLY FOR TESTING!, clamp(height - line_length*0.2 /* 20 percent descent slope*/, -3, 10);
+	height -= 2.5*(line_speed*line_speed/16.0);
+	float height_error = height;//clamp(height - (1+clamp(fmax((line_length-10)*0.2, (line_length - 5)*0.1), 0, 1000))/*line_length*0.3*/ /* 20 percent descent slope*/, -10, 10);//clamp(height, -3, 10);//ONLY FOR TESTING!, clamp(height - line_length*0.2 /* 20 percent descent slope*/, -3, 10);
 	
 	float desired_dive_angle = 0.15*autopilot->landing.dive_angle_P*height_error;//-desired_line_angle - 2.0 * line_angle_error;
 	desired_dive_angle_smooth = desired_dive_angle;//0.8 * desired_dive_angle_smooth + 0.2 * desired_dive_angle;
@@ -376,10 +377,21 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	//float airbrake = AIRBRAKE_ON;
 	//if (height_error < -5) airbrake = AIRBRAKE_OFF;
 	
+	int flag =  4;
+	if(line_length < 20){
+		flag = 3;
+	}
+	if(line_length < 10){
+		flag = 2;
+	}
+	if(line_length < 5){
+		flag = 1;
+	}
+	
 	if(sendCounter == 0){
 		sendCounter = (frequencyDivider - 1); // 
 		//sendDebuggingData(line_length, airbrake, airbrake_compensation_by_elevons, sensor_data.height, y_axis_control, 2);
-		sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, sensor_data.height, y_axis_control, 2); // UP-DOWN control
+		sendDebuggingData(line_length, height_error, flag/*desired_dive_angle_smooth*/, sensor_data.height, line_speed/*y_axis_control*/, 2); // UP-DOWN control
 		//sendDebuggingData(line_length, angle_error, roll_angle, roll_angle-desired_roll_angle, x_axis_control, 2); // UP-DOWN control
 		//sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control, 2); // UP-DOWN control
 	}else{

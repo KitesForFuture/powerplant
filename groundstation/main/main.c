@@ -124,6 +124,9 @@ void processReceivedConfigValuesViaWiFi(float* config_values){
 	}
 }
 
+
+float data_including_lora[10];
+
 void processReceivedDebuggingDataViaWiFi(float* debugging_data){
 	//printf("forwarding Debugging data to in_flight_config ESP32");
 	//debugging_data[1] = getHeight();
@@ -134,7 +137,13 @@ void processReceivedDebuggingDataViaWiFi(float* debugging_data){
 		set_level_GPIO_22(0);
 		wifi_rec_led_state = 0;
 	}
-	sendUARTArray100(debugging_data, 6, ESP32_UART);
+	for(int i = 0; i < 5; i++){
+		data_including_lora[i] = debugging_data[i];
+	}
+	//fill the last 4 values with groundstation and lora stuff
+	
+	data_including_lora[9] = debugging_data[5]; // flight mode indicator
+	
 }
 
 void init(){
@@ -168,9 +177,12 @@ void init(){
 	lora_set_bandwidth(7);
 	lora_set_spreading_factor(6);
 	
+	for(int i = 0; i < 10; i++){
+		data_including_lora[i] = 0;
+	}
+	
 }
 
-float line_length = 0;
 //float line_speed = 0;
 float line_speed_servo = 0;
 float line_length_offset = NOT_INITIALIZED;
@@ -188,6 +200,9 @@ void app_main(void){
 	printf("waiting for UART...\n");
 	uint8_t counter = 0;
 	//float line_length_test = 0;
+	float line_length = 0;
+	float lora_received_1 = 0;
+	float lora_received_2 = 0;
 	while(1){
 		counter++;
 		uint8_t buf[4];
@@ -209,14 +224,28 @@ void app_main(void){
 			printf("sending fm=%d, line_length=%f, line_speed=%f to kite\n", (char)flight_mode, line_length, line_speed);
 			lora_send_packet_and_forget(buf, 4);
 			lora_receive(4);
+			
+			
+			//send this regardless of whether data comes in via LoRa or WIFI
+			data_including_lora[5] = line_length;
+			data_including_lora[6] = getHeight();
+			data_including_lora[7] = lora_received_1; // == line_length, maybe with delay or freezing when packet lost
+			data_including_lora[8] = lora_received_2;
+			sendUARTArray100(data_including_lora, 10, ESP32_UART);
 		}
 		if(lora_received()){
 			int return_value = lora_receive_packet(buf, 4);
 			if(return_value != 0){
-				tension_request = 1.0; // kite is in landing mode
+				lora_received_1 = ((((int)buf[0]) << 8) + buf[1]) / 16.0;
+				lora_received_2 = buf[2];
+				if(buf[2] == 4){//autopilot.mode == LANDING_MODE
+					tension_request = 1.0; // kite is in landing mode
+				}
 				printf("received %d, %d, ret = %d, setting tension_request=1.0 -> kite in landing mode\n", buf[0], buf[1], return_value);
 			}
 		}
+		
+		
 		
 		
 		if(((int)(get_uptime_seconds()))%2 == 0){
