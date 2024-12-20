@@ -1,6 +1,7 @@
 add_library(i2c_devices
  interchip.c
  dps310.c
+ dps310_parametrized.c
  cat24c256.c
  icm20948.c)
  
