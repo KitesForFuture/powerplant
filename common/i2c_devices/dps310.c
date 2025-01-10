@@ -15,7 +15,7 @@ float height_medium_smooth = 0;
 float p_comp_init = 0;
 int p_init_counter = 0;
 
-uint8_t coefficientsource = 0;
+static uint8_t coefficientsource = 0;
 
 int c0, c1;
 

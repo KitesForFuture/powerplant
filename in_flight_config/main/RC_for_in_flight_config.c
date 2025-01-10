@@ -695,25 +695,34 @@ static const httpd_uri_t kite_config_get_html = {
 							if(event.keyCode == 171){ // key c\n\
 								//event.preventDefault();\n\
 								for(let i = 0; i < num_diagram_lines-1; i++){\n\
-									diagrams[debuggingData[num_diagram_lines-1]].diagramLines[i].zoom_in();\n\
+									diagrams[0].diagramLines[i].zoom_in();\n\
+									diagrams[1].diagramLines[i].zoom_in();\n\
+									diagrams[2].diagramLines[i].zoom_in();\n\
 								}\n\
 							}\n\
 							if(event.keyCode == 173){ // key c\n\
 								//event.preventDefault();\n\
 								for(let i = 0; i < num_diagram_lines-1; i++){\n\
-									diagrams[debuggingData[num_diagram_lines-1]].diagramLines[i].zoom_out();\n\
+									//diagrams[debuggingData[num_diagram_lines-1]].diagramLines[i].zoom_out();\n\
+									diagrams[0].diagramLines[i].zoom_out();\n\
+									diagrams[1].diagramLines[i].zoom_out();\n\
+									diagrams[2].diagramLines[i].zoom_out();\n\
 								}\n\
 							}\n\
 							if(event.keyCode == 37){ // key c\n\
 								//event.preventDefault();\n\
 								for(let i = 0; i < num_diagram_lines-1; i++){\n\
-									diagrams[debuggingData[num_diagram_lines-1]].diagramLines[i].left();\n\
+									diagrams[0].diagramLines[i].left();\n\
+									diagrams[1].diagramLines[i].left();\n\
+									diagrams[2].diagramLines[i].left();\n\
 								}\n\
 							}\n\
 							if(event.keyCode == 39){ // key c\n\
 								//event.preventDefault();\n\
 								for(let i = 0; i < num_diagram_lines-1; i++){\n\
-									diagrams[debuggingData[num_diagram_lines-1]].diagramLines[i].right();\n\
+									diagrams[0].diagramLines[i].right();\n\
+									diagrams[1].diagramLines[i].right();\n\
+									diagrams[2].diagramLines[i].right();\n\
 								}\n\
 							}\n\
 						}, false);\n\

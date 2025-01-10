@@ -6,6 +6,7 @@
 
 #include "../../common/i2c_devices/cat24c256.h"
 #include "../../common/i2c_devices/dps310.h"
+#include "../../common/i2c_devices/dps310_parametrized.h"
 #include "../../common/i2c_devices/icm20948.h"
 
 #include "control/rotation_matrix.h"
@@ -43,7 +44,7 @@
 #include "lora_minimum.h"
 #include "lora_minimum.c"
 
-//#include "my_gpio.c"
+#include "my_gpio.c"
 //#include "driver/ledc.h"
 
 #define MAX_SERVO_DEFLECTION 60.0//50
@@ -51,7 +52,7 @@
 #define MAX_BRAKE_DEFLECTION 59.0
 #define MAX_PROPELLER_SPEED 90.0 // AT MOST 90
 
-#define HEIGHT_CALIBRATION_OFFSET 1.0
+#define HEIGHT_CALIBRATION_OFFSET 0.0
 
 
 #define LEDC_TIMER              LEDC_TIMER_0
@@ -67,6 +68,9 @@
 
 struct i2c_bus bus0 = {18, 19};
 struct i2c_bus bus1 = {25, 14};
+
+struct dps310_struct dps;
+struct dps310_struct dps2;
 
 static Autopilot autopilot;
 
@@ -231,7 +235,7 @@ void main_task(void* arg)
 	int output_pins[] = {23,17, 2/*prop*/, 27, 15/*prop*/,13,12,33};
 	initMotors(output_pins, 8);
 	
-	//initGPIO();
+	initGPIO();
 	
 	ICM20948 kite_and_line_mpu;
 	
@@ -365,12 +369,31 @@ void main_task(void* arg)
     	vTaskDelay(100);
     }
     
-    printf("initializing dps310\n");
+    printf("initializing both dps310\n");
     
+    dps.bus.sda = 25;
+    dps.bus.scl = 14;// = {25, 14};
+    dps.address = 0x76;
+    
+    vTaskDelay(10);
+    init_dps310_p(&dps);
+    vTaskDelay(10);
+    
+    
+    dps2.bus.sda = 25;
+    dps2.bus.scl = 14;// = {25, 14};
+    dps2.address = 0x77;
+    
+    vTaskDelay(10);
+    init_dps310_p(&dps2);
+    vTaskDelay(10);
+    
+    /*
     vTaskDelay(10);
 	dps_address = 0x76;
     init_dps310(bus1);
     vTaskDelay(10);
+    */
     
 	initAutopilot(&autopilot, config_values);
 	
@@ -423,7 +446,7 @@ void main_task(void* arg)
 		processRC();
 		
 		if(lora_received()){
-			printf("lora received\n");
+			//printf("lora received\n");
 			uint8_t buf[4];
 			int return_value = lora_receive_packet(buf, 4);
 			if(return_value != 0){
@@ -439,7 +462,7 @@ void main_task(void* arg)
 				
 				line_speed_lora = -(buf[3] / 8.0);
 				
-				printf("received line_length_lora = %f, line_speed_lora = %f, gs_height_offset_lora = %f, fm_lora = %d, ret = %d\n", line_length_lora, line_speed_lora, gs_height_offset_lora, flight_mode_lora, return_value);
+				printf("received line_length_lora = %f, line_speed_lora = %f, gs_height_offset_lora = %f, fm_lora = %d, ret = %d, [%d, %d, %d, %d]\n", line_length_lora, line_speed_lora, gs_height_offset_lora, flight_mode_lora, return_value, buf[0], buf[1], buf[2], buf[3]);
 			}
 			// reply to the packet:
 			int ll_times_16 = (int)(clamp(line_length_lora, 0, 4000) * 16);
@@ -448,11 +471,20 @@ void main_task(void* arg)
 			
 			buf[2] = (uint8_t)autopilot.mode;
 			
+			printf("sending[%d, %d, %d, %d], ll_times_16 = %d\n", buf[0], buf[1], buf[2], buf[3], ll_times_16);
+			
 			lora_send_packet_and_forget(buf, 4);
 			
 			
 			lora_receive(4);
 			//counter = 0;
+		}
+		
+		// PITOT TUBE HEATING
+		if(getTemp_p(&dps) < 4.0){
+			set_level_GPIO_21(1);
+		}else{
+			set_level_GPIO_21(0);
 		}
 		
 		
@@ -463,7 +495,9 @@ void main_task(void* arg)
 			data_needs_being_written_to_EEPROM = 0;
 		}
 		
-		update_dps310_if_necessary();
+		update_dps310_if_necessary_p(&dps);
+		update_dps310_if_necessary_p(&dps2);
+		//update_dps310_if_necessary();
 		
 		readDataICM20948(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
 		updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
@@ -485,8 +519,15 @@ void main_task(void* arg)
 		float line_length = clamp(line_length_in_meters, 0, 1000000); // global var defined in RC.c, should default to 1 when no signal received, TODO: revert line length in VESC LISP code
 		autopilot.fm = flight_mode_lora;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
+		
+		//calculate height measured via pitot tube:
+		float height_pitot = 0.86 * getHeight_p(&dps) + 0.14 * getHeight_p(&dps2);
+		float speed_pitot = 5.0 * sqrt(  fmax( getHeight_p(&dps) - getHeight_p(&dps2), 0 )  );
+		//sendDebuggingData(getHeight_p(&dps), getHeight_p(&dps2), height_pitot, height_pitot - gs_height_offset_lora+HEIGHT_CALIBRATION_OFFSET, speed_pitot, 2); // UP-DOWN control
+		
+		printf("height_pitot1 = %f, height_pitot2 = %f\n", getHeight_p(&dps), getHeight_p(&dps2));
 		SensorData sensorData;
-		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.line_vector_normed, kite_orientation_data.gyro_in_kite_coords, getHeight()-gs_height_offset_lora+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative());
+		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.line_vector_normed, kite_orientation_data.gyro_in_kite_coords, height_pitot-gs_height_offset_lora+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative_p(&dps));
 		
 		//TODO: decide size of timestep_in_s in main.c and pass to stepAutopilot(), or use same method as used in updateRotationMatrix
 		ControlData control_data;

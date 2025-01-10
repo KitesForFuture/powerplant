@@ -1,21 +1,18 @@
 
 #define GPIO_INPUT_IO_0 26
 
-#define GPIO_INPUT_PIN_SELECTION ((1ULL<<GPIO_INPUT_IO_0))
+#define GPIO_OUTPUT_PIN_SEL ((1ULL<<21))
 
 
-#define GPIO_OUTPUT_PIN_SEL  ((1ULL<<16) | (1ULL<<32))
-
+//#define GPIO_OUTPUT_PIN_SEL  ((1ULL<<16) | (1ULL<<32) | (1ULL<<21))
+/*
 int get_level_GPIO_0(){
 	return gpio_get_level(GPIO_INPUT_IO_0);
 }
+*/
 
-void set_level_GPIO_16(uint32_t level){
-	gpio_set_level(16, level);
-}
-
-void set_level_GPIO_32(uint32_t level){
-	gpio_set_level(32, level);
+void set_level_GPIO_21(uint32_t level){
+	gpio_set_level(21, level);
 }
 
 void initGPIO()

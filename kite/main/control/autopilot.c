@@ -15,6 +15,20 @@ float powerInWatts = 0;
 void sendDebuggingData(float num1, float num2, float num3, float num4, float num5, float num6);
 void sendData(uint32_t mode, float data0, float data1, float data2);
 
+float angleDifferenceWithoutDiscontinuity(float alpha, float beta){
+	float diff = alpha - beta;
+	if(diff > 3.141592){
+		diff -= 2*3.141592;
+	}else if(diff < -3.141592){
+		diff += 2*3.141592;
+	}
+	return diff;
+	/* //fmod way by Grok
+	float diff = alpha - beta;
+    diff = fmod(diff + M_PI, 2 * M_PI) - M_PI; // fmod for floating-point modulo
+    return diff;
+	*/
+}
 
 // TODO. calculate the correct error even when offset is 180 degrees.
 float getAngleError(float offset, float controllable_axis[3], float axis_we_wish_horizontal[3]){
@@ -315,6 +329,16 @@ static float airbrake_compensation_by_elevons = 0;
 static int sendCounter = 0;
 static int frequencyDivider = 2;
 
+static float length2Height(float length){
+	if(length < 5){
+		return 0;
+	}else if(length < 10){
+		return (length - 5) * (length - 5) * 0.02;
+	}else{
+		return (length - 10)*0.2 + 0.5;
+	}
+}
+
 void landing_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float line_tension, int transition){
 	
 	float* mat = sensor_data.rotation_matrix;
@@ -323,8 +347,9 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	
 	// HEIGHT CONTROL: STAGE 1
 	float height = sensor_data.height-autopilot->landing.desired_height;
-	height -= 2.5*(line_speed*line_speed/16.0);
-	float height_error = height;//clamp(height - (1+clamp(fmax((line_length-10)*0.2, (line_length - 5)*0.1), 0, 1000))/*line_length*0.3*/ /* 20 percent descent slope*/, -10, 10);//clamp(height, -3, 10);//ONLY FOR TESTING!, clamp(height - line_length*0.2 /* 20 percent descent slope*/, -3, 10);
+	
+	//float height_error = height;//
+	float height_error = height - length2Height(line_length);
 	
 	float desired_dive_angle = 0.15*autopilot->landing.dive_angle_P*height_error;//-desired_line_angle - 2.0 * line_angle_error;
 	desired_dive_angle_smooth = desired_dive_angle;//0.8 * desired_dive_angle_smooth + 0.2 * desired_dive_angle;
@@ -391,7 +416,9 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	if(sendCounter == 0){
 		sendCounter = (frequencyDivider - 1); // 
 		//sendDebuggingData(line_length, airbrake, airbrake_compensation_by_elevons, sensor_data.height, y_axis_control, 2);
-		sendDebuggingData(line_length, height_error, flag/*desired_dive_angle_smooth*/, sensor_data.height, line_speed/*y_axis_control*/, 2); // UP-DOWN control
+		
+		sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, sensor_data.height, y_axis_offset, 2); // UP-DOWN control
+		
 		//sendDebuggingData(line_length, angle_error, roll_angle, roll_angle-desired_roll_angle, x_axis_control, 2); // UP-DOWN control
 		//sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control, 2); // UP-DOWN control
 	}else{
@@ -459,9 +486,9 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	// 2. STAGE P(I)D: flight direction -> neccessary roll angle
 	float angleErrorZAxis = getAngleErrorZAxisImproved(0.0, mat, line_dir);
-	float z_axis_offset = angleErrorZAxis - slowly_changing_target_angle_local;
+	float z_axis_offset = angleDifferenceWithoutDiscontinuity(angleErrorZAxis, slowly_changing_target_angle_local);
 	float neutral_roll_angle = clamp(angleErrorZAxis*line_angle_from_zenith, -0.65, 0.65); // max 37 degrees
-	float desired_roll_angle = clamp(neutral_roll_angle + autopilot->eight.roll.P * z_axis_offset - autopilot->eight.roll.D * sensor_data.gyro[2], -55*PI/180, 55*PI/180);
+	float desired_roll_angle = clamp(neutral_roll_angle + autopilot->eight.roll.P * z_axis_offset - autopilot->eight.roll.D * sensor_data.gyro[2], -70*PI/180, 70*PI/180);
 	
 	
 	// 3. STAGE P(I)D: neccessary roll angle -> aileron deflection

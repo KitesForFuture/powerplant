@@ -6,7 +6,7 @@
 #define SOURCE_INTERNAL = 0x00
 #define SOURCE_EXTERNAL = 0x80
 
-uint8_t coefficientsource = 0;
+static uint8_t coefficientsource = 0;
 
 uint8_t high_byte;
 uint8_t medium_byte;
@@ -38,6 +38,9 @@ int update_dps310_if_necessary_p(struct dps310_struct *dps) {
 		//printf("c0 = %f, c1 = %f, dps->t_raw = %f, t_comp = %f deg C\n", 1.0*c0, 1.0*c1, dps->t_raw, t_comp);
 		
 		float p_comp = dps->c00 + dps->p_raw*(dps->c10 + dps->p_raw * (dps->c20 + dps->p_raw * dps->c30)) + dps->t_raw * dps->c01 + dps->t_raw * dps->p_raw * (dps->c11 + dps->p_raw * dps->c21);
+		
+		
+		dps->current_temp = 0.95*dps->current_temp + 0.05*t_comp;
 		
 		//printf("p_comp = %f Pa, c00 = %d, c10 = %d, c20 = %d, c30 = %d, c01 = %d, c11 = %d, c21 = %d\n", p_comp, c00, c10, c20, c30, c01, c11, c21);
 		
@@ -80,6 +83,7 @@ void init_dps310_p(struct dps310_struct *dps){ // ToDoLeo rename to init. Make s
 	dps->t_raw = 0.287;
 	
     dps->current_height = 0;
+    dps->current_temp = 15;
     dps->height_medium_smooth = 0;
     
     dps->p_comp_init = 0;
@@ -190,3 +194,9 @@ float getHeight_p(struct dps310_struct* dps) {
 float getHeightDerivative_p(struct dps310_struct* dps){
 	return dps->dH;
 }
+
+
+float getTemp_p(struct dps310_struct *dps){
+	return dps->current_temp;
+}
+

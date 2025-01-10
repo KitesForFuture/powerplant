@@ -4,9 +4,9 @@
 
 (define safety-distance-for-landing-debug 0)
 
-;(define launch-line-length 1)
-;(define min-eight-line-length 2)
-;(define max-eight-line-length 3)
+;(define launch-line-length 0.1)
+;(define min-eight-line-length 0.2)
+;(define max-eight-line-length 0.3)
 
 (define launch-command 0.0)
 (define land-command 1.0)
@@ -142,15 +142,15 @@
                     (if (= flightmode eight)
                         (progn
                             ;(print "REEL IN while Eight")
-                            (set-current 15)
+                            (set-current 12)
                             ;(set-current 6)
                         )
                         ; flightmode = landing or final-landing
-                        (if (> line-length (+ 6.3 safety-distance-for-landing-debug))
+                        (if (> line-length (+ 15.75 safety-distance-for-landing-debug))
                             (set-current 8)
                             (if (> line-length safety-distance-for-landing-debug)
                                 (progn
-                                    (set-current (+ 1.7 (* 1.0 (- line-length safety-distance-for-landing-debug))))
+                                    (set-current (+ 1.7 (* 0.4 (- line-length safety-distance-for-landing-debug))))
                                 )
                                 ;(set-current 8)
                                 (set-current 1.7)

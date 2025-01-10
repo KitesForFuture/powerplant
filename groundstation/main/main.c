@@ -188,6 +188,8 @@ float line_speed_servo = 0;
 float line_length_offset = NOT_INITIALIZED;
 float last_line_length = 0;
 
+float lora_received_1_old = 0;
+
 void app_main(void){
 	init();
 	//storeServoArmForEnergyGeneration();
@@ -203,7 +205,16 @@ void app_main(void){
 	float line_length = 0;
 	float lora_received_1 = 0;
 	float lora_received_2 = 0;
+	
+	float debugging_line_length = 0;
+	
+	int line_length_was_over_60 = false;
+	
 	while(1){
+		
+		debugging_line_length += 0.1;
+		//line_length = debugging_line_length;
+		
 		counter++;
 		uint8_t buf[4];
 		if(counter%4 == 0){
@@ -221,7 +232,7 @@ void app_main(void){
 			int ls_times_8 = (int)(clamp(-line_speed, 0, 30) * 8);
 			buf[3] = ls_times_8 & 0xFF;
 			
-			printf("sending fm=%d, line_length=%f, line_speed=%f to kite\n", (char)flight_mode, line_length, line_speed);
+			printf("dll = %f, sending fm=%d, line_length=%f, line_speed=%f to kite [%d, %d, %d, %d]\n", debugging_line_length, (char)flight_mode, line_length, line_speed, buf[0], buf[1], buf[2], buf[3]);
 			lora_send_packet_and_forget(buf, 4);
 			lora_receive(4);
 			
@@ -229,8 +240,14 @@ void app_main(void){
 			//send this regardless of whether data comes in via LoRa or WIFI
 			data_including_lora[5] = line_length;
 			data_including_lora[6] = getHeight();
-			data_including_lora[7] = lora_received_1; // == line_length, maybe with delay or freezing when packet lost
-			data_including_lora[8] = lora_received_2;
+			if(abs(lora_received_1 - lora_received_1_old) < 10 && (lora_received_2 == -5 || lora_received_2 == 0 || lora_received_2 == 1 || lora_received_2 == 2 || lora_received_2 == 4 || lora_received_2 == 6 || lora_received_2 == 7 || lora_received_2 == 112)){
+				data_including_lora[7] = lora_received_1; // == line_length, maybe with delay or freezing when packet lost
+				data_including_lora[8] = lora_received_2;
+			}else{
+				data_including_lora[7] = -10; // == line_length, maybe with delay or freezing when packet lost
+				data_including_lora[8] = -10;
+			}
+			lora_received_1_old = lora_received_1;
 			sendUARTArray100(data_including_lora, 10, ESP32_UART);
 		}
 		if(lora_received()){
@@ -241,7 +258,7 @@ void app_main(void){
 				if(buf[2] == 4){//autopilot.mode == LANDING_MODE
 					tension_request = 1.0; // kite is in landing mode
 				}
-				printf("received %d, %d, ret = %d, setting tension_request=1.0 -> kite in landing mode\n", buf[0], buf[1], return_value);
+				printf("received [%d, %d, %d, %d], lr1 = %f, lr2 = %f, ret = %d\n", buf[0], buf[1], buf[2], buf[3], lora_received_1, lora_received_2, return_value);
 			}
 		}
 		
@@ -327,8 +344,12 @@ void app_main(void){
 		
 		// **************** MANUAL SWITCH ****************
 		
+		if(line_length > 60){
+			line_length_was_over_60 = true;
+		}
+		
 		if(!internet_connected){
-			if(get_level_GPIO_0() != 0){
+			if(get_level_GPIO_0() != 0 || (line_length_was_over_60 == true && line_length < 50)){
 				//printf("SWITCH request final landing\n");
 				sendUART(2, 0, VESC_UART); // request final-landing from VESC
 			}else{

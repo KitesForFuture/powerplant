@@ -8,6 +8,7 @@ struct dps310_struct {
     struct i2c_bus bus;
     int address;
     float current_height;
+    float current_temp;
     float height_medium_smooth;
     
     float p_comp_init;
@@ -33,5 +34,7 @@ void init_dps310_p(struct dps310_struct *dps);
 
 float getHeight_p(struct dps310_struct *dps);
 float getHeightDerivative_p(struct dps310_struct *dps);
+
+float getTemp_p(struct dps310_struct *dps);
 
 #endif
