@@ -11,6 +11,7 @@ static void (*read_callback)(float*);
 static void (*write_callback)(float*);
 static void (*actuator_control_callback)(float, float, float, float, float, float, float, float, float);
 
+struct dps310_struct *dps_local;
 
 Orientation_Data* orientation_data_kite;
 
@@ -1011,7 +1012,7 @@ static esp_err_t orientation_get_handler(httpd_req_t *req)
     
     orientation_data_kite->line_vector_normed[0], orientation_data_kite->line_vector_normed[1], orientation_data_kite->line_vector_normed[2],
     
-    getHeight(), getHeightDerivative());
+    getHeight_p(dps_local), getHeightDerivative_p(dps_local));
     
     error = httpd_resp_send(req, response2, strlen(response2));
     return error;
@@ -1272,8 +1273,9 @@ void wifi_init_softap(void)
 
 // init wifi on the esp
 // register callbacks
-void network_setup_configuring(void (*read_callback_arg)(float*), void (*write_callback_arg)(float*), void (*actuator_control_callback_arg)(float, float, float, float, float, float, float, float, float), Orientation_Data* orientation_data_arg_kite)
+void network_setup_configuring(void (*read_callback_arg)(float*), void (*write_callback_arg)(float*), void (*actuator_control_callback_arg)(float, float, float, float, float, float, float, float, float), Orientation_Data* orientation_data_arg_kite, struct dps310_struct *dps_arg)
 {
+	dps_local = dps_arg;
 	orientation_data_kite = orientation_data_arg_kite;
 	read_callback = read_callback_arg;
 	write_callback = write_callback_arg;

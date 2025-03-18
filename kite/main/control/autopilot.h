@@ -28,6 +28,8 @@
 #define LINE_TENSION_LANDING -2
 #define LINE_TENSION_LANDING_HOVER -3
 
+int debuggingLED;
+
 struct _Autopilot {
 	struct {
 		struct {
@@ -125,7 +127,7 @@ void loadConfigVariables(Autopilot* autopilot, float* config_values);
 
 void initAutopilot(Autopilot* autopilot, float* config_values);
 
-void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float line_tension);
+void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float line_tension, float timestep_in_s);
 
 void notlandung(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data);
 void test_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension);

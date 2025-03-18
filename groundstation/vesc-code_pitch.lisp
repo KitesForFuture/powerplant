@@ -45,7 +45,7 @@
                     ; REEL-IN WITH LOW TENSION
                     
                     (if (< line-length 0)
-                        (set-brake 40)
+                        (set-current 3);(set-brake 40)
                         (set-current 3.5)
                     )
                     

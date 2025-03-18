@@ -47,7 +47,7 @@
 #include "my_gpio.c"
 //#include "driver/ledc.h"
 
-#define MAX_SERVO_DEFLECTION 60.0//50
+#define MAX_SERVO_DEFLECTION 40.0//50
 #define MIN_BRAKE_DEFLECTION -59.0//-64
 #define MAX_BRAKE_DEFLECTION 59.0
 #define MAX_PROPELLER_SPEED 90.0 // AT MOST 90
@@ -279,11 +279,29 @@ void main_task(void* arg)
 	
 	if(getAccelX(kite_and_line_mpu_raw_data) < 0){
 		printf("entering config mode\n");
-		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data);
+		network_setup_configuring(&getConfigValues ,&setConfigValues, &actuatorControl, &kite_orientation_data, &dps);
 		
 		
-		dps_address = 0x76;
-		init_dps310(bus1);
+		printf("initializing both dps310\n");
+    
+		dps.bus.sda = 25;
+		dps.bus.scl = 14;// = {25, 14};
+		dps.address = 0x76;
+		
+		vTaskDelay(10);
+		init_dps310_p(&dps);
+		vTaskDelay(10);
+		
+		
+		dps2.bus.sda = 25;
+		dps2.bus.scl = 14;// = {25, 14};
+		dps2.address = 0x77;
+		
+		vTaskDelay(10);
+		init_dps310_p(&dps2);
+		vTaskDelay(10);
+		
+    
 		Time t = start_timer();
 		TickType_t xLastWakeTime;
 		xLastWakeTime = xTaskGetTickCount();
@@ -291,7 +309,7 @@ void main_task(void* arg)
 		while(1){
 			float U = 15.08 + 0.007062 * (getVoltageInMilliVolt() - 1909);
 			voltage = 0.05 * U + 0.95 * voltage;
-			printf("Raw Voltage sensing value: %f\n", voltage);
+			//printf("Raw Voltage sensing value: %f\n", voltage);
 			//vTaskDelay(0);
 			//printf("roll angle = %f\n", getLineRollAngle(kite_orientation_data.line_vector_normed));
 			//printf("yaw angle = %f\n", getLineYawAngle(kite_orientation_data.line_vector_normed));
@@ -300,7 +318,9 @@ void main_task(void* arg)
 			float timestep = get_time_step(&t);
 			//printf("timestep = %f\n", timestep);
 			
-			update_dps310_if_necessary();
+			update_dps310_if_necessary_p(&dps);
+			update_dps310_if_necessary_p(&dps2);
+			printf("side holes = %f, front hole = %f\n", getHeight_p(&dps), getHeight_p(&dps2));
 			
 			if(gyroCalibrationCommand){
 				gyroCalibrationCommand = false;
@@ -429,19 +449,25 @@ void main_task(void* arg)
 	
 	int last_gs_height_offset_times_32 = 0;
 	float line_speed_lora = 0;
+	float line_length_lora_unfiltered = 0;
 	float line_length_lora = 0;
 	float gs_height_offset_lora = 0;
 	char flight_mode_lora = 0;
 	
 	lora_receive(4);
 	
+	
+	int error_time_counter = 0;
+	float old_line_length_unfiltered = 0;
+	
 	while(1) {
 		//printf("running loop\n");
 		vTaskDelayUntil(&xLastWakeTime, 2);
 		
 		
-		float new_timestep = 1024*get_time_step(&t);
-		timestep = 0.9*timestep + 0.1 * new_timestep * new_timestep;
+		float new_timestep = /*1024**/get_time_step(&t);
+		timestep = 0.9*timestep + 0.1 * new_timestep;// * new_timestep;
+		//printf("new_timestep = %f, timestep = %f\n", new_timestep, timestep);
 		//sendDebuggingData(timestep, getHeight(), groundstation_height, getHeight()-groundstation_height+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative(), 0);
 		processRC();
 		
@@ -451,7 +477,18 @@ void main_task(void* arg)
 			int return_value = lora_receive_packet(buf, 4);
 			if(return_value != 0){
 			
-				line_length_lora = ((((int)buf[0]) << 8) + buf[1]) / 16.0;
+				float line_length_lora_unfiltered = ((((int)buf[0]) << 8) + buf[1]) / 16.0;
+				
+				
+				//for finding line length bug
+				if (old_line_length_unfiltered + 3 < line_length_lora_unfiltered || old_line_length_unfiltered - 3 > line_length_lora_unfiltered){//if line-length jumps by more than 10 metres
+		        	debuggingLED = debuggingLED | 1;
+		        }else{
+		        	line_length_lora = line_length_lora_unfiltered;
+		        }
+		        old_line_length_unfiltered = line_length_lora_unfiltered;
+				
+				
 				incrementServo();
 				
 				
@@ -462,7 +499,7 @@ void main_task(void* arg)
 				
 				line_speed_lora = -(buf[3] / 8.0);
 				
-				printf("received line_length_lora = %f, line_speed_lora = %f, gs_height_offset_lora = %f, fm_lora = %d, ret = %d, [%d, %d, %d, %d]\n", line_length_lora, line_speed_lora, gs_height_offset_lora, flight_mode_lora, return_value, buf[0], buf[1], buf[2], buf[3]);
+				//printf("received line_length_lora = %f, line_speed_lora = %f, gs_height_offset_lora = %f, fm_lora = %d, ret = %d, [%d, %d, %d, %d]\n", line_length_lora, line_speed_lora, gs_height_offset_lora, flight_mode_lora, return_value, buf[0], buf[1], buf[2], buf[3]);
 			}
 			// reply to the packet:
 			int ll_times_16 = (int)(clamp(line_length_lora, 0, 4000) * 16);
@@ -471,10 +508,9 @@ void main_task(void* arg)
 			
 			buf[2] = (uint8_t)autopilot.mode;
 			
-			printf("sending[%d, %d, %d, %d], ll_times_16 = %d\n", buf[0], buf[1], buf[2], buf[3], ll_times_16);
+			//printf("sending[%d, %d, %d, %d], ll_times_16 = %d\n", buf[0], buf[1], buf[2], buf[3], ll_times_16);
 			
 			lora_send_packet_and_forget(buf, 4);
-			
 			
 			lora_receive(4);
 			//counter = 0;
@@ -517,6 +553,7 @@ void main_task(void* arg)
 		}
 		
 		float line_length = clamp(line_length_in_meters, 0, 1000000); // global var defined in RC.c, should default to 1 when no signal received, TODO: revert line length in VESC LISP code
+		if(flight_mode_lora == 7){ flight_mode_lora = 112;}
 		autopilot.fm = flight_mode_lora;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
 		
@@ -525,7 +562,7 @@ void main_task(void* arg)
 		float speed_pitot = 5.0 * sqrt(  fmax( getHeight_p(&dps) - getHeight_p(&dps2), 0 )  );
 		//sendDebuggingData(getHeight_p(&dps), getHeight_p(&dps2), height_pitot, height_pitot - gs_height_offset_lora+HEIGHT_CALIBRATION_OFFSET, speed_pitot, 2); // UP-DOWN control
 		
-		printf("height_pitot1 = %f, height_pitot2 = %f\n", getHeight_p(&dps), getHeight_p(&dps2));
+		//printf("height_pitot1 = %f, height_pitot2 = %f\n", getHeight_p(&dps), getHeight_p(&dps2));
 		SensorData sensorData;
 		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.line_vector_normed, kite_orientation_data.gyro_in_kite_coords, height_pitot-gs_height_offset_lora+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative_p(&dps));
 		
@@ -535,7 +572,7 @@ void main_task(void* arg)
 		//autopilot.mode = EIGHT_MODE;
 		//DEBUGGING, TODO: remove
 		//line_length = 3;
-		stepAutopilot(&autopilot, &control_data, sensorData, line_length_lora, line_speed_lora, 3/*line tension*/);
+		stepAutopilot(&autopilot, &control_data, sensorData, line_length_lora, line_speed_lora, 3/*line tension*/, timestep);
 		
 		// DON'T LET SERVOS BREAK THE KITE
 		control_data.brake = clamp(control_data.brake, MIN_BRAKE_DEFLECTION, MAX_BRAKE_DEFLECTION);

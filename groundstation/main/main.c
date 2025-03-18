@@ -130,13 +130,13 @@ float data_including_lora[10];
 void processReceivedDebuggingDataViaWiFi(float* debugging_data){
 	//printf("forwarding Debugging data to in_flight_config ESP32");
 	//debugging_data[1] = getHeight();
-	if(wifi_rec_led_state == 0){
+	/*if(wifi_rec_led_state == 0){
 		//set_level_GPIO_22(1);
 		wifi_rec_led_state = 1;
 	}else{
 		set_level_GPIO_22(0);
 		wifi_rec_led_state = 0;
-	}
+	}*/
 	for(int i = 0; i < 5; i++){
 		data_including_lora[i] = debugging_data[i];
 	}
@@ -164,9 +164,9 @@ void init(){
 	
 	initGPIO();
 	
-	example_ledc_init();
-	ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, 0);
-	ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+	//example_ledc_init();
+	//ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, 0);
+	//ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
 	
 	
 	init_uptime();
@@ -190,6 +190,8 @@ float last_line_length = 0;
 
 float lora_received_1_old = 0;
 
+float old_line_length = 0;
+
 void app_main(void){
 	init();
 	//storeServoArmForEnergyGeneration();
@@ -210,6 +212,9 @@ void app_main(void){
 	
 	int line_length_was_over_60 = false;
 	
+	set_level_GPIO_22(0);
+	set_level_GPIO_23(0);
+	
 	while(1){
 		
 		debugging_line_length += 0.1;
@@ -227,6 +232,7 @@ void app_main(void){
 			buf[1] = ll_times_16 & 0xFF;
 			
 			int gsho_times_4 = ((int)((getHeight()+0.5) * 32)) % 32;
+			if(flight_mode == 112){ flight_mode = 7;}
 			buf[2] = (((char)flight_mode)<<5) + (gsho_times_4 & 0x1F);
 			
 			int ls_times_8 = (int)(clamp(-line_speed, 0, 30) * 8);
@@ -240,14 +246,25 @@ void app_main(void){
 			//send this regardless of whether data comes in via LoRa or WIFI
 			data_including_lora[5] = line_length;
 			data_including_lora[6] = getHeight();
-			if(abs(lora_received_1 - lora_received_1_old) < 10 && (lora_received_2 == -5 || lora_received_2 == 0 || lora_received_2 == 1 || lora_received_2 == 2 || lora_received_2 == 4 || lora_received_2 == 6 || lora_received_2 == 7 || lora_received_2 == 112)){
-				data_including_lora[7] = lora_received_1; // == line_length, maybe with delay or freezing when packet lost
-				data_including_lora[8] = lora_received_2;
+			
+			
+			data_including_lora[7] = lora_received_1; // == line_length, maybe with delay or freezing when packet lost
+			data_including_lora[8] = lora_received_2;
+			
+			/*if(abs(lora_received_1 - lora_received_1_old) < 10 && (lora_received_2 == -5 || lora_received_2 == 0 || lora_received_2 == 1 || lora_received_2 == 2 || lora_received_2 == 4 || lora_received_2 == 6 || lora_received_2 == 7 || lora_received_2 == 112)){
+				
 			}else{
-				data_including_lora[7] = -10; // == line_length, maybe with delay or freezing when packet lost
-				data_including_lora[8] = -10;
+				if(lora_received_1 > 3){
+					data_including_lora[7] = -10; // == line_length, maybe with delay or freezing when packet lost
+					data_including_lora[8] = -10;
+				}
+			}
+			*/
+			if(abs(lora_received_1 - lora_received_1_old) < 1){
+				set_level_GPIO_23(1);
 			}
 			lora_received_1_old = lora_received_1;
+			
 			sendUARTArray100(data_including_lora, 10, ESP32_UART);
 		}
 		if(lora_received()){
@@ -264,7 +281,7 @@ void app_main(void){
 		
 		
 		
-		
+		/*
 		if(((int)(get_uptime_seconds()))%2 == 0){
 			set_level_GPIO_22(0);
 			set_level_GPIO_23(1);
@@ -272,6 +289,8 @@ void app_main(void){
 			set_level_GPIO_22(1);
 			set_level_GPIO_23(0);
 		}
+		*/
+		
 		//printf("test314\n");
 		update_dps310_if_necessary();
 		//printf("getHeight() = %f\n", getHeight());
@@ -288,10 +307,10 @@ void app_main(void){
 				//ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY);
 				led_state = 1;
 			}else{
-				ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, 0);
+				//ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, 0);
 				led_state = 0;
 			}
-			ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+			//ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
 			
 			line_length_raw = receive_array[0];
 			flight_mode = receive_array[1];
@@ -300,15 +319,25 @@ void app_main(void){
 			if(flight_mode != 2.0 && flight_mode != 3.0){tension_request = 0;};
 			
 			line_length = line_length_raw;// - line_length_offset;
+			
+			
+			//for finding line length bug
+			if (old_line_length + 3 < line_length || old_line_length - 3 > line_length){//if line-length jumps by more than 10 metres
+            	set_level_GPIO_22(1);
+            }
+            old_line_length = line_length;
+            
+			
 			//printf("received %f, %f\n", line_length_raw, flight_mode);
 			//printf("sending flight_mode %f and line_length %f to kite\n", flight_mode, line_length);
-			if(wifi_send_led_state == 0){
+			
+			/*if(wifi_send_led_state == 0){
 				//set_level_GPIO_23(1);
 				wifi_send_led_state = 1;
 			}else{
 				set_level_GPIO_23(0);
 				wifi_send_led_state = 0;
-			}
+			}*/
 			
 			/*
 			sendData(LINE_LENGTH_MODE, line_length, flight_mode, getHeight(), line_speed); // send line_length, flight_mode to kite
@@ -350,8 +379,12 @@ void app_main(void){
 		
 		if(!internet_connected){
 			if(get_level_GPIO_0() != 0 || (line_length_was_over_60 == true && line_length < 50)){
-				//printf("SWITCH request final landing\n");
+				printf("SWITCH request final landing\n");
 				sendUART(2, 0, VESC_UART); // request final-landing from VESC
+			}else if(get_level_GPIO_33() != 0){
+				//Switch request for emergency landing (in circles, airbrake extended, line tension = 0)
+				printf("SWITCH request emergency landing\n");
+				sendUART(112, 0, VESC_UART); // request emergency-landing from VESC
 			}else{
 				//sendUART(0, 0, VESC_UART);
 			}
