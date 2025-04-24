@@ -25,7 +25,7 @@ float tension_request = 0;
 static void (*write_config_callback_kite)(float*);
 
 static void (*receive_config_callback_groundstation)(float*);
-static void (*receive_debugging_data_callback_groundstation)(float*);
+static void (*receive_debugging_data_callback_groundstation)(float*, int);
 
 typedef struct __attribute__((packed)) esp_now_msg_t
 {
@@ -45,6 +45,12 @@ typedef struct __attribute__((packed)) esp_now_msg_t_medium
 	uint32_t mode;
 	float data[6];
 } esp_now_msg_t_medium;
+
+typedef struct __attribute__((packed)) esp_now_msg_t_10
+{
+	uint32_t mode;
+	float data[10];
+} esp_now_msg_t_10;
 
 int rec_led_state = 0;
 // gets called when incoming data is received
@@ -107,7 +113,14 @@ static void msg_recv_cb_groundstation(const uint8_t *mac_addr, const uint8_t *da
 	if (len == sizeof(esp_now_msg_t_medium)){
 		esp_now_msg_t_medium msg;
 		memcpy(&msg, data, len);
-		(*receive_debugging_data_callback_groundstation)(msg.data);
+		(*receive_debugging_data_callback_groundstation)(msg.data, 6);
+		
+	}
+	
+	if (len == sizeof(esp_now_msg_t_10)){
+		esp_now_msg_t_10 msg;
+		memcpy(&msg, data, len);
+		(*receive_debugging_data_callback_groundstation)(msg.data, 10);
 		
 	}
 }
@@ -166,7 +179,7 @@ void network_setup_kite_flying(void (*write_config_callback_arg)(float*))
 
 // init wifi on the esp
 // register callbacks
-void network_setup_groundstation(void (*received_config_callback_arg)(float*), void (*receive_debugging_data_callback_arg)(float*))
+void network_setup_groundstation(void (*received_config_callback_arg)(float*), void (*receive_debugging_data_callback_arg)(float*, int))
 {
 	network_setup_common();
 	
@@ -190,6 +203,27 @@ void sendDebuggingData(float num1, float num2, float num3, float num4, float num
 	uint16_t packet_size = sizeof(esp_now_msg_t_medium);
 	uint8_t msg_data[packet_size];
 	memcpy(&msg_data[0], &msg, sizeof(esp_now_msg_t_medium));
+	
+	esp_now_send(broadcast_mac, msg_data, packet_size);
+}
+
+void sendDebuggingData10(float num1, float num2, float num3, float num4, float num5, float num6, float num7, float num8, float num9, float num10){
+	esp_now_msg_t_10 msg;
+	msg.mode = DEBUG_DATA_MODE;
+	msg.data[0] = num1;
+	msg.data[1] = num2;
+	msg.data[2] = num3;
+	msg.data[3] = num4;
+	msg.data[4] = num5;
+	msg.data[5] = num6;
+	msg.data[6] = num7;
+	msg.data[7] = num8;
+	msg.data[8] = num9;
+	msg.data[9] = num10;
+	
+	uint16_t packet_size = sizeof(esp_now_msg_t_10);
+	uint8_t msg_data[packet_size];
+	memcpy(&msg_data[0], &msg, sizeof(esp_now_msg_t_10));
 	
 	esp_now_send(broadcast_mac, msg_data, packet_size);
 }

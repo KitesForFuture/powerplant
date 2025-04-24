@@ -10,6 +10,7 @@
 
 (define line-length 0)
 (define old-line-length-unfiltered 0)
+(define old-line-length-unfiltered2 0)
 
 (define launch-command 0.0)
 (define land-command 1.0)
@@ -59,10 +60,11 @@
                 
                 
                 ; this is all for finding the line-length bug
-                (if (or (< (+ old-line-length-unfiltered 3) line-length-unfiltered) (> (- old-line-length-unfiltered 3) line-length-unfiltered)) ;if line-length-unfiltered jumps by more than 10 metres
+                (if (or (or (< (+ old-line-length-unfiltered2 3) line-length-unfiltered) (> (- old-line-length-unfiltered2 3) line-length-unfiltered)) (or (< (+ old-line-length-unfiltered 3) line-length-unfiltered) (> (- old-line-length-unfiltered 3) line-length-unfiltered)) ) ;if line-length-unfiltered jumps by more than 10 metres
                 	(gpio-write 'pin-adc1 1)
                 	(define line-length line-length-unfiltered)
                 )
+                (define old-line-length-unfiltered2 old-line-length-unfiltered)
                 (define old-line-length-unfiltered line-length-unfiltered)
                 
                 

@@ -127,7 +127,7 @@ void processReceivedConfigValuesViaWiFi(float* config_values){
 
 float data_including_lora[10];
 
-void processReceivedDebuggingDataViaWiFi(float* debugging_data){
+void processReceivedDebuggingDataViaWiFi(float* debugging_data, int length){
 	//printf("forwarding Debugging data to in_flight_config ESP32");
 	//debugging_data[1] = getHeight();
 	/*if(wifi_rec_led_state == 0){
@@ -137,12 +137,12 @@ void processReceivedDebuggingDataViaWiFi(float* debugging_data){
 		set_level_GPIO_22(0);
 		wifi_rec_led_state = 0;
 	}*/
-	for(int i = 0; i < 5; i++){
+	for(int i = 0; i < lenght-1; i++){
 		data_including_lora[i] = debugging_data[i];
 	}
 	//fill the last 4 values with groundstation and lora stuff
 	
-	data_including_lora[9] = debugging_data[5]; // flight mode indicator
+	data_including_lora[9] = debugging_data[length-1]; // flight mode indicator
 	
 }
 
@@ -199,7 +199,9 @@ void app_main(void){
 	//float landing_request = 0.0;
 	float receive_array[100];
 	int receive_array_length = 0;
-	float line_length_raw;
+	float line_length_raw = 0;
+	float old_line_length_raw = 0;
+	float old_line_length_raw2 = 0;
 	float flight_mode = 0;
 	printf("waiting for UART...\n");
 	uint8_t counter = 0;
@@ -302,7 +304,7 @@ void app_main(void){
 		receive_array_length = processUART(VESC_UART, receive_array);
 		if(receive_array_length == 3){
 			
-			printf("received UART from VESC\n");
+			//printf("received UART from VESC\n");
 			if(led_state == 0){
 				//ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY);
 				led_state = 1;
@@ -314,12 +316,16 @@ void app_main(void){
 			
 			line_length_raw = receive_array[0];
 			flight_mode = receive_array[1];
-			printf("received flight_mode_request = %f\n", flight_mode);
+			//printf("received flight_mode_request = %f\n", flight_mode);
 			line_speed = receive_array[2];
 			if(flight_mode != 2.0 && flight_mode != 3.0){tension_request = 0;};
 			
-			line_length = line_length_raw;// - line_length_offset;
-			
+			// REMOVING UP TO 2 CONSECUTIVE OUTLIERS of LINE_LENGTH
+			if( (line_length_raw < old_line_length_raw + 3) && (line_length_raw > old_line_length_raw - 3) && (line_length_raw < old_line_length_raw2 + 3) && (line_length_raw > old_line_length_raw2 - 3)){
+				line_length = line_length_raw;// - line_length_offset;
+			}
+			old_line_length_raw2 = old_line_length_raw;
+			old_line_length_raw = line_length_raw;
 			
 			//for finding line length bug
 			if (old_line_length + 3 < line_length || old_line_length - 3 > line_length){//if line-length jumps by more than 10 metres
@@ -327,7 +333,7 @@ void app_main(void){
             }
             old_line_length = line_length;
             
-			
+			//printf("line_length = %f\n", line_length);
 			//printf("received %f, %f\n", line_length_raw, flight_mode);
 			//printf("sending flight_mode %f and line_length %f to kite\n", flight_mode, line_length);
 			
