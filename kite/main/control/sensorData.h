@@ -7,9 +7,10 @@ struct _SensorData {
 	float* gyro;
 	float height;
 	float d_height;
+	float speed_pitot;
 };
 typedef struct _SensorData SensorData;
 
-void initSensorData(SensorData* sensorData, float* rotation_matrix, float* line_direction_vector, float* gyro, float height, float d_height);
+void initSensorData(SensorData* sensorData, float* rotation_matrix, float* line_direction_vector, float* gyro, float height, float d_height, float speed_pitot);
 
 #endif

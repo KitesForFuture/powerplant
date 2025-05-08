@@ -104,7 +104,7 @@ lora_write_reg(int reg, int val)
       .flags = 0,
       .length = 8 * sizeof(out),
       .tx_buffer = out,
-      .rx_buffer = in  
+      .rx_buffer = in
    };
 
    //gpio_set_level(CONFIG_CS_GPIO, 0);

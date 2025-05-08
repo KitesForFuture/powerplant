@@ -14,6 +14,7 @@ float old_line_length = 0;
 float powerInWatts = 0;
 
 void sendDebuggingData(float num1, float num2, float num3, float num4, float num5, float num6);
+void sendDebuggingData10(float num1, float num2, float num3, float num4, float num5, float num6, float num7, float num8, float num9, float num10);
 void sendData(uint32_t mode, float data0, float data1, float data2);
 
 float angleDifferenceWithoutDiscontinuity(float alpha, float beta){
@@ -462,22 +463,26 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	stepActuator(&(autopilot->slowly_changing_target_angle), timestep_in_s);
 	float slowly_changing_target_angle_local = getValueActuator(&(autopilot->slowly_changing_target_angle));
 	
+	//slowly_changing_target_angle_local = 0;
+	
 	//slowly_changing_target_angle_local = 30*3.14/180;
 	// 2. STAGE P(I)D: flight direction -> neccessary roll angle
 	float angleErrorZAxis = getAngleErrorZAxisImproved(0.0, mat, line_dir);
 	float z_axis_offset = angleDifferenceWithoutDiscontinuity(angleErrorZAxis, slowly_changing_target_angle_local);
 	//TODO: roll_correction_factor is dependent on the line tension. At line tension = 2 * kite weight it is 0.25 and then is inversely proportional to the line tension
-	float roll_correction_factor = 0.125;
+	float roll_correction_factor = 0.125 * 1.3;
 	float neutral_roll_angle = clamp(roll_correction_factor*angleErrorZAxis*line_angle_from_zenith, -0.65, 0.65); // max 37 degrees
 	float desired_roll_angle = clamp(neutral_roll_angle + autopilot->eight.roll.P * z_axis_offset - autopilot->eight.roll.D * sensor_data.gyro[2], -70*PI/180, 70*PI/180);
-	
+	printf("dra = %f, nra = %f, zao = %f, angleErrorZAxis=%f\n", desired_roll_angle, neutral_roll_angle, z_axis_offset, angleErrorZAxis);
 	
 	// 3. STAGE P(I)D: neccessary roll angle -> aileron deflection
 	float z_axis_control = - 28 * autopilot->eight.Z.P * (desired_roll_angle-roll_angle) - 11 * autopilot->eight.Z.D * sensor_data.gyro[0];
-	z_axis_control = clamp(z_axis_control, -40, 40);
+	z_axis_control = - autopilot->eight.Z.P /*200*/ * (desired_roll_angle-roll_angle) - autopilot->eight.Z.D /*15*/ * sensor_data.gyro[0];//150 * (desired_roll_angle-roll_angle) + 15 * sensor_data.gyro[0];
+	
+	z_axis_control = clamp(z_axis_control, -20, 20);
 	
 	// ELEVATOR
-	float y_axis_control = autopilot->eight.elevator + autopilot->eight.Y.D * sensor_data.gyro[1];
+	float y_axis_control = autopilot->eight.elevator + autopilot->eight.Y.D * sensor_data.gyro[1] - 0.5* abs(z_axis_control);
 	
 	float airbrake = AIRBRAKE_OFF;
 	
@@ -490,14 +495,16 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		old_line_length = line_length;
 	}
 	
+	float rudder = autopilot->eight.Y.D*50*(sensor_data.gyro[2]-0.7*roll_angle);
+	
 	sendDebuggingData(roll_angle, angleErrorZAxis, desired_roll_angle, slowly_changing_target_angle_local, debuggingLED, 1);
 	//sendDebuggingData(angleErrorZAxis, getAngleErrorZAxis(0.0, mat), 0, 0, 0, 0);
 	initControlData(control_data_out, 0, 0,
-		y_axis_control - z_axis_control + abs(z_axis_control)*0.0,
-		y_axis_control + z_axis_control + abs(z_axis_control)*0.0,
-		0,
-		0,
-		airbrake, 0, LINE_TENSION_EIGHT); return;
+		- z_axis_control + abs(z_axis_control)*0.15,
+		+ z_axis_control + abs(z_axis_control)*0.15,
+		y_axis_control,
+		y_axis_control,
+		airbrake, rudder, LINE_TENSION_EIGHT); return;
 }
 
 static float height_control_smooth = 0;

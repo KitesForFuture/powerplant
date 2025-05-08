@@ -232,7 +232,7 @@ void main_task(void* arg)
 		{0.0, 0.0, 0.0} // magnet
 	};
 	
-	int output_pins[] = {23,17, 2/*prop*/, 27, 15/*prop*/,13,12,33};
+	int output_pins[] = {23,17, 2/*prop*/, 27, 15/*prop*/,4,12,33};
 	initMotors(output_pins, 8);
 	
 	initGPIO();
@@ -445,7 +445,7 @@ void main_task(void* arg)
 	
 	//long preamble_length = lora_get_preamble_length();
 	//printf("preamble length = %d\n", (int)preamble_length);
-	//lora_dump_registers();
+	lora_dump_registers();
 	
 	int last_gs_height_offset_times_32 = 0;
 	float line_speed_lora = 0;
@@ -472,7 +472,7 @@ void main_task(void* arg)
 		processRC();
 		
 		if(lora_received()){
-			//printf("lora received\n");
+			printf("lora received\n");
 			uint8_t buf[4];
 			int return_value = lora_receive_packet(buf, 4);
 			if(return_value != 0){
@@ -499,7 +499,7 @@ void main_task(void* arg)
 				
 				line_speed_lora = -(buf[3] / 8.0);
 				
-				//printf("received line_length_lora = %f, line_speed_lora = %f, gs_height_offset_lora = %f, fm_lora = %d, ret = %d, [%d, %d, %d, %d]\n", line_length_lora, line_speed_lora, gs_height_offset_lora, flight_mode_lora, return_value, buf[0], buf[1], buf[2], buf[3]);
+				printf("received line_length_lora = %f, line_speed_lora = %f, gs_height_offset_lora = %f, fm_lora = %d, ret = %d, [%d, %d, %d, %d]\n", line_length_lora, line_speed_lora, gs_height_offset_lora, flight_mode_lora, return_value, buf[0], buf[1], buf[2], buf[3]);
 			}
 			// reply to the packet:
 			int ll_times_16 = (int)(clamp(line_length_lora, 0, 4000) * 16);
@@ -564,7 +564,7 @@ void main_task(void* arg)
 		
 		//printf("height_pitot1 = %f, height_pitot2 = %f\n", getHeight_p(&dps), getHeight_p(&dps2));
 		SensorData sensorData;
-		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.line_vector_normed, kite_orientation_data.gyro_in_kite_coords, height_pitot-gs_height_offset_lora+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative_p(&dps));
+		initSensorData(&sensorData, kite_orientation_data.rotation_matrix_transpose, kite_orientation_data.line_vector_normed, kite_orientation_data.gyro_in_kite_coords, height_pitot-gs_height_offset_lora+HEIGHT_CALIBRATION_OFFSET, getHeightDerivative_p(&dps), speed_pitot);
 		
 		//TODO: decide size of timestep_in_s in main.c and pass to stepAutopilot(), or use same method as used in updateRotationMatrix
 		ControlData control_data;

@@ -137,7 +137,7 @@ void processReceivedDebuggingDataViaWiFi(float* debugging_data, int length){
 		set_level_GPIO_22(0);
 		wifi_rec_led_state = 0;
 	}*/
-	for(int i = 0; i < lenght-1; i++){
+	for(int i = 0; i < length-1; i++){
 		data_including_lora[i] = debugging_data[i];
 	}
 	//fill the last 4 values with groundstation and lora stuff
@@ -176,6 +176,8 @@ void init(){
 	lora_enable_crc();
 	lora_set_bandwidth(7);
 	lora_set_spreading_factor(6);
+	
+	lora_dump_registers();
 	
 	for(int i = 0; i < 10; i++){
 		data_including_lora[i] = 0;

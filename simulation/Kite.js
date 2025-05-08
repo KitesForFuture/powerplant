@@ -90,7 +90,7 @@ class Kite extends RigidBody{
 		super();
 		//this.positionR.set(2, 0, 2);//this.positionR.set(40, 0, 82);//
 		this.reset();
-		this.dimensions = new THREE.Vector3(0.2, 2, 0.03);
+		this.dimensions = new THREE.Vector3(0.23, 3.2, 0.03);
 		
 		this.center_of_gravity_from_front = 0.25;//30;//0.33;//0.33;//fraction of the full chord length
 		this.bridle_length = 0.2;//-0.05;//in meters, with respect to the wing join center

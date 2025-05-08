@@ -6,7 +6,7 @@
 
 ;(define launch-line-length 0.2)
 ;(define min-eight-line-length 0.4)
-;(define max-eight-line-length 0.6)
+;(define max-eight-line-length 1.0)
 
 (define line-length 0)
 (define old-line-length-unfiltered 0)
