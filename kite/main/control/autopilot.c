@@ -367,7 +367,7 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	
 	float desired_dive_angle = 0.15*autopilot->landing.dive_angle_P*height_error;//-desired_line_angle - 2.0 * line_angle_error;
 	desired_dive_angle_smooth = desired_dive_angle;//0.8 * desired_dive_angle_smooth + 0.2 * desired_dive_angle;
-	desired_dive_angle_smooth = clamp( desired_dive_angle_smooth, -PI/12, PI/6 );
+	desired_dive_angle_smooth = clamp( desired_dive_angle_smooth, -PI/12, PI/4 );
 	
 	if(transition){
 		desired_dive_angle_smooth = -PI/6;
@@ -392,7 +392,7 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	}*/
 	
 	float x_axis_control = - 28 * autopilot->landing.X.P * (desired_roll_angle-roll_angle) - 11 * autopilot->landing.X.D * sensor_data.gyro[0];
-	x_axis_control = clamp(x_axis_control, -45, 45);
+	x_axis_control = clamp(x_axis_control, -20, 20);
 	y_axis_control = clamp(y_axis_control, -50, 50);
 	
 	// LINE SPEED CONTROL VIA AIR BRAKE
