@@ -255,9 +255,13 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		}else if(autopilot->fm == 112.0){
 			autopilot->mode = NOTLANDUNG;
 			old_line_length = line_length;
-		} else if(autopilot->fm >= 2.0 && fabs(getAngleErrorZAxisImproved(0.0, sensor_data.rotation_matrix, sensor_data.line_direction_vector)) < 0.2){//landing mode request from VESC
-			autopilot->mode = LANDING_MODE;
-			old_line_length = line_length;
+		} else if(autopilot->fm >= 2.0){//landing mode request from VESC
+			autopilot->multiplier = 0; // turn immediately
+			autopilot->direction = 0; // don't turn all the way, just to point towards the sky
+			if(fabs(getAngleErrorZAxisImproved(0.0, sensor_data.rotation_matrix, sensor_data.line_direction_vector)) < 0.2){
+				autopilot->mode = LANDING_MODE;
+				old_line_length = line_length;
+			}
 		}
 		eight_control(autopilot, control_data_out, sensor_data, line_length, timestep_in_s); return;
 	}else if(autopilot->mode == LANDING_MODE){
@@ -269,7 +273,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	}else if(autopilot->mode == LANDING_EIGHT_TRANSITION){
 		if(sensor_data.rotation_matrix[0] > 0.1){
 			autopilot->timer = start_timer();
-			//autopilot->direction = 1;
+			autopilot->direction = 1;
 			autopilot->multiplier = FIRST_TURN_MULTIPLIER;
 			autopilot->mode = EIGHT_MODE;
 			old_line_length = line_length;

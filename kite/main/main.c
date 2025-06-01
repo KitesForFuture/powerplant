@@ -460,6 +460,8 @@ void main_task(void* arg)
 	int error_time_counter = 0;
 	float old_line_length_unfiltered = 0;
 	
+	Time lora_timer = start_timer();
+	
 	while(1) {
 		//printf("running loop\n");
 		vTaskDelayUntil(&xLastWakeTime, 2);
@@ -476,7 +478,10 @@ void main_task(void* arg)
 			uint8_t buf[4];
 			int return_value = lora_receive_packet(buf, 4);
 			if(return_value != 0){
-			
+				
+				//reset lora timer when LoRa received something, this timer is used to detect connection problems and then go into landing mode
+				lora_timer = start_timer();
+				
 				float line_length_lora_unfiltered = ((((int)buf[0]) << 8) + buf[1]) / 16.0;
 				
 				
@@ -554,8 +559,14 @@ void main_task(void* arg)
 		
 		float line_length = clamp(line_length_in_meters, 0, 1000000); // global var defined in RC.c, should default to 1 when no signal received, TODO: revert line length in VESC LISP code
 		if(flight_mode_lora == 7){ flight_mode_lora = 112;}
+		
 		autopilot.fm = flight_mode_lora;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
+		
+		//Go into landing mode when no LoRa-Signal for 5 seconds. Groundstation (VESC) has to notice this by quickly decreasing line tension (reeling in with high speed), and go itself into landing mode
+		if(query_timer_seconds(lora_timer) > 5){
+			autopilot.fm = 2.0;
+		}
 		
 		//calculate height measured via pitot tube:
 		float height_pitot = 0.86 * getHeight_p(&dps) + 0.14 * getHeight_p(&dps2);
