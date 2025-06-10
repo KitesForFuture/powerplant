@@ -1,0 +1,26 @@
+
+
+
+##### Transition from Eight to Landing #####
+
+1. Groundstation determines line length
+
+2. vesc-code.lisp: If line length is >250m Groundstation sends flightmode_request for landing, "(define flightmode-request landing)".
+
+3. RC.c: receives flight mode request and saves it to "flight_mode"
+
+4. main.c "autopilot.fm = flight_mode"
+
+4. autopilot.c: "(if autopilot.fm >= 2.0) and nose pointing up" go into autopilot->mode = LANDING_MODE
+
+5. autopilot.c: Kite is in landing mode now. "sendData(LINE_TENSION_REQUEST_MODE, 0.0, 0.0, 0.0);" while in Landing mode
+
+6. vesc-code.list: receives flight mode = landing mode -> goes into landing mode "(define flightmode landing)"
+
+
+
+##### Transition from Landing to Eight #####
+
+1. vesc-code.lisp: If line length <50m, go into eight mode "(define flightmode eight)" and request eight mode from kite "(define flightmode-request eight)"
+
+2. autopilot.c: go into Landing_eight_transition until nose points up. Then do eights mode.

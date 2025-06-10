@@ -215,6 +215,20 @@ void incrementServo(){
 	}
 }
 
+float getLineAngleX(float direction_of_neutral_angle, float direction_of_90_deg_angle){
+	float angle = 0;//signed_angle2(flight_direction, line_direction);//angle(new THREE.Vector3(mat[4], mat[5], 0), new THREE.Vector3(mat_line[7], mat_line[8], 0)) - Math.PI*0.5;
+	if(direction_of_neutral_angle == 0){
+		angle = PI/2*sign(direction_of_90_deg_angle);
+	}else if(direction_of_neutral_angle > 0){
+		angle = atan(direction_of_90_deg_angle/direction_of_neutral_angle);
+	}else if(direction_of_90_deg_angle < 0){
+		angle = -PI+atan(direction_of_90_deg_angle/direction_of_neutral_angle);
+	}else{
+		angle = PI+atan(direction_of_90_deg_angle/direction_of_neutral_angle);
+	}
+	return angle;
+}
+
 void main_task(void* arg)
 {
 	init_uptime();
@@ -364,6 +378,8 @@ void main_task(void* arg)
 				readDataICM20948(&kite_and_line_mpu, &kite_and_line_mpu_raw_data);
 				//printf("accel raw: %f, %f, %f, gyro raw: %f, %f, %f, mag raw: %f, %f, %f\n", kite_and_line_mpu_raw_data.accel[0], kite_and_line_mpu_raw_data.accel[1], kite_and_line_mpu_raw_data.accel[2], kite_and_line_mpu_raw_data.gyro[0], kite_and_line_mpu_raw_data.gyro[1], kite_and_line_mpu_raw_data.gyro[2], kite_and_line_mpu_raw_data.magnet[0], kite_and_line_mpu_raw_data.magnet[1], kite_and_line_mpu_raw_data.magnet[2]);
 				updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
+				float* line_dir = kite_orientation_data.line_vector_normed;
+				printf("pitch angle = %f\n", 0.75*getLineAngleX(-line_dir[2], -line_dir[0]));
 			}
 			if(data_needs_being_written_to_EEPROM == 1){
 				writeConfigValuesToEEPROM(config_values);

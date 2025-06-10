@@ -15,6 +15,9 @@ float powerInWatts = 0;
 
 void sendDebuggingData(float num1, float num2, float num3, float num4, float num5, float num6);
 void sendDebuggingData10(float num1, float num2, float num3, float num4, float num5, float num6, float num7, float num8, float num9, float num10);
+
+void sendDebuggingData25(float num1, float num2, float num3, float num4, float num5, float num6, float num7, float num8, float num9, float num10, float num11, float num12, float num13, float num14, float num15, float num16, float num17, float num18, float num19, float num20, float num21, float num22, float num23, float num24, float num25);
+
 void sendData(uint32_t mode, float data0, float data1, float data2);
 
 float angleDifferenceWithoutDiscontinuity(float alpha, float beta){
@@ -210,7 +213,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	//float timestep_in_s = timestep;//0.02; // 50 Hz, but TODO: MUST measure more precisely!
 	if(autopilot->mode == AIRPLANE_MODE){
-		landing_control(autopilot, control_data_out, sensor_data, line_length, line_speed, line_tension, false); return;
+		landing_control(autopilot, control_data_out, sensor_data, line_length, line_speed, line_tension, false, timestep_in_s); return;
 	}
 	//autopilot->mode = EIGHT_MODE;
 	//printf("mode = %d, fm = %f, line_length = %f\n", autopilot->mode, autopilot->fm, line_length);
@@ -263,13 +266,13 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 				old_line_length = line_length;
 			}
 		}
-		eight_control(autopilot, control_data_out, sensor_data, line_length, timestep_in_s); return;
+		eight_control(autopilot, control_data_out, sensor_data, line_length, line_speed, timestep_in_s); return;
 	}else if(autopilot->mode == LANDING_MODE){
 		//sendData(LINE_TENSION_REQUEST_MODE, 0.0, 0.0, 0.0);
 		if(autopilot->fm == 1.0){ // 1.0 is VESC eight mode
 			autopilot->mode = LANDING_EIGHT_TRANSITION;
 		}
-		landing_control(autopilot, control_data_out, sensor_data, line_length, line_speed, line_tension, false); return;
+		landing_control(autopilot, control_data_out, sensor_data, line_length, line_speed, line_tension, false, timestep_in_s); return;
 	}else if(autopilot->mode == LANDING_EIGHT_TRANSITION){
 		if(sensor_data.rotation_matrix[0] > 0.1){
 			autopilot->timer = start_timer();
@@ -278,7 +281,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 			autopilot->mode = EIGHT_MODE;
 			old_line_length = line_length;
 		}
-		return landing_control(autopilot, control_data_out, sensor_data, line_length, line_speed, line_tension, true);
+		return landing_control(autopilot, control_data_out, sensor_data, line_length, line_speed, line_tension, true, timestep_in_s);
 	}else if(autopilot->mode == TEST_MODE){
 		return test_control(autopilot, control_data_out, sensor_data, line_length, line_tension);
 	}
@@ -347,7 +350,7 @@ static float airbrake = -60;
 static float airbrake_compensation_by_elevons = 0;
 
 static int sendCounter = 0;
-static int frequencyDivider = 2;
+static int frequencyDivider = 5;
 
 static float length2Height(float length){
 	if(length < 5){
@@ -359,7 +362,7 @@ static float length2Height(float length){
 	}
 }
 
-void landing_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float line_tension, int transition){
+void landing_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float line_tension, int transition, float timestep_in_s){
 	
 	float* mat = sensor_data.rotation_matrix;
 	float* line_dir = sensor_data.line_direction_vector;
@@ -416,16 +419,15 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 		flag = 1;
 	}
 	
-	if(sendCounter == 0){
-		sendCounter = (frequencyDivider - 1); // 
-		//sendDebuggingData(line_length, airbrake, airbrake_compensation_by_elevons, sensor_data.height, y_axis_control, 2);
+	if(sendCounter-- == 0){
+		sendCounter = (frequencyDivider - 1);
 		
-		sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, sensor_data.height, debuggingLED, 2); // UP-DOWN control
-		
-		//sendDebuggingData(line_length, angle_error, roll_angle, roll_angle-desired_roll_angle, x_axis_control, 2); // UP-DOWN control
-		//sendDebuggingData(line_length, height_error, desired_dive_angle_smooth, y_axis_offset, y_axis_control, 2); // UP-DOWN control
-	}else{
-		sendCounter--;
+		sendDebuggingData25(
+		timestep_in_s, line_length, sensor_data.height, height, height_error,
+		desired_roll_angle, roll_angle, angle_error, desired_dive_angle_smooth, y_axis_offset,
+		sensor_data.gyro[0], sensor_data.gyro[1], sensor_data.gyro[2], line_speed, line_speed_error,
+		airbrake, airbrake_compensation_by_elevons, 0, 0, sensor_data.speed_pitot,
+		0, 0, 0, 0, 0);
 	}
 	
 	float prop_speed = 0;
@@ -439,7 +441,7 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 }
 
 
-void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float timestep_in_s){
+void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float timestep_in_s){
 	
 	// DIRECTION TIMER
 	if(query_timer_seconds(autopilot->timer) > autopilot->sideways_flying_time * autopilot->multiplier * clamp(0.25+0.01*line_length, 1, 10)){ // IF TIME TO TURN
@@ -490,19 +492,29 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	
 	float airbrake = AIRBRAKE_OFF;
 	
-	if(old_line_length == 0){
-		old_line_length = line_length;
-	}else{
-		float reel_out_speed = (line_length - old_line_length)/timestep_in_s;
-		float forceInNewtons = 60;
-		powerInWatts = 0.98 * powerInWatts + 0.02 * reel_out_speed * forceInNewtons;
-		old_line_length = line_length;
-	}
+	//float reel_out_speed = 0;
+	//if(old_line_length == 0){
+	//	old_line_length = line_length;
+	//}else{
+		//float reel_out_speed = line_speed;//(line_length - old_line_length)/timestep_in_s;
+	float forceInNewtons = 60;
+	powerInWatts = 0.8 * powerInWatts + 0.2 * line_speed * forceInNewtons;
+		//old_line_length = line_length;
+	//}
 	
 	float rudder = autopilot->eight.Y.D*50*(sensor_data.gyro[2]-0.7*roll_angle);
 	
-	sendDebuggingData(roll_angle, angleErrorZAxis, desired_roll_angle, slowly_changing_target_angle_local, debuggingLED, 1);
-	//sendDebuggingData(angleErrorZAxis, getAngleErrorZAxis(0.0, mat), 0, 0, 0, 0);
+	if(sendCounter-- == 0){
+		sendCounter = (frequencyDivider - 1);
+		
+		sendDebuggingData25(
+			timestep_in_s, line_length, sensor_data.height, line_speed, powerInWatts,
+			desired_roll_angle, roll_angle, slowly_changing_target_angle_local, angleErrorZAxis, 0,
+			sensor_data.gyro[0], sensor_data.gyro[1], sensor_data.gyro[2], line_angle_from_zenith, target_angle_adjustment,
+			0, 0, 0, getLinePitchAngle(line_dir), sensor_data.speed_pitot,
+			0, 0, 0, 0, 0);
+	}
+	
 	initControlData(control_data_out, 0, 0,
 		- z_axis_control + abs(z_axis_control)*0.15,
 		+ z_axis_control + abs(z_axis_control)*0.15,

@@ -8,6 +8,11 @@ altimeter_test
 
 fernbedienung
 
+kite_data_to_sd
+
+data_to_sd/build
+data_to_sd/sdkconfig
+
 horizontalflug
 groundstation_horizontalflug
 schiebesensor

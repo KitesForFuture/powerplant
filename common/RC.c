@@ -52,6 +52,12 @@ typedef struct __attribute__((packed)) esp_now_msg_t_10
 	float data[10];
 } esp_now_msg_t_10;
 
+typedef struct __attribute__((packed)) esp_now_msg_t_25
+{
+	uint32_t mode;
+	float data[25];
+} esp_now_msg_t_25;
+
 int rec_led_state = 0;
 // gets called when incoming data is received
 static void msg_recv_cb_kite(const uint8_t *mac_addr, const uint8_t *data, int len)
@@ -121,6 +127,12 @@ static void msg_recv_cb_groundstation(const uint8_t *mac_addr, const uint8_t *da
 		esp_now_msg_t_10 msg;
 		memcpy(&msg, data, len);
 		(*receive_debugging_data_callback_groundstation)(msg.data, 10);
+		
+	}
+	if (len == sizeof(esp_now_msg_t_25)){
+		esp_now_msg_t_25 msg;
+		memcpy(&msg, data, len);
+		(*receive_debugging_data_callback_groundstation)(msg.data, 25);
 		
 	}
 }
@@ -224,6 +236,42 @@ void sendDebuggingData10(float num1, float num2, float num3, float num4, float n
 	uint16_t packet_size = sizeof(esp_now_msg_t_10);
 	uint8_t msg_data[packet_size];
 	memcpy(&msg_data[0], &msg, sizeof(esp_now_msg_t_10));
+	
+	esp_now_send(broadcast_mac, msg_data, packet_size);
+}
+
+void sendDebuggingData25(float num1, float num2, float num3, float num4, float num5, float num6, float num7, float num8, float num9, float num10, float num11, float num12, float num13, float num14, float num15, float num16, float num17, float num18, float num19, float num20, float num21, float num22, float num23, float num24, float num25){
+	esp_now_msg_t_25 msg;
+	msg.mode = DEBUG_DATA_MODE;
+	msg.data[0] = num1;
+	msg.data[1] = num2;
+	msg.data[2] = num3;
+	msg.data[3] = num4;
+	msg.data[4] = num5;
+	msg.data[5] = num6;
+	msg.data[6] = num7;
+	msg.data[7] = num8;
+	msg.data[8] = num9;
+	msg.data[9] = num10;
+	msg.data[10] = num11;
+	msg.data[11] = num12;
+	msg.data[12] = num13;
+	msg.data[13] = num14;
+	msg.data[14] = num15;
+	msg.data[15] = num16;
+	msg.data[16] = num17;
+	msg.data[17] = num18;
+	msg.data[18] = num19;
+	msg.data[19] = num20;
+	msg.data[20] = num21;
+	msg.data[21] = num22;
+	msg.data[22] = num23;
+	msg.data[23] = num24;
+	msg.data[24] = num25;
+	
+	uint16_t packet_size = sizeof(esp_now_msg_t_25);
+	uint8_t msg_data[packet_size];
+	memcpy(&msg_data[0], &msg, sizeof(esp_now_msg_t_25));
 	
 	esp_now_send(broadcast_mac, msg_data, packet_size);
 }

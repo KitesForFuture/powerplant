@@ -131,8 +131,8 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 
 void notlandung(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data);
 void test_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension);
-void landing_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float line_tension, int transition);
-void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float timestep_in_s);
+void landing_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float line_tension, int transition, float timestep_in_s);
+void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float timestep_in_s);
 void straight_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length);
 void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension);
 
