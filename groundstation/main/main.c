@@ -53,37 +53,33 @@
 
 #define LEDC_TIMER              LEDC_TIMER_0
 #define LEDC_MODE               LEDC_LOW_SPEED_MODE
-#define LEDC_OUTPUT_IO          (33) // Define the output GPIO
+//#define LEDC_OUTPUT_IO          (22) // Define the output GPIO
 #define LEDC_CHANNEL            LEDC_CHANNEL_0
 #define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
 #define LEDC_DUTY               (4096) // Set duty to 50%. (2 ** 13) * 50% = 4096
 #define LEDC_FREQUENCY          (4000) // Frequency in Hertz. Set frequency at 4 kHz
 
-struct i2c_bus bus0 = {25, 14};//SDA, SCL
+#define INTERNET_CONNECTED 		false
 
-int internet_connected = false;
 
-float currentServoAngle = SERVO_MIN_ANGLE;
-float direction = 1;
-
-void controlServoAngle(float reel_in_speed){
-	currentServoAngle += direction*0.0045*reel_in_speed;
-	if(currentServoAngle > SERVO_MAX_ANGLE) {direction = -1; currentServoAngle = SERVO_MAX_ANGLE;}
-	if(currentServoAngle < SERVO_MIN_ANGLE) {direction = 1; currentServoAngle = SERVO_MIN_ANGLE;}
-	printf("setting servo angle = %f\n", currentServoAngle);
-	setAngle(2, currentServoAngle);
+void controlServoAngle(float reel_in_speed, float * currentServoAngle, float * direction){
+	*currentServoAngle += *direction*0.0045*reel_in_speed;
+	if(*currentServoAngle > SERVO_MAX_ANGLE) {*direction = -1; *currentServoAngle = SERVO_MAX_ANGLE;}
+	if(*currentServoAngle < SERVO_MIN_ANGLE) {*direction = 1; *currentServoAngle = SERVO_MIN_ANGLE;}
+	printf("setting servo angle = %f\n", *currentServoAngle);
+	setAngle(2, *currentServoAngle);
 }
 
-void storeServoArmForEnergyGeneration(){
+void storeServoArmForEnergyGeneration(float * currentServoAngle, float * direction){
 	setAngle(2, -70);
-	currentServoAngle = SERVO_MIN_ANGLE;
-	direction = 1;
+	*currentServoAngle = SERVO_MIN_ANGLE;
+	*direction = 1;
 }
 
-float wifi_send_led_state = 0;
-float wifi_rec_led_state = 0;
-float led_state = 0;
-static void example_ledc_init(void)
+//float wifi_send_led_state = 0;
+//float wifi_rec_led_state = 0;
+
+/*static void example_ledc_init(void)
 {
     // Prepare and then apply the LEDC PWM timer configuration
     ledc_timer_config_t ledc_timer = {
@@ -106,12 +102,12 @@ static void example_ledc_init(void)
         .hpoint         = 0
     };
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
-}
+}*/
 
 void processReceivedConfigValuesViaWiFi(float* config_values){
 	//TODO: send UART with config values
 	printf("Received config over ESP-NOW.\n");
-	if(internet_connected){
+	if(INTERNET_CONNECTED){
 		printf("ECHOING back to ESP-NOW, because INTERNET_CONTROL ESP is connected");
 		sendDataArrayLarge(CONFIG_MODE, config_values, NUM_CONFIG_FLOAT_VARS); // ECHO the config array
 	}else{
@@ -124,34 +120,47 @@ void processReceivedConfigValuesViaWiFi(float* config_values){
 	}
 }
 
-
-float data_including_lora[10];
-
+/*float data_including_lora[10];
 void processReceivedDebuggingDataViaWiFi(float* debugging_data, int length){
 	//printf("forwarding Debugging data to in_flight_config ESP32");
 	//debugging_data[1] = getHeight();
-	/*if(wifi_rec_led_state == 0){
-		//set_level_GPIO_22(1);
-		wifi_rec_led_state = 1;
-	}else{
-		set_level_GPIO_22(0);
-		wifi_rec_led_state = 0;
-	}*/
+	
 	for(int i = 0; i < length-1; i++){
 		data_including_lora[i] = debugging_data[i];
 	}
 	//fill the last 4 values with groundstation and lora stuff
 	
 	data_including_lora[9] = debugging_data[length-1]; // flight mode indicator
-	
+}
+*/
+
+// Increase to match max expected length (e.g., 25) + some buffer for safety
+float data_including_lora[32];  // Or use #define MAX_DEBUG_DATA 32
+
+void processReceivedDebuggingDataViaWiFi(float* debugging_data, int length) {
+    // Add bounds check to prevent overflow
+    if (length > sizeof(data_including_lora) / sizeof(float)) {
+        ESP_LOGE("DEBUG_HANDLER", "Input length %d exceeds buffer size %d! Truncating or aborting.",
+                 length, sizeof(data_including_lora) / sizeof(float));
+        length = sizeof(data_including_lora) / sizeof(float);  // Truncate to avoid crash, or return early
+    }
+
+    // Copy safely
+    for (int i = 0; i < length - 1; i++) {
+        data_including_lora[i] = debugging_data[i];
+    }
+
+    // Safe assignment (assuming length >=1; add check if needed)
+    if (length > 0) {
+        data_including_lora[length - 1] = debugging_data[length - 1];  // Still targets [9], but ensure it fits
+    } else {
+        ESP_LOGW("DEBUG_HANDLER", "Empty input data!");
+    }
 }
 
 void init(){
-	dps_address = 0x77;
-    init_dps310(bus0);
 	
-	initMotors(); // servo (pwm) outputs
-	storeServoArmForEnergyGeneration();
+	
 	//networking
 	//setRole(GROUND_STATION);
 	
@@ -186,15 +195,27 @@ void init(){
 }
 
 //float line_speed = 0;
-float line_speed_servo = 0;
-float line_length_offset = NOT_INITIALIZED;
-float last_line_length = 0;
 
-float lora_received_1_old = 0;
 
-float old_line_length = 0;
+void main_task(void){
+	
+	float line_speed_servo = 0;
+	float line_length_offset = NOT_INITIALIZED;
+	float last_line_length = 0;
 
-void app_main(void){
+	float lora_received_1_old = 0;
+
+	float old_line_length = 0;
+	
+	DPS310 dps;
+	struct i2c_bus bus0 = {25, 14};//SDA, SCL
+	init_dps310(&dps, bus0, 0x77);
+	
+	float currentServoAngle = SERVO_MIN_ANGLE;
+	float direction = 1;
+	initMotors(); // servo (pwm) outputs
+	storeServoArmForEnergyGeneration(&currentServoAngle, &direction);
+	
 	init();
 	//storeServoArmForEnergyGeneration();
 	//controlServoAngle(30.0 * reel_in_high_duty_voltage);
@@ -219,6 +240,15 @@ void app_main(void){
 	set_level_GPIO_22(0);
 	set_level_GPIO_23(0);
 	
+	uint8_t speed_pitot_times_10 = 0;
+	
+	int emergency_activated = false;
+	
+	
+	float led_state = 0;
+	
+	
+	
 	while(1){
 		
 		debugging_line_length += 0.1;
@@ -226,7 +256,9 @@ void app_main(void){
 		
 		counter++;
 		uint8_t buf[4];
+		printf("a");
 		if(counter%4 == 0){
+			printf("b");
 			/*if(line_length_test < 2000)
 				line_length_test ++;
 			else
@@ -234,23 +266,25 @@ void app_main(void){
 			int ll_times_16 = (int)(clamp(line_length, 0, 4000) * 16);
 			buf[0] = (ll_times_16 >> 8) & 0xFF;
 			buf[1] = ll_times_16 & 0xFF;
-			
-			int gsho_times_4 = ((int)((getHeight()+0.5) * 32)) % 32;
+			printf("c");
+			int gsho_times_4 = ((int)((getHeight(&dps)+0.5) * 32)) % 32;
+			printf("d");
 			if(flight_mode == 112){ flight_mode = 7;}
 			buf[2] = (((char)flight_mode)<<5) + (gsho_times_4 & 0x1F);
 			
 			int ls_times_8 = (int)(clamp(-line_speed, 0, 30) * 8);
 			buf[3] = ls_times_8 & 0xFF;
-			
-			printf("dll = %f, sending fm=%d, line_length=%f, line_speed=%f to kite [%d, %d, %d, %d]\n", debugging_line_length, (char)flight_mode, line_length, line_speed, buf[0], buf[1], buf[2], buf[3]);
+			printf("e");
+			printf("h = %f, dll = %f, sending fm=%d, line_length=%f, line_speed=%f to kite [%d, %d, %d, %d]\n", getHeight(&dps), debugging_line_length, (char)flight_mode, line_length, line_speed, buf[0], buf[1], buf[2], buf[3]);
+			printf("f");
 			lora_send_packet_and_forget(buf, 4);
 			lora_receive(4);
-			
+			printf("g");
 			
 			//send this regardless of whether data comes in via LoRa or WIFI
 			data_including_lora[5] = line_length;
-			data_including_lora[6] = getHeight();
-			
+			data_including_lora[6] = getHeight(&dps);
+			printf("h");
 			
 			data_including_lora[7] = lora_received_1; // == line_length, maybe with delay or freezing when packet lost
 			data_including_lora[8] = lora_received_2;
@@ -268,10 +302,11 @@ void app_main(void){
 				set_level_GPIO_23(1);
 			}
 			lora_received_1_old = lora_received_1;
-			
+			printf("i");
 			sendUARTArray100(data_including_lora, 10, ESP32_UART);
 		}
 		if(lora_received()){
+			printf("j");
 			int return_value = lora_receive_packet(buf, 4);
 			if(return_value != 0){
 				lora_received_1 = ((((int)buf[0]) << 8) + buf[1]) / 16.0;
@@ -279,6 +314,8 @@ void app_main(void){
 				if(buf[2] == 4){//autopilot.mode == LANDING_MODE
 					tension_request = 1.0; // kite is in landing mode
 				}
+				speed_pitot_times_10 = buf[3];
+				sendUART(0, speed_pitot_times_10/1.0, VESC_UART);
 				printf("received [%d, %d, %d, %d], lr1 = %f, lr2 = %f, ret = %d\n", buf[0], buf[1], buf[2], buf[3], lora_received_1, lora_received_2, return_value);
 			}
 		}
@@ -296,16 +333,19 @@ void app_main(void){
 		*/
 		
 		//printf("test314\n");
-		update_dps310_if_necessary();
+		
+		update_dps310_if_necessary(&dps);
+		
 		//printf("getHeight() = %f\n", getHeight());
 		//sendUART(1, 2, VESC_UART);//DEBUGGING
 		//sendUART(1, 2, ESP32_UART);//DEBUGGING
 		// **************** REACT to UART message from VESC ****************
 		
 		// pass line length and line tension from UART to WIFI
+		printf("k");
 		receive_array_length = processUART(VESC_UART, receive_array);
 		if(receive_array_length == 3){
-			
+			printf("l");
 			//printf("received UART from VESC\n");
 			if(led_state == 0){
 				//ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY);
@@ -352,19 +392,19 @@ void app_main(void){
 			printf("sending flight_mode %f and line_length %f to communication ESP32\n", flight_mode, line_length);
 			*/
 			
-			if(internet_connected){
+			if(INTERNET_CONNECTED){
 				sendUART(flight_mode, line_length, ESP32_UART); // send flight_mode to attached ESP32, which forwards it to the internet
 			}
 			line_speed_servo = (1-0.125) * line_speed_servo + 0.125 * 50/*frequency*/ * (line_length - last_line_length);
 			last_line_length = line_length;
 			//printf("line_speed = %f, line_length = %f\n", line_speed, line_length);
 			if(-line_speed_servo > 0.5){
-				controlServoAngle(30.0 * fabs(line_speed_servo));
+				controlServoAngle(30.0 * fabs(line_speed_servo), &currentServoAngle, &direction);
 			}else{
-				storeServoArmForEnergyGeneration();
+				storeServoArmForEnergyGeneration(&currentServoAngle, &direction);
 			}
 		}
-		
+		printf("m");
 		// **************** REACT to UART message from ESP32 ****************
 		
 		// receiving from attached ESP32 via UART
@@ -372,36 +412,42 @@ void app_main(void){
 		if(receive_array_length == 2){ // received from INTERNET
 			printf("Sending landing/launching request to VESC: %f\n", receive_array[0]);
 			sendUART(receive_array[0], 0, VESC_UART); // landing (TODO: launch) COMMAND
-			internet_connected = true;
+			//INTERNET_CONNECTED = true;
 		}else if(receive_array_length == NUM_CONFIG_FLOAT_VARS + NUM_GS_CONFIG_FLOAT_VARS){ // received from in_flight_config CONFIG TOOL
 			printf("sending config to kite via ESP-NOW\n");
 			sendDataArrayLarge(CONFIG_MODE, receive_array, NUM_CONFIG_FLOAT_VARS); // *** FORWARD of CONFIG ARRAY from UART to ESP-NOW, stripping groundstation config
+			vTaskDelay(100);
 			//set_bmp_calibration(receive_array[NUM_CONFIG_FLOAT_VARS+0]); // we have no BMP anymore that needs calibrating
 		}
-		
+		printf("n");
 		// **************** MANUAL SWITCH ****************
 		
 		if(line_length > 60){
 			line_length_was_over_60 = true;
 		}
 		
-		if(!internet_connected){
-			if(get_level_GPIO_0() != 0 || (line_length_was_over_60 == true && line_length < 50)){
-				printf("SWITCH request final landing\n");
-				sendUART(2, 0, VESC_UART); // request final-landing from VESC
-			}else if(get_level_GPIO_33() != 0){
+		if(!INTERNET_CONNECTED){
+			if(get_level_GPIO_33() != 0 || emergency_activated == true){
 				//Switch request for emergency landing (in circles, airbrake extended, line tension = 0)
+				emergency_activated = true;
 				printf("SWITCH request emergency landing\n");
 				sendUART(112, 0, VESC_UART); // request emergency-landing from VESC
+			}else if(get_level_GPIO_0() != 0 || (line_length_was_over_60 == true && line_length < 50)){
+				printf("SWITCH request final landing\n");
+				sendUART(2, 0, VESC_UART); // request final-landing from VESC
 			}else{
 				//sendUART(0, 0, VESC_UART);
 			}
 		}
-		
+		printf("o");
 	    if(tension_request == 1.0){		// kite is in landing mode, thus ...
 	    	sendUART(1, 0, VESC_UART);	// ... agree to landing with VESC
 	    }
 	    vTaskDelay(2.0);
     }
-    
+}
+
+void app_main(void){
+    //xTaskCreatePinnedToCore(main_task, "main_task", 16000, NULL, 5, NULL, 1);  // 8KB stack, core 1
+    xTaskCreate(main_task, "main_task", 20000, NULL, 17, NULL);
 }

@@ -140,7 +140,7 @@ void app_main(void){
 	// Card has been initialized, print its properties
 	sdmmc_card_print_info(stdout, card);
 
-	const char *file_hello = "/sdcard/diagram";
+	const char *file_hello = "/sdcard/dgrm";
 	const char *ext = ".kd3";
 	
 	int i = 0;
@@ -172,7 +172,7 @@ void app_main(void){
 	while(1){
 		
 		// **************** FILE CLOSE SWITCH ****************
-		if(file_open && get_level_GPIO_22() == 0){
+		if(file_open && get_level_GPIO_16() == 0){
 			// close logging file
 			fprintf(f, "]");
 			printf("closing file\n");

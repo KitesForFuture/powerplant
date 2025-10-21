@@ -5,7 +5,7 @@
 
 
 #include "../../common/i2c_devices/cat24c256.h"
-#include "../../common/i2c_devices/dps310.h"
+//#include "../../common/i2c_devices/dps310.h"
 #include "../../common/i2c_devices/dps310_parametrized.h"
 #include "../../common/i2c_devices/icm20948.h"
 
@@ -118,21 +118,21 @@ void setConfigValues(float* values){
 void actuatorControl(float left_aileron, float right_aileron, float left_elevon, float right_elevon, float brake, float rudder, float left_propeller, float right_propeller, float propeller_safety_max){
 	
 	if(config_values[52]){ // SWAPPED
-		setAngle(6, config_values[48] + config_values[50]*left_aileron); // left aileron
-		setAngle(7, config_values[49] + config_values[51]*right_aileron); // right aileron
+		setAngle(6, clamp(config_values[48] + config_values[50]*left_aileron, -49, 49)); // left aileron
+		setAngle(7, clamp(config_values[49] + config_values[51]*right_aileron, -45, 45)); // right aileron
 	}else{
-		setAngle(7, config_values[48] + config_values[50]*left_aileron); // left aileron
-		setAngle(6, config_values[49] + config_values[51]*right_aileron); // right aileron
+		setAngle(7, clamp(config_values[48] + config_values[50]*left_aileron, -49, 49)); // left aileron
+		setAngle(6, clamp(config_values[49] + config_values[51]*right_aileron, -45, 45)); // right aileron
 	}
 	//setAngle(7, -5 + left_aileron); // left aileron
 	//setAngle(6, 5 + -right_aileron); // right aileron
 	//printf("%f, %f,%f, %f,%f\n", config_values[50], config_values[51], config_values[52], config_values[48], config_values[49]);
 	if(config_values[9]){ // SWAPPED
-		setAngle(3, config_values[37] + config_values[7]*left_elevon); // left elevon
-		setAngle(0, config_values[38] + config_values[8]*right_elevon); // right elevon
+		setAngle(3, clamp(config_values[37] + config_values[7]*left_elevon, -49, 49)); // left elevon
+		setAngle(0, clamp(config_values[38] + config_values[8]*right_elevon, -55, 55)); // right elevon
 	}else{
-		setAngle(0, config_values[37] + config_values[7]*left_elevon); // left elevon
-		setAngle(3, config_values[38] + config_values[8]*right_elevon); // right elevon
+		setAngle(0, clamp(config_values[37] + config_values[7]*left_elevon, -49, 49)); // left elevon
+		setAngle(3, clamp(config_values[38] + config_values[8]*right_elevon, -55, 55)); // right elevon
 	}
 	
 	if(config_values[11]){ // SWAPPED
@@ -142,8 +142,8 @@ void actuatorControl(float left_aileron, float right_aileron, float left_elevon,
 		setSpeed(4, clamp(left_propeller, 0, propeller_safety_max)); // left Propeller
 		setSpeed(2, clamp(right_propeller, 0, propeller_safety_max)); // right Propeller
 	}
-	setAngle(1, config_values[39] + config_values[10]*brake); // Brake
-	setAngle(5, config_values[41] + config_values[40]*rudder); // Rudder
+	setAngle(1, clamp(config_values[39] + config_values[10]*brake, -60, 60)); // Brake
+	setAngle(5, clamp(config_values[41] + config_values[40]*rudder, -40, 40)); // Rudder
 }
 
 // can also be used to manually change config variables
@@ -472,6 +472,7 @@ void main_task(void* arg)
 	
 	lora_receive(4);
 	
+	float speed_pitot = 0;
 	
 	int error_time_counter = 0;
 	float old_line_length_unfiltered = 0;
@@ -529,6 +530,11 @@ void main_task(void* arg)
 			
 			buf[2] = (uint8_t)autopilot.mode;
 			
+			float rounded_speed_pitot = roundf(speed_pitot*10);
+			if (rounded_speed_pitot < 0) rounded_speed_pitot = 0;
+   			if (rounded_speed_pitot > 255) rounded_speed_pitot = 255;
+			buf[3] = (uint8_t)rounded_speed_pitot;
+			
 			//printf("sending[%d, %d, %d, %d], ll_times_16 = %d\n", buf[0], buf[1], buf[2], buf[3], ll_times_16);
 			
 			lora_send_packet_and_forget(buf, 4);
@@ -575,7 +581,7 @@ void main_task(void* arg)
 		
 		float line_length = clamp(line_length_in_meters, 0, 1000000); // global var defined in RC.c, should default to 1 when no signal received, TODO: revert line length in VESC LISP code
 		if(flight_mode_lora == 7){ flight_mode_lora = 112;}
-		
+		printf("flightmode_lora = %d\n", flight_mode_lora);
 		autopilot.fm = flight_mode_lora;// global var flight_mode defined in RC.c, 
 		//printf("autopilot.mode = %d", autopilot.mode);
 		
@@ -586,7 +592,7 @@ void main_task(void* arg)
 		
 		//calculate height measured via pitot tube:
 		float height_pitot = 0.86 * getHeight_p(&dps) + 0.14 * getHeight_p(&dps2);
-		float speed_pitot = 5.0 * sqrt(  fmax( getHeight_p(&dps) - getHeight_p(&dps2), 0 )  );
+		speed_pitot = 5.0 * sqrt(  fmax( getHeight_p(&dps) - getHeight_p(&dps2), 0 )  );
 		//sendDebuggingData(getHeight_p(&dps), getHeight_p(&dps2), height_pitot, height_pitot - gs_height_offset_lora+HEIGHT_CALIBRATION_OFFSET, speed_pitot, 2); // UP-DOWN control
 		
 		//printf("height_pitot1 = %f, height_pitot2 = %f\n", getHeight_p(&dps), getHeight_p(&dps2));

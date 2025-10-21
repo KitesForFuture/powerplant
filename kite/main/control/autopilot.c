@@ -223,6 +223,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 			autopilot->timer = start_timer();
 		}
 		if(autopilot->fm == 3.0){ // 0.0 is VESC launch mode, 3.0 is VESC final landing mode
+			printf("switching from hover to landing mode because autopilot.fm == 3.0 *************\n");
 			autopilot->mode = LANDING_MODE;
 			landing_propeller_counter = 0;
 			old_line_length = line_length;
@@ -232,7 +233,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		}
 		autopilot->y_angle_offset = autopilot->hover.y_angle_offset;
 		
-		hover_control(autopilot, control_data_out, sensor_data, line_length, LINE_TENSION_LAUNCH); return;
+		hover_control(autopilot, control_data_out, sensor_data, line_length, line_speed, LINE_TENSION_LAUNCH, timestep_in_s); return;
 	}else if(autopilot->mode == HOVER_EIGHT_TRANSITION){
 		if(query_timer_seconds(autopilot->timer) > 1){
 			if(autopilot->fm == 3.0){
@@ -250,7 +251,7 @@ void stepAutopilot(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 			}
 		}
 		autopilot->y_angle_offset = autopilot->transition_y_angle_offset;
-		hover_control(autopilot, control_data_out, sensor_data, line_length, LINE_TENSION_EIGHT); return;
+		hover_control(autopilot, control_data_out, sensor_data, line_length, line_speed, LINE_TENSION_EIGHT, timestep_in_s); return;
 	}else if(autopilot->mode == EIGHT_MODE){
 		if(autopilot->fm == 3.0){
 			autopilot->mode = LANDING_MODE;
@@ -350,7 +351,7 @@ static float airbrake = -60;
 static float airbrake_compensation_by_elevons = 0;
 
 static int sendCounter = 0;
-static int frequencyDivider = 5;
+static int frequencyDivider = 1;//5;
 
 static float length2Height(float length){
 	if(length < 5){
@@ -422,12 +423,13 @@ void landing_control(Autopilot* autopilot, ControlData* control_data_out, Sensor
 	if(sendCounter-- == 0){
 		sendCounter = (frequencyDivider - 1);
 		
+		printf("(land.) line_speed = %f, length = %f, mode = %d\n", line_speed, line_length, autopilot->mode);
 		sendDebuggingData25(
 		timestep_in_s, line_length, sensor_data.height, height, height_error,
 		desired_roll_angle, roll_angle, angle_error, desired_dive_angle_smooth, y_axis_offset,
 		sensor_data.gyro[0], sensor_data.gyro[1], sensor_data.gyro[2], line_speed, line_speed_error,
 		airbrake, airbrake_compensation_by_elevons, 0, 0, sensor_data.speed_pitot,
-		0, 0, 0, 0, 0);
+		0, 0, 0, 0, 3);
 	}
 	
 	float prop_speed = 0;
@@ -507,12 +509,13 @@ void eight_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 	if(sendCounter-- == 0){
 		sendCounter = (frequencyDivider - 1);
 		
+		printf("(eight) line_speed = %f, length = %f\n", line_speed, line_length);
 		sendDebuggingData25(
 			timestep_in_s, line_length, sensor_data.height, line_speed, powerInWatts,
 			desired_roll_angle, roll_angle, slowly_changing_target_angle_local, angleErrorZAxis, 0,
 			sensor_data.gyro[0], sensor_data.gyro[1], sensor_data.gyro[2], line_angle_from_zenith, target_angle_adjustment,
 			0, 0, 0, getLinePitchAngle(line_dir), sensor_data.speed_pitot,
-			0, 0, 0, 0, 0);
+			0, 0, 0, 0, 2);
 	}
 	
 	initControlData(control_data_out, 0, 0,
@@ -529,7 +532,7 @@ static float d_h_smooth = 0;
 static float z_axis_I = 0;
 static float h_I = 0;
 
-void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_tension){
+void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorData sensor_data, float line_length, float line_speed, float line_tension, float timestep_in_s){
 	
 	float* mat = sensor_data.rotation_matrix;
 	float* line_dir = sensor_data.line_direction_vector;
@@ -621,7 +624,16 @@ void hover_control(Autopilot* autopilot, ControlData* control_data_out, SensorDa
 		//y_axis_control = -10;
 	}
 	*/
-	sendDebuggingData(sensor_data.height, line_length, height_control_smooth, line_speed_control, z_axis_I, 0);
+	if(sendCounter-- == 0){
+		sendCounter = (frequencyDivider - 1);
+		printf("(hover) line_speed = %f, length = %f\n", line_speed, line_length);
+		sendDebuggingData25(
+			timestep_in_s, line_length, sensor_data.height, line_speed, powerInWatts,
+			0, roll_angle, height_control_smooth, line_speed_control, z_axis_I,
+			sensor_data.gyro[0], sensor_data.gyro[1], sensor_data.gyro[2], 0, 0,
+			0, 0, 0, 0, sensor_data.speed_pitot,
+			0, 0, 0, 0, 1);
+	}
 	initControlData(control_data_out, left_prop, right_prop, left_elevon, right_elevon, left_elevon, right_elevon, AIRBRAKE_OFF, 0, line_tension); return;
 	
 }

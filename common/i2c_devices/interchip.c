@@ -8,6 +8,7 @@
 
 // ToDo 2 instances of driver, one per bus?
 esp_err_t _initInterchip(struct i2c_bus bus) {
+	//printf("bus(%d, %d)\n", bus.sda, bus.scl);
 	//this line should be after i2c_param_config according to espressif documentation
     i2c_driver_install(I2C_PORT_T, I2C_MODE_MASTER, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
     
