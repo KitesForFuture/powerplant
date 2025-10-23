@@ -30,6 +30,9 @@ kite_hayden/sdkconfig
 kite_wifi/build
 kite_wifi/sdkconfig
 
+manual_acc_calibration_kite/build
+manual_acc_calibration_kite/sdkconfig
+
 magnet-testing/build
 magnet-testing/sdkconfig
 

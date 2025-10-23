@@ -157,6 +157,10 @@ void FAKEupdateRotationMatrix(Orientation_Data* orientation_data){
 	orientation_data->rotation_matrix_transpose[8] = orientation_data->rotation_matrix[8];
 }
 
+static float gyro_dyn_cal_x = 0;
+static float gyro_dyn_cal_y = 0;
+static float gyro_dyn_cal_z = 0;
+
 void updateRotationMatrix(Orientation_Data* orientation_data, raw_data_ICM20948 mpu_raw_data){
 	
 	if(orientation_data->mpu_last_update_time == 0){
@@ -171,13 +175,17 @@ void updateRotationMatrix(Orientation_Data* orientation_data, raw_data_ICM20948 
 	// angles in radians
 	// 0.01745329 = pi/180
 	
-	orientation_data->gyro_in_kite_coords[0] = gyro_x * PI / 180;
-	orientation_data->gyro_in_kite_coords[1] = gyro_y * PI / 180;
-	orientation_data->gyro_in_kite_coords[2] = gyro_z * PI / 180;
+	float gx = ( gyro_x + gyro_dyn_cal_x ) * PI / 180;
+	float gy = ( gyro_y + gyro_dyn_cal_y ) * PI / 180;
+	float gz = ( gyro_z + gyro_dyn_cal_z ) * PI / 180;
 	
-	float alpha = PI / 180 * gyro_x * time_difference;
-	float beta = PI / 180 * gyro_y * time_difference;
-	float gamma = PI / 180 * gyro_z * time_difference;
+	orientation_data->gyro_in_kite_coords[0] = gx; //gyro_x = -mpu_raw_data.gyro[0], gyro_y = ... see macros on top of this file
+	orientation_data->gyro_in_kite_coords[1] = gy;
+	orientation_data->gyro_in_kite_coords[2] = gz;
+	
+	float alpha = gx * time_difference;
+	float beta = gy * time_difference;
+	float gamma = gz * time_difference;
 	
 	//sendData(alpha, beta, gamma, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	
@@ -200,14 +208,25 @@ void updateRotationMatrix(Orientation_Data* orientation_data, raw_data_ICM20948 
 	
 	static int speed_factor_counter = 0;
 	
-	float speed_factor = 1;
+	float speed_factor = 3;
 	if(speed_factor_counter < 1000){
 		speed_factor = 10;
 		speed_factor_counter++;
 	}
+	//normalize (a,b,c)
+	float a = accel_x;
+	float b = accel_y;
+	float c = accel_z;
+	float InvNorm = 1/sqrt(a*a+b*b+c*c);
+	a *= InvNorm;
+	b *= InvNorm;
+	c *= InvNorm;
 	
-	rotate_towards_g(temp_rotation_matrix, gravity_x, gravity_y, gravity_z, accel_x, accel_y, accel_z, orientation_data->rotation_matrix, speed_factor);
+	rotate_towards_g(temp_rotation_matrix, gravity_x, gravity_y, gravity_z, a, b, c, orientation_data->rotation_matrix, speed_factor);
 	//memcpy(orientation_data->rotation_matrix, temp_rotation_matrix, sizeof(temp_rotation_matrix));// TODO: remove when above line uncommented!!!
+	gyro_dyn_cal_x -= sign(axis_1) * 0.001 * (1-fabs(a));
+	gyro_dyn_cal_y -= sign(axis_2) * 0.001 * (1-fabs(b));
+	gyro_dyn_cal_z -= sign(axis_3) * 0.001 * (1-fabs(c));
 	
 	normalize_matrix(orientation_data->rotation_matrix);
 	

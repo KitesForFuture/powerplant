@@ -141,25 +141,37 @@ void transpose_matrix(float source[], float destination[]){
 	destination[8] = source[8];
 }
 
+
+
 // rotates matrix mat such that mat'*(a_init, b_init, c_init)' aligns more with (a,b,c)'
 // (a_init, b_init, c_init) can be initially measured acceleration vector, usually something close to (0,0,1)
 // (a,b,c) can be the currently measured acceleration vector
 void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, float a, float b, float c, float out[], float speed_factor){
 	// mat'*(a_init, b_init, c_init)'
+	
+	
+	
+	
 	float tmp_vec[3];
 	mat_transp_mult_vec(mat, a_init, b_init, c_init, tmp_vec); // tmp_vec is how the three sensors should feel gravitational acceleration. The three x-components of the three rotation matrix vectors.
 	
+	
 	// determine the normalized rotation axis (mat'*(a_init, b_init, c_init)') x (a,b,c)' in sensor coordinate system
-	float axis_1 = tmp_vec[1]*c-tmp_vec[2]*b;
-	float axis_2 = tmp_vec[2]*a-tmp_vec[0]*c;
-	float axis_3 = tmp_vec[0]*b-tmp_vec[1]*a;
-	float InvNorm = 1/sqrt(axis_1*axis_1 + axis_2*axis_2 + axis_3*axis_3);
+	axis_1 = tmp_vec[1]*c-tmp_vec[2]*b;
+	axis_2 = tmp_vec[2]*a-tmp_vec[0]*c;
+	axis_3 = tmp_vec[0]*b-tmp_vec[1]*a;
+	
+	printf("rotational error due to gyro mis-calibration: %f, %f, %f\n", axis_1, axis_2, axis_3);
+	
+	/*InvNorm = 1/sqrt(axis_1*axis_1 + axis_2*axis_2 + axis_3*axis_3);
 	axis_1 *= InvNorm;
 	axis_2 *= InvNorm;
 	axis_3 *= InvNorm;
+	*/
+	
 	
 	// determine the approximate angle between mat'*(a_init, b_init, c_init)' and (a,b,c)'
-	float differenceNorm = sqrt((tmp_vec[0]-a*0.1)*(tmp_vec[0]-a*0.1) + (tmp_vec[1]-b*0.1)*(tmp_vec[1]-b*0.1) + (tmp_vec[2]-c*0.1)*(tmp_vec[2]-c*0.1));
+	float differenceNorm = sqrt((tmp_vec[0]-a)*(tmp_vec[0]-a) + (tmp_vec[1]-b)*(tmp_vec[1]-b) + (tmp_vec[2]-c)*(tmp_vec[2]-c));
 	//float differenceNorm = sqrt((mat[2]-a)*(mat[2]-a) + (mat[5]-b)*(mat[5]-b) + (mat[8]-c)*(mat[8]-c)); // TODO: there is a BUG here. mat[2] should be either mat[0] or tmp_vec[0], etc.
 	// multiply by small number, so we move only tiny bit in right direction at every step -> averaging measured acceleration from vibration
 	float angle = differenceNorm*0.001*speed_factor;//When connected to USB, then 0.00004 suffices. When autonomous on battery 0.0004 (10 times larger) does just fine.
@@ -173,13 +185,13 @@ void rotate_towards_g(float mat[], float a_init, float b_init, float c_init, flo
 	// rotation matrix
 	float tmp_rot_matrix[9];
 	tmp_rot_matrix[0] = 1;
-	tmp_rot_matrix[1] = -axis_3*sin(angle);
-	tmp_rot_matrix[2] = axis_2*sin(angle);
-	tmp_rot_matrix[3] = axis_3*sin(angle);
+	tmp_rot_matrix[1] = -axis_3*0.001*speed_factor;
+	tmp_rot_matrix[2] = axis_2*0.001*speed_factor;
+	tmp_rot_matrix[3] = axis_3*0.001*speed_factor;
 	tmp_rot_matrix[4] = 1;
-	tmp_rot_matrix[5] = -axis_1*sin(angle);
-	tmp_rot_matrix[6] = -axis_2*sin(angle);
-	tmp_rot_matrix[7] = axis_1*sin(angle);
+	tmp_rot_matrix[5] = -axis_1*0.001*speed_factor;
+	tmp_rot_matrix[6] = -axis_2*0.001*speed_factor;
+	tmp_rot_matrix[7] = axis_1*0.001*speed_factor;
 	tmp_rot_matrix[8] = 1;
 	
 	mat_mult_mat_transp(mat, tmp_rot_matrix, out);

@@ -241,7 +241,7 @@ void main_task(void* arg)
 	init_cat24(bus1);
 	
 	raw_data_ICM20948 kite_and_line_mpu_calibration = {
-		{0.0, 0.0, 0.0}, // accel
+		{readEEPROM(0), readEEPROM(1), readEEPROM(2)}, // accel
 		{readEEPROM(3), readEEPROM(4), readEEPROM(5)}, // gyro
 		{0.0, 0.0, 0.0} // magnet
 	};
@@ -334,7 +334,7 @@ void main_task(void* arg)
 			
 			update_dps310_if_necessary_p(&dps);
 			update_dps310_if_necessary_p(&dps2);
-			printf("side holes = %f, front hole = %f\n", getHeight_p(&dps), getHeight_p(&dps2));
+			//printf("side holes = %f, front hole = %f\n", getHeight_p(&dps), getHeight_p(&dps2));
 			
 			if(gyroCalibrationCommand){
 				gyroCalibrationCommand = false;
@@ -379,7 +379,7 @@ void main_task(void* arg)
 				//printf("accel raw: %f, %f, %f, gyro raw: %f, %f, %f, mag raw: %f, %f, %f\n", kite_and_line_mpu_raw_data.accel[0], kite_and_line_mpu_raw_data.accel[1], kite_and_line_mpu_raw_data.accel[2], kite_and_line_mpu_raw_data.gyro[0], kite_and_line_mpu_raw_data.gyro[1], kite_and_line_mpu_raw_data.gyro[2], kite_and_line_mpu_raw_data.magnet[0], kite_and_line_mpu_raw_data.magnet[1], kite_and_line_mpu_raw_data.magnet[2]);
 				updateRotationMatrix(&kite_orientation_data, kite_and_line_mpu_raw_data);
 				float* line_dir = kite_orientation_data.line_vector_normed;
-				printf("pitch angle = %f\n", 0.75*getLineAngleX(-line_dir[2], -line_dir[0]));
+				//printf("pitch angle = %f\n", 0.75*getLineAngleX(-line_dir[2], -line_dir[0]));
 			}
 			if(data_needs_being_written_to_EEPROM == 1){
 				writeConfigValuesToEEPROM(config_values);
